@@ -26,8 +26,8 @@ const DB_NAME = process.env.DB_NAME as string;
 const DB_USERS = process.env.USERS_COLLECTION_NAME as string;
 
 // Blockchain config
-const provider = new providers.JsonRpcProvider(process.env.SMOOTHIE);
-const contractAddress = "0x2ca5c649439fe2fa769cc1b87b1a17cc657a99e9";	
+const provider = new providers.JsonRpcProvider(process.env.GOERLI);
+const contractAddress = "0x96c889d2772189b518936f332c5b8113096ca8b3";	
 const abi = [
 	`event ValidatorRegistered(
 		address indexed eth1_addr, string validator, uint id

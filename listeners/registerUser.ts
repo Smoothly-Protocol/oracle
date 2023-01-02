@@ -13,15 +13,14 @@ interface ValidatorInfo {
 export function startRegistrationListener(contract: Contract) {
 	const filter = contract.filters.ValidatorRegistered();
 	contract.on(filter, (sender, validator, id) => {
-		//verifyValidator(sender, validator);
-		//verifyValidator("0xd6e31F36c3ED652eb79a2db89C99fc5B67366997", "0x952d4c3395975fcd9f7a9fa24f79530d615c1cb6dbc952b011f403908b7a31bf64bda9f3645a922d4ecde3a188204847");
-		verifyValidatorTestnet(contract, sender, validator, id);
+		verifyValidator(sender, validator, id);
+		//verifyValidatorTestnet(contract, sender, validator, id);
 	});
 	console.log("Listening to register events");
 }
 
 async function verifyValidator(eth1Addr: string, pubKey: string, id: number) {
-	const url = `https://beaconcha.in/api/v1/validator/eth1/${eth1Addr}`;
+	const url = `https://goerli.beaconcha.in/api/v1/validator/eth1/${eth1Addr}`;
 	const headers = {
 		method: "GET",
 		headers: {

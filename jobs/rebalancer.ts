@@ -41,9 +41,13 @@ export async function startRebalancerCron (contract: Contract) {
 				let obj: any = usersIncluded.concat(usersSlashed);
 
 				// Call rebalance in contract
+        try {
 				const signer = new Wallet(pk, contract.provider);
 				const tx = await contract.connect(signer).rebalanceRewards(obj, fee);
 				await tx.wait();
+        } catch(err) {
+          console.log(err);
+        }
 			} else {
 				const currentTimestamp = Math.floor(Date.now() / 1000);
 				console.log(`Didn't recieve any block rewards for today ${currentTimestamp}`);
