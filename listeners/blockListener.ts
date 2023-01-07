@@ -6,10 +6,9 @@ import { Contract } from "ethers";
 export async function startBlockListener(contract: Contract) {
 	const eth2 = new EventSource(`${process.env.PRATER_NODE}/eth/v1/events?topics=block`);
 	let lastSlot = 0;
-	let epoch = 13059;
+	let epoch = 147351;
 	eth2.addEventListener('block', async (e)  => {
 		const { slot } = JSON.parse(e.data);	
-
 		// Check for missed slots
 		if(lastSlot === 0) {
 			lastSlot = slot;

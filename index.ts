@@ -11,6 +11,7 @@ import User from "./db/models/user";
 import { startRegistrationListener } from "./listeners/registerUser";
 import { startDeactivationListener } from "./listeners/deactivateUser";
 import { startBlockListener } from "./listeners/blockListener";
+import { startVoluntaryExitsListener } from "./listeners/voluntaryExits";
 
 // Cron job
 import { startRebalancerCron } from "./jobs/rebalancer";
@@ -47,6 +48,7 @@ async function main() {
 		startDeactivationListener(contract);
 		startBlockListener(contract);
 		startRebalancerCron(contract);
+    startVoluntaryExitsListener();
 	} catch(err) {
 		console.log(err);
 	}

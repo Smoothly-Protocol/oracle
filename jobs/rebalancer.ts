@@ -17,7 +17,7 @@ const pk = process.env.PRIVATE_KEY as string;
 const FEE = 25; // 2.5% Protocol_fee on rebalance
 
 export async function startRebalancerCron (contract: Contract) {
-	cron.schedule('* * * * *', async () => {
+	cron.schedule('* 1 * * *', async () => {
 		if(collections.users != undefined) {
 
 			const validUsers = await collections.users.find({

@@ -11,7 +11,7 @@ export function startDeactivationListener(contract: Contract) {
 	console.log("Listening to deactivation events");
 }
 
-async function deactivateValidator(validator: string) {
+export async function deactivateValidator(validator: string) {
 	// Delete from database
 	if (collections.users != undefined) {
 		const result = await collections.users.deleteOne({pubKey: validator});
