@@ -12,7 +12,7 @@ export async function startVoluntaryExitsListener() {
     if(collections.users != undefined) {
       const user = await collections.users.findOne(query);
       if(user) {
-        deactivateValidato(user.pubKey);
+        deactivateValidator(user.pubKey);
         console.log("Voluntary exit from:", validator_index);
       }
     }

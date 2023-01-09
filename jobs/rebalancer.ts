@@ -17,11 +17,10 @@ const pk = process.env.PRIVATE_KEY as string;
 const FEE = 25; // 2.5% Protocol_fee on rebalance
 
 export async function startRebalancerCron (contract: Contract) {
-	cron.schedule('* 1 * * *', async () => {
+	cron.schedule('* * * * *', async () => {
 		if(collections.users != undefined) {
 
 			const validUsers = await collections.users.find({
-				firstBlockProposed: true, 
 				slashFee: { $eq: 0 } ,
 				missedSlots: { $eq: 0 } 
 			}).toArray();
@@ -44,7 +43,6 @@ export async function startRebalancerCron (contract: Contract) {
         try {
 				const signer = new Wallet(pk, contract.provider);
 				const tx = await contract.connect(signer).rebalanceRewards(obj, fee);
-				await tx.wait();
         } catch(err) {
           console.log(err);
         }
@@ -73,7 +71,7 @@ async function fundUsers(users: Array<any>, total: BigNumber, contract: Contract
 	const userShare = total.sub(_fee).div(validUsers.length);
 	let obj = [];
 	for(let user of validUsers) {
-		obj.push([user.eth1Addr, user.validatorId, userShare, 0, 0]);
+		obj.push([user.eth1Addr, user.validatorId, userShare, 0, 0, user.firstBlockProposed]);
 		console.log(`Funded ${user.pubKey} with ${utils.formatEther(userShare)}`); 
 	}
 	return [obj, _fee];
@@ -84,7 +82,7 @@ async function slashUsers(users: Array<any>): Promise<any> {
 	for(let user of users) {
 		// Skip first missed proposal
 		if(user.firstMissedSlot || user.slashFee > 0) {
-			obj.push([user.eth1Addr, user.validatorId, 0, user.missedSlots, user.slashFee]);
+			obj.push([user.eth1Addr, user.validatorId, 0, user.missedSlots, user.slashFee, user.firstBlockProposed]);
 		} else {
 			user.firstMissedSlot = true;	
 		}	

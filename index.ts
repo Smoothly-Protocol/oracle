@@ -28,14 +28,14 @@ const DB_USERS = process.env.USERS_COLLECTION_NAME as string;
 
 // Blockchain config
 const provider = new providers.JsonRpcProvider(process.env.GOERLI);
-const contractAddress = "0x96c889d2772189b518936f332c5b8113096ca8b3";	
+const contractAddress = "0xbc18866baaaa12201d977e5ac71ec575d4d06e61";	
 const abi = [
 	`event ValidatorRegistered(
 		address indexed eth1_addr, string validator, uint id
 	)`,
 	"event ValidatorDeactivated(string validator)",
 	"event RewardsRecieved(uint256 value, uint256 indexed timestamp)",
-	"function rebalanceRewards(tuple(address,uint256,uint256,uint256,uint256)[], uint fee) external",
+	"function rebalanceRewards(tuple(address,uint256,uint256,uint256,uint256,bool)[], uint fee) external",
 	"function getRebalanceRewards() external view returns(uint)",
 	"function getValidatorStake(address eth1Addr, uint id) external view returns(uint)"
 ];	
