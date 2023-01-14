@@ -38,14 +38,16 @@ export async function startRebalancerCron (contract: Contract) {
 				let [usersIncluded, fee] = await fundUsers(validUsers, total, contract);
 				let usersSlashed: any = await slashUsers(slashedUsers);
 				let obj: any = usersIncluded.concat(usersSlashed);
+        console.log(obj);
 
 				// Call rebalance in contract
+        /*
         try {
 				const signer = new Wallet(pk, contract.provider);
 				const tx = await contract.connect(signer).rebalanceRewards(obj, fee);
         } catch(err) {
           console.log(err);
-        }
+        }*/
 			} else {
 				const currentTimestamp = Math.floor(Date.now() / 1000);
 				console.log(`Didn't recieve any block rewards for today ${currentTimestamp}`);
@@ -58,7 +60,7 @@ async function includeValidUsers(users: Array<User>, contract: Contract): Promis
 	let obj = [];
 	for(let user of users) {
 		const stakePosition = await contract.getValidatorStake(user.eth1Addr, user.validatorId);
-		if(stakePosition > utils.parseEther("0.5")) {
+		if(stakePosition > utils.parseEther("0.05")) {
 			obj.push(user);	
 		}
 	}
@@ -80,12 +82,17 @@ async function fundUsers(users: Array<any>, total: BigNumber, contract: Contract
 async function slashUsers(users: Array<any>): Promise<any> {
 	let obj = [];
 	for(let user of users) {
-		// Skip first missed proposal
-		if(user.firstMissedSlot || user.slashFee > 0) {
+		// Skip first missed proposal only for active users
+    if(!user.firstBlockProposed) {
+			obj.push([user.eth1Addr, user.validatorId, 0, user.missedSlots, user.slashFee, user.firstBlockProposed]);
+    } else if(user.firstMissedSlot || user.slashFee > 0) {
 			obj.push([user.eth1Addr, user.validatorId, 0, user.missedSlots, user.slashFee, user.firstBlockProposed]);
 		} else {
+      if(user.missedSlots > 1) {
+        obj.push([user.eth1Addr, user.validatorId, 0, user.missedSlots - 1, user.slashFee, user.firstBlockProposed]);
+      } 
 			user.firstMissedSlot = true;	
-		}	
+		}
 		// Update db
 		if( collections.users != undefined ) {
 			user.slashFee = 0;
