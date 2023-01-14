@@ -34,20 +34,18 @@ export async function startRebalancerCron (contract: Contract) {
 
 			const total = await contract.getRebalanceRewards();
 
-			if(total > 0 && validUsers.length > 0) {
+			if(total.gt(utils.parseEther("0.0001")) && validUsers.length > 0) {
 				let [usersIncluded, fee] = await fundUsers(validUsers, total, contract);
 				let usersSlashed: any = await slashUsers(slashedUsers);
 				let obj: any = usersIncluded.concat(usersSlashed);
-        console.log(obj);
 
 				// Call rebalance in contract
-        /*
         try {
 				const signer = new Wallet(pk, contract.provider);
 				const tx = await contract.connect(signer).rebalanceRewards(obj, fee);
         } catch(err) {
           console.log(err);
-        }*/
+        }
 			} else {
 				const currentTimestamp = Math.floor(Date.now() / 1000);
 				console.log(`Didn't recieve any block rewards for today ${currentTimestamp}`);
