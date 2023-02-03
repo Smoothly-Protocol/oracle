@@ -119,7 +119,7 @@ async function slashUsers(users: Array<any>, contract: Contract): Promise<any> {
       const missedSlashes = MISSED_PROPOSAL_FEE.mul(BigNumber.from(rUser[3]));
       const feeSlashes = SLASH_FEE.mul(BigNumber.from(rUser[4]));
 
-      let stake = validator[3];
+      let stake = validator[4];
       let tFees = missedSlashes.add(feeSlashes); 
 
       // Make sure user has enough stake
