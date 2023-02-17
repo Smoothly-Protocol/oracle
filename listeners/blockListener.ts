@@ -77,12 +77,13 @@ async function isUserSlot(res: any, contract: Contract) {
 
 			// Slash for change of FEE_RECIPIENT
 			const { fee_recipient } = body.execution_payload;
-			if( (fee_recipient !== contract.address) && user.firstBlockProposed ) {
+			if( (fee_recipient !== contract.address) ) {
 				console.log("Fee recipient slash for", proposer_index);
 				user.slashFee += 1;
-			} 
-			// Activation
-			user.firstBlockProposed ? 0 : user.firstBlockProposed = true; 
+			} else { 
+        // Activation
+        user.firstBlockProposed ? 0 : user.firstBlockProposed = true; 
+      }
 
 			await collections.users.updateOne(query, { $set: user});
 		}
