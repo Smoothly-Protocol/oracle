@@ -6,7 +6,7 @@ import { Contract } from "ethers";
 export async function startBlockListener(contract: Contract) {
   const eth2 = new EventSource(`${process.env.PRATER_NODE}/eth/v1/events?topics=block`);
   let lastSlot = 0;
-  let epoch = 158938;
+  let epoch = 159563;
   eth2.addEventListener('block', async (e)  => {
     const { slot } = JSON.parse(e.data);	
     // Check for missed slots
@@ -74,8 +74,8 @@ async function isUserSlot(res: any, contract: Contract) {
     const query = {validatorIndex: Number(proposer_index)};
     const user = await collections.users.findOne(query);
     if(user) {
-      const { fee_recipient } = body.execution_payload;
-      const block: any = await contract.provider.getBlockWithTransactions(body.eth1_data.block_hash);
+      const { fee_recipient, block_hash } = body.execution_payload;
+      const block: any = await contract.provider.getBlockWithTransactions(block_hash);
       // Check builder not swapping address
       if( (fee_recipient !== contract.address.toLowerCase()) && 
          (block.transactions[block.transactions.length - 1].to.toLowerCase() !== contract.address.toLowerCase())) 
