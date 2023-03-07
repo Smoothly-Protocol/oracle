@@ -4,103 +4,68 @@ import { collections } from "../db/src/database.service";
 import { Contract } from "ethers";
 
 export async function startBlockListener(contract: Contract) {
-  const eth2 = new EventSource(`${process.env.PRATER_NODE}/eth/v1/events?topics=block`);
-  let lastSlot = 0;
-  let epoch = 159563;
-  eth2.addEventListener('block', async (e)  => {
-    const { slot } = JSON.parse(e.data);	
-    // Check for missed slots
-    if(lastSlot === 0) {
-      lastSlot = slot;
-    } else {
-      let missed = Number(slot) - (Number(lastSlot) + 1);
-      if(missed > 0) {
-        addMissedSlots(lastSlot, missed, epoch);
+  const eth2 = new EventSource(`${process.env.PRATER_NODE}/eth/v1/events?topics=finalized_checkpoint`);
+  eth2.addEventListener('finalized_checkpoint', async (e)  => {
+    const { epoch } = JSON.parse(e.data);	
+    const { data } = await reqEpochSlots(epoch);
+
+    console.log("Processing epoch:", Number(epoch));
+
+    for(let i = 0; i < data.length; i++) {
+      const { slot, validator_index } = data[i];
+      const user = await isUser(contract, Number(validator_index));
+      if(user) {
+        const res = await reqSlotInfo(slot);
+        res !== undefined ? 
+          await validateSlot(user, res.body, contract) : 
+          await addMissedSlot(user); 
       }
-      lastSlot = slot;
-    }	
-
-    // Add Slot
-    const res = await waitForBlockInfo(slot);
-    isUserSlot(res, contract);
-
-    // Update Epoch
-    const attestations = res.data.message.body.attestations;
-    if(attestations.length > 0) {
-      epoch = attestations[0].data.target.epoch;
     }
   });
-  console.log("Listening to new proposed blocks");
+  console.log("Listening for new finalized_checkpoints");
 }
 
-async function addMissedSlots(last: number, missed: number, epoch: number) {
-  if(missed !== 0) {
-    let found = false;
-    last = Number(last) + 1;
-    while(!found && epoch !== 0) {
-      const res = await reqEpochSlots(epoch);
-      // Find correct epoch
-      if(last > res.data[31].slot) {
-        epoch = Number(epoch) + 1;
-        continue;
-      } else if(last < res.data[0].slot) {
-        epoch = Number(epoch) - 1;
-        continue;
-      }
-      // Check if is User
-      for(let i = 0; i < res.data.length; i++) {
-        if(res.data[i].slot === String(last)) {
-          if(collections.users != undefined) {
-            const query = {validatorIndex: Number(res.data[i].validator_index)};
-            const user = await collections.users.findOne(query);
-            if(user) {
-              user.missedSlots += 1;
-              await collections.users.updateOne(query, { $set: user});
-              console.log(`User with index ${user.validatorIndex} missed a proposal`);
-            }
-          }
-          found = true;
-        }
-      }
-    }
-    addMissedSlots(last, missed - 1, epoch);
-  }
-  return;
-}
-
-async function isUserSlot(res: any, contract: Contract) {
-  const { slot, proposer_index, body } = res.data.message;
+async function addMissedSlot(user: any) {
   if(collections.users != undefined) {
-    const query = {validatorIndex: Number(proposer_index)};
+    user.missedSlots += 1;
+    await collections.users.updateOne({validatorIndex: user.validatorIndex}, { $set: user});
+    console.log(`Missed proposal: validator with index ${user.validatorIndex}`);
+  }
+}
+
+async function validateSlot(user: any, body: any, contract: Contract) {
+  if(collections.users != undefined) {
+    const { fee_recipient, block_hash } = body.execution_payload;
+    const block: any = await contract.provider.getBlockWithTransactions(block_hash);
+    // Check builder not swapping address
+    if( (fee_recipient.toLowerCase() != contract.address.toLowerCase()) && 
+       (block.transactions[block.transactions.length - 1].to.toLowerCase() != contract.address.toLowerCase())) 
+      {
+        user.slashFee += 1;
+        console.log(`Proposed block with incorrect fee recipient: validator with index ${user.validatorIndex}`);
+      } else { 
+        // Activation
+        if(!user.firstBlockProposed) {
+          user.firstBlockProposed = true
+          console.log(`Activated: validator with index ${user.validatorIndex}`);
+        } 
+        console.log(`Proposed block: validator with index ${user.validatorIndex}`);
+      }
+
+      await collections.users.updateOne({validatorIndex: user.validatorIndex}, { $set: user});
+  }
+}
+
+async function isUser(contract: Contract, validator_index: number) : Promise<any> {
+  if(collections.users != undefined) {
+    const query = {validatorIndex: validator_index};
     const user = await collections.users.findOne(query);
-    if(user) {
-      const { fee_recipient, block_hash } = body.execution_payload;
-      const block: any = await contract.provider.getBlockWithTransactions(block_hash);
-      // Check builder not swapping address
-      if( (fee_recipient !== contract.address.toLowerCase()) && 
-         (block.transactions[block.transactions.length - 1].to.toLowerCase() !== contract.address.toLowerCase())) 
-        {
-          user.slashFee += 1;
-          console.log("Fee recipient slash for", proposer_index);
-        } else { 
-          // Activation
-          user.firstBlockProposed ? 0 : user.firstBlockProposed = true; 
-        }
-
-        await collections.users.updateOne(query, { $set: user});
-    }
+    return user ? user : undefined;
   }
+  return undefined;
 }
 
-async function waitForBlockInfo(slot: number): Promise<any> {
-  let res = await reqBlockInfo(slot);
-  while(res.code === 404) {
-    res = await reqBlockInfo(slot);
-  }
-  return res;
-}
-
-async function reqBlockInfo(slot: number): Promise<any> {
+async function reqSlotInfo(slot: number): Promise<any> {
   const url = `${process.env.PRATER_NODE}/eth/v2/beacon/blocks/${slot}`;	
   const headers = {
     method: "GET",
@@ -111,7 +76,7 @@ async function reqBlockInfo(slot: number): Promise<any> {
   };
   const req = await fetch(url, headers);
   const res = await req.json();
-  return res;
+  return res.code === 404 ? undefined : res.data.message;
 }
 
 async function reqEpochSlots(epoch: number): Promise<any> {
@@ -127,3 +92,4 @@ async function reqEpochSlots(epoch: number): Promise<any> {
   const res = await req.json();
   return res;
 }
+
