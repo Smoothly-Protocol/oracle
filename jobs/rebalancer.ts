@@ -19,7 +19,7 @@ const SLASH_FEE = utils.parseEther("0.05");
 const MISSED_PROPOSAL_FEE = utils.parseEther("0.015");
 
 export async function startRebalancerCron (contract: Contract) {
-  cron.schedule('* * * * *', async () => {
+  cron.schedule('0 22 * * *', async () => {
     if(collections.users != undefined) {
 
       const validUsers = await collections.users.find({

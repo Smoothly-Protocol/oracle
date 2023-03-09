@@ -13,7 +13,7 @@ export async function startVoluntaryExitsListener() {
       const user = await collections.users.findOne(query);
       if(user) {
         deactivateValidator(user.pubKey);
-        console.log("Voluntary exit from:", validator_index);
+        console.log("Voluntary exit: validator with index", validator_index);
       }
     }
   })
