@@ -1,7 +1,24 @@
 import { providers, Contract, utils } from "ethers";
+import { Trie } from '@ethereumjs/trie'
+import { Level } from 'level';
+import { LevelDB } from './utils/level';
 import * as dotenv from 'dotenv';
 import * as path from 'path';
 
+// Load Environment variables
+dotenv.config({
+	path: path.resolve(__dirname, '../.env')
+});
+
+// Merkle trie
+const stateRoot = '0x880574a2aac265595827b78912c6e6e853042f8b12e12a93ccb6d06c7bc5738f';
+const trie = new Trie({
+  db: new LevelDB(new Level("./mydb")),
+  useKeyHashing: true,
+  root: Buffer.from(stateRoot.slice(2), 'hex')
+});
+
+/*
 // DB
 import { ObjectId } from "mongodb";
 import { connectToDatabase } from "./db/src/database.service";
@@ -15,12 +32,9 @@ import { startVoluntaryExitsListener } from "./listeners/voluntaryExits";
 
 // Cron job
 import { startRebalancerCron } from "./jobs/rebalancer";
+*/
 
-// Load Environment variables
-dotenv.config({
-	path: path.resolve(__dirname, '../.env')
-});
-
+/*
 // Constants
 const DB_STRING = process.env.DB_CONN_STRING as string;
 const DB_NAME = process.env.DB_NAME as string;
@@ -41,15 +55,22 @@ const abi = [
   "function getValidator(address eth1Addr, uint id) external view returns(tuple(bytes,uint,uint,uint,uint,bool))"
 ];	
 const contract = new Contract(contractAddress, abi, provider);
-
+*/
 async function main() {
 	try {
+    //await trie.put(Buffer.from('test'), Buffer.from('two')) 
+    const value: any = await trie.get(Buffer.from('test'))
+    console.log(value.toString()) // 'one'
+    console.log(trie.root().toString('hex'));
+    
+    /*
 		await connectToDatabase(DB_STRING, DB_NAME, DB_USERS);	
 		startRegistrationListener(contract);
 		startDeactivationListener(contract);
 		startBlockListener(contract);
 		startRebalancerCron(contract);
     startVoluntaryExitsListener();
+   */
 	} catch(err) {
 		console.log(err);
 	}
@@ -60,3 +81,4 @@ main()
 	console.error(error);
 	process.exit(1);
 });
+
