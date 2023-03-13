@@ -1,0 +1,1 @@
+export { artifact } from "./artifact";
