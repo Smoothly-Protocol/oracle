@@ -1,8 +1,10 @@
-import { providers, Contract, utils, BigNumber } from "ethers;
-import { ValidatorInfo } from "../types";
-import { Config } from './config';
+import { providers, Contract, utils, BigNumber } from "ethers";
+import { ValidatorInfo, User } from "../types";
+import { Config } from '../config';
+import { STAKE_FEE } from "../utils";
 
 export function startRegistrationListener(config: Config): void {
+  const contract = config.contract;
 	const filter = contract.filters.ValidatorRegistered();
 	contract.on(filter, (sender, validatorId) => {
 		verifyValidator(sender, validatorId, config);
@@ -16,7 +18,7 @@ async function verifyValidator(
   id: number,
   config: Config 
 ) {
-	const url = `${config.beaconchainApi}/api/v1/validator/eth1/${eth1Addr}`;
+	const url = `${config.network.beaconchainApi}/api/v1/validator/eth1/${eth1Addr}`;
 	const headers = {
 		method: "GET",
 		headers: {
@@ -31,26 +33,12 @@ async function verifyValidator(
 		data = res.data.length != undefined ? res.data : data.push(res.data);
 		const { verified, index } = proofOwnership(eth1Addr, id, data);
 		if(verified) {
-			const newUser: User = {
-				eth1Addr: eth1Addr,
-				validatorId: id,
-				pubKey: pubKey,
-				validatorIndex: index,
-				missedSlots: 0,
-				slashFee: 0,
-				firstBlockProposed: false,
-				firstMissedSlot: false
-			}
-			// Push to database
-			if (collections.users != undefined) {
-				// TODO: check if user already exisst
-				const result = await collections.users.insertOne(newUser);
-				result 
-					? console.log(`Successfully created new user with id ${result.insertedId}`)
-					: console.log(`Failed to create a new user for: ${eth1Addr} and ${pubKey}`);
-			}
+      // Check User Tuple on types used for RLP encoding to Trie.
+			const newUser: User = [index, 0, 0, 0, STAKE_FEE, 0, 0];
+      await config.insertDB(eth1Addr, newUser);
+      console.log(`Successfully created user: with validator ${index} for ${eth1Addr}`)
 		} else {
-			console.log("Slash user for bad authentication");
+      console.log(`Onowned User: with validator ${index} for ${eth1Addr}`);
 		}
 	} else {
 		console.log("ERR: something went wrong on verifyValidator req call.");
@@ -69,7 +57,7 @@ function proofOwnership(
 	let index: number = 0;
 	if(len > 0) {
 		for(let i = 0; i < len; i++) {
-			if((data[i].publickey == pubKey) && (data[i].validatorindex != null)) {
+			if(data[i].validatorindex == id) {
 				verified = true;
 				index = Number(data[i].validatorindex);
 			   	return { verified, index }; 

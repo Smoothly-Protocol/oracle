@@ -1,8 +1,14 @@
-import { NetInfo, Defaults } from "./types";
-import { providers, Contract, Wallet } from "ethers";
+import { NetInfo, Defaults, User } from "./types";
+import { 
+  providers, 
+  Contract, 
+  Wallet, 
+  ContractFactory 
+} from "ethers"; 
 import { Trie } from '@ethereumjs/trie'
+import { RLP } from '@ethereumjs/rlp'
 import { Level } from 'level';
-import { LevelDB, ABI } from './utils';
+import { LevelDB, artifact } from './utils';
 
 const GOERLI: NetInfo = {
   rpc: "https://eth-goerli.alchemyapi.io/v2/zmsxPR7pKHtiLvAkZ1R61BYtCqnCg0yc",
@@ -36,7 +42,7 @@ export class Config {
   root?: string;
   network: NetInfo;
 
-  constructor(_network: string, _pk: string ) {
+  constructor(_network: string, _pk: string) {
     // Network 
     if(_network === "goerli") {
       this.network = GOERLI;
@@ -48,18 +54,18 @@ export class Config {
       throw new Error("Unknown or not supported network.");
     } 
 
+    // Signer
+    this.signer = this.validateWallet(_pk);
+
     // Blockchain
     this.contract = new Contract(
       this.network.contractAddress,
-      ABI,
+      artifact["abi"],
       new providers.JsonRpcProvider(this.network.rpc)
     );
-
-    // Signer
-    this.signer = this.validateWallet(_pk);
   }
 
-  async initDB() {
+  async initDB(): Promise<Config> {
     try {
       const root: string = await this.contract.ROOT();
       this.db = new Trie({
@@ -74,9 +80,34 @@ export class Config {
     }
   }
 
-  validateWallet(pk: string) {
+  async insertDB(key: string, user: User): Promise<void> {
+    if(this.db !== undefined) {
+      const value = await this.getDB(key);
+      if(value !== undefined) {
+        let arr: User[] = []; 
+        arr = value.map((v: User) => {return v});
+        arr.push(user);
+        await this.db.put(Buffer.from(key), Buffer.from(RLP.encode(arr)));
+      } else {
+        await this.db.put(Buffer.from(key), Buffer.from(RLP.encode([user])));
+      }
+    }
+  }
+
+  async getDB(key: string): Promise<any> {
+    let user;
+    if(this.db !== undefined) {
+      user = await this.db.get(Buffer.from(key));
+    }
+    return user != null 
+      ? RLP.decode(user) 
+      : undefined;
+  }
+
+  validateWallet(pk: string): Wallet {
     try {
-      const wallet = new Wallet(pk);
+      const provider = new providers.JsonRpcProvider(this.network.rpc)
+      const wallet = new Wallet(pk, provider);
       return wallet;
     } catch {
       throw new Error("Invalid private key");

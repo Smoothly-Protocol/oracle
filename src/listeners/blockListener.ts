@@ -1,10 +1,8 @@
 import EventSource from "eventsource";
-import * as dotenv from 'dotenv';
-import { collections } from "../db/src/database.service";
-import { Contract } from "ethers";
+import { Config } from './config';
 
-export async function startBlockListener(contract: Contract) {
-  const eth2 = new EventSource(`${process.env.PRATER_NODE}/eth/v1/events?topics=finalized_checkpoint`);
+export async function startBlockListener(config: Config) {
+  const eth2 = new EventSource(`${config.network.beacon}/eth/v1/events?topics=finalized_checkpoint`);
   eth2.addEventListener('finalized_checkpoint', async (e)  => {
     const { epoch } = JSON.parse(e.data);	
     const { data } = await reqEpochSlots(epoch);

@@ -1,4 +1,3 @@
-import { Trie } from '@ethereumjs/trie'
 import { Config } from './config';
 import * as path from 'path';
 
@@ -25,16 +24,11 @@ async function main(): Promise<void> {
   try {
     const pk = opts.privateKey; //"0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff"
     const network = opts.network;
-    const config = await new Config(network, pk).initDB();
+    const config = await(new Config(network, pk)).initDB();
 
     // Init event Listeners
     startRegistrationListener(config);
     /*
-    await trie.put(Buffer.from('test'), Buffer.from('two')) 
-    const value: any = await trie.get(Buffer.from('test'))
-    console.log(value.toString()) // 'one'
-    console.log(trie.root().toString('hex'));
-
     startDeactivationListener(contract);
     startBlockListener(contract);
     startRebalancerCron(contract);

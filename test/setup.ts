@@ -1,10 +1,8 @@
 import { 
-  providers, 
   Wallet, 
-  Contract,
-  ContractFactory
 } from "ethers";
 import { artifact } from "./utils";
+import { Config } from "../src/config";
 
 // Default 10 accounts from anvil
 const pks = [
@@ -20,17 +18,10 @@ const pks = [
   "0x2a871d0798f97d79848a013d4936a73bf4cc922c825d33c1cf7073dff6d409c6"
 ];
 
-const provider = new providers.JsonRpcProvider("http://127.0.0.1:8545");
-
 export function getSigners(provider: any): Array<Wallet> {
   return pks.map((pk: string): Wallet => { return new Wallet(pk, provider) });
 }
 
-export async function setup() {
-  const signer = new Wallet(pks[0], provider);
-  return await (new ContractFactory(
-    artifact["abi"], 
-    artifact["bytecode"], 
-    signer)
-  ).deploy();
+export async function setup(): Promise<Config> {
+  return await (new Config("local", pks[0]).initDB());
 }
