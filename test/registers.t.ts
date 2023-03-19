@@ -9,6 +9,9 @@ import { Validator } from "../src/types";
 import * as dotenv from 'dotenv';
 import * as path from 'path';
 
+//disable logs
+console.log = function () {};
+
 // Load Environment variables
 dotenv.config({
   path: path.resolve(__dirname, '../.env')

@@ -7,6 +7,9 @@ import { Oracle } from '../src/oracle';
 import { STAKE_FEE } from "../src/utils";
 import { Validator } from "../src/types";
 
+//disable logs
+console.log = function () {};
+
 describe("Deactivation users event listener on Exit", () => {
   let oracle: Oracle;
   let contract: Contract;
