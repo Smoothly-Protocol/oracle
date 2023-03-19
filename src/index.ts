@@ -1,12 +1,14 @@
-import { Config } from './config';
+import { Oracle } from './oracle';
 import * as path from 'path';
 
 import { Command } from 'commander';
 const program = new Command();
 
+/*
 import { 
   startRegistrationListener 
 } from "./listeners";
+*/
 
 // CLI Helper
 program
@@ -24,10 +26,13 @@ async function main(): Promise<void> {
   try {
     const pk = opts.privateKey; //"0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff"
     const network = opts.network;
-    const config = await(new Config(network, pk)).initDB();
+    const oracle = new Oracle(network, pk);
+    oracle.start();
+    oracle.stop();
+    // TODO: Sync node from beginning
 
     // Init event Listeners
-    startRegistrationListener(config);
+    //startRegistrationListener(config);
     /*
     startDeactivationListener(contract);
     startBlockListener(contract);

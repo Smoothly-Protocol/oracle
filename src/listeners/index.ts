@@ -1,4 +1,5 @@
-export { startRegistrationListener } from "./registerUser";
-export { startDeactivationListener } from "./deactivateUser";
+export { Registered } from "./registers";
+export { ExitRequested } from "./exits";
+
 //export { startBlockListener } from "./blockListener";
 //export { startVoluntaryExitsListener } from "./voluntaryExits";

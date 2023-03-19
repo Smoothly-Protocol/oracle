@@ -1,2 +1,2 @@
 export { artifact } from "./artifact";
-export { delay, decodeUser } from "./helpers";
+export { delay, getProof } from "./helpers";

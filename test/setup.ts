@@ -1,8 +1,10 @@
+import { Oracle } from "../src/oracle";
+import { artifact } from "../src/utils";
 import { 
   Wallet, 
+  ContractFactory,
+  providers
 } from "ethers";
-import { artifact } from "./utils";
-import { Config } from "../src/config";
 
 // Default 10 accounts from anvil
 const pks = [
@@ -22,6 +24,18 @@ export function getSigners(provider: any): Array<Wallet> {
   return pks.map((pk: string): Wallet => { return new Wallet(pk, provider) });
 }
 
-export async function setup(): Promise<Config> {
-  return await (new Config("local", pks[0]).initDB());
+export async function setup(): Promise<Oracle> {
+	try {
+		const provider = new providers.JsonRpcProvider("http://127.0.0.1:8545");
+		const [owner] = await getSigners(provider);
+		const contract = await(new ContractFactory(
+			artifact["abi"], 
+			artifact["bytecode"],
+			owner
+		)).deploy();
+		const oracle = new Oracle("local", pks[0]).updateContract(contract);
+    return oracle;
+	} catch (err: any) {
+		throw new Error(err);
+	}
 }

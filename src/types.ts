@@ -1,15 +1,13 @@
-// Need to match contract struct Validator
-// boolean: any non-zero byte except "0x80" is considered true used to RLP
-// decode in contract. 
-export type User = [
-  number, // validatorIndex 
-  number, // rewards
-  number, // slash_miss
-  number, // slash_fee
-  number, // stake
-  number, // boolean -> firstBlockProposed
-  number //  boolean -> firstMissedSlot 
-]
+export interface Validator {
+  index: number, 
+  rewards: number, 
+  slashMiss: number, 
+  slashFee: number 
+  stake: number, 
+  firstBlockProposed: boolean, 
+  firstMissedSlot: boolean,  
+  exitRequested: boolean  
+}
 
 export interface NetInfo {
   rpc: string,

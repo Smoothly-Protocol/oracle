@@ -1,14 +1,15 @@
 import { providers, Contract, utils, BigNumber } from "ethers";
-import { ValidatorInfo, User } from "../types";
-import { Config } from '../config';
+import { ValidatorInfo, Validator } from "../types";
+import { Oracle } from '../oracle';
 import { STAKE_FEE } from "../utils";
 
-export function startRegistrationListener(config: Config): void {
-  const contract = config.contract;
-	const filter = contract.filters.ValidatorRegistered();
-	contract.on(filter, (sender, validatorId) => {
-		verifyValidator(sender, validatorId, config);
-		//verifyValidatorTestnet(contract, sender, validator, id);
+export function Registered(oracle: Oracle): void {
+  const contract = oracle.contract;
+	const filter = contract.filters.Registered();
+	contract.on(filter, (sender, indexes) => {
+    for(let index of indexes) {
+      verifyValidator(sender, index, oracle);
+    }
 	});
 	console.log("Listening to register events");
 }
@@ -16,9 +17,9 @@ export function startRegistrationListener(config: Config): void {
 async function verifyValidator(
   eth1Addr: string, 
   id: number,
-  config: Config 
+  oracle: Oracle 
 ) {
-	const url = `${config.network.beaconchainApi}/api/v1/validator/eth1/${eth1Addr}`;
+	const url = `${oracle.network.beaconchainApi}/api/v1/validator/eth1/${eth1Addr}`;
 	const headers = {
 		method: "GET",
 		headers: {
@@ -33,9 +34,17 @@ async function verifyValidator(
 		data = res.data.length != undefined ? res.data : data.push(res.data);
 		const { verified, index } = proofOwnership(eth1Addr, id, data);
 		if(verified) {
-      // Check User Tuple on types used for RLP encoding to Trie.
-			const newUser: User = [index, 0, 0, 0, STAKE_FEE, 0, 0];
-      await config.insertDB(eth1Addr, newUser);
+			const newUser: Validator = {
+        index: index, 
+        rewards: 0,
+        slashMiss: 0,
+        slashFee: 0, 
+        stake: STAKE_FEE,
+        firstBlockProposed: false, 
+        firstMissedSlot: false,
+        exitRequested: false
+      };
+      await oracle.db.insert(eth1Addr, index, newUser);
       console.log(`Successfully created user: with validator ${index} for ${eth1Addr}`)
 		} else {
       console.log(`Onowned User: with validator ${index} for ${eth1Addr}`);
