@@ -4,7 +4,8 @@ import { EMPTY_ROOT } from "./utils";
 import { Contract } from "ethers"; 
 import { 
   Registered, 
-  ExitRequested 
+  ExitRequested,
+  VoluntaryExits
 } from "./listeners";
 
 export class Oracle extends Config {
@@ -22,6 +23,7 @@ export class Oracle extends Config {
   start(): void {
     Registered(this);
     ExitRequested(this);
+    VoluntaryExits(this);
   }
 
   stop(): void {

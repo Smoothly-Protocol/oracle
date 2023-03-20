@@ -6,10 +6,8 @@ import { STAKE_FEE } from "../utils";
 export function Registered(oracle: Oracle): void {
   const contract = oracle.contract;
 	const filter = contract.filters.Registered();
-	contract.on(filter, (sender, indexes) => {
-    for(let index of indexes) {
-      verifyValidator(sender, index, oracle);
-    }
+	contract.on(filter, (sender, index) => {
+    verifyValidator(sender, index, oracle);
 	});
 	console.log("Listening to register events");
 }
@@ -42,7 +40,8 @@ async function verifyValidator(
         stake: STAKE_FEE,
         firstBlockProposed: false, 
         firstMissedSlot: false,
-        exitRequested: false
+        exitRequested: false,
+        active: true
       };
       await oracle.db.insert(eth1Addr, index, newUser);
       console.log(`Successfully created user: with validator ${index} for ${eth1Addr}`)

@@ -10,7 +10,7 @@ import { Validator } from "../src/types";
 //disable logs
 console.log = function () {};
 
-describe("Deactivation users event listener on Exit", () => {
+describe("Exits", () => {
   let oracle: Oracle;
   let contract: Contract;
   let indexes: number[] = [38950];
@@ -32,7 +32,8 @@ describe("Deactivation users event listener on Exit", () => {
       stake: STAKE_FEE,
       firstBlockProposed: false, 
       firstMissedSlot: false,
-      exitRequested: false
+      exitRequested: false,
+      active: true
     };
     await oracle.db.insert(
       oracle.signer.address, 
@@ -42,7 +43,7 @@ describe("Deactivation users event listener on Exit", () => {
     oracle.start()
   })
 
-  it("picks up and validates exit of validator", async () => {
+  it("picks up and validates exit of validator from contract", async () => {
     await contract.requestExit(indexes); 
     await delay(5000);
     const result: any = await oracle.db.get(oracle.signer.address, indexes[0])

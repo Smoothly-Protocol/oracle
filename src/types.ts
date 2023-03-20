@@ -6,7 +6,8 @@ export interface Validator {
   stake: number, 
   firstBlockProposed: boolean, 
   firstMissedSlot: boolean,  
-  exitRequested: boolean  
+  exitRequested: boolean,
+  active: boolean
 }
 
 export interface NetInfo {

@@ -7,7 +7,7 @@
 	"license": "MIT",
 	"scripts": {
 		"start": "NODE_NO_WARNINGS=1 ts-node ./src/index.ts",
-    "test": "NODE_NO_WARNINGS=1 mocha -r ts-node/register 'test/**.t.ts'"
+    "test": " ./scripts/start_anvil.sh && NODE_NO_WARNINGS=1 mocha -r ts-node/register 'test/**.t.ts'"
 	},
 	"devDependencies": {
 		"@types/chai": "^4.3.4",
