@@ -54,7 +54,7 @@ describe("Registers users event listener", () => {
       {value: utils.parseEther("0.65")}
     );
     await delay(5000);
-    const result: any = await oracle.db.get(oracle.signer.address, 1);
+    const result: any = await oracle.db.get(1);
     assert.equal(result, undefined);
   }).timeout(20000);
 
@@ -71,16 +71,16 @@ describe("Registers users event listener", () => {
     );
     // Wait for event listeners to get picked up
     await delay(8000);
-    const result1: any = await oracle.db.get(validatorAcc.address, validators[0]);
-    const result2: any= await oracle.db.get(validatorAcc.address, validators[1]);
+    const result1: any = await oracle.db.get(validators[0]);
+    const result2: any = await oracle.db.get(validators[1]);
 
     assert.equal(result1.index, validators[0])
     assert.equal(result2.index, validators[1])
   }).timeout(20000);
 
   after(async () => {
-    await oracle.db.delete(validatorAcc.address, indexes[0])
-    await oracle.db.delete(validatorAcc.address, indexes[1])
+    await oracle.db.delete(indexes[0])
+    await oracle.db.delete(indexes[1])
     oracle.stop();
   })
 });

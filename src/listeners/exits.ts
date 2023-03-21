@@ -6,7 +6,7 @@ export function ExitRequested(oracle: Oracle) {
 	const filter = contract.filters.ExitRequested();
 	contract.on(filter, (sender, indexes) => {
     for(let index of indexes) {
-      validateRequest(sender, index, oracle);	
+      validateRequest(sender.toLowerCase(), index, oracle);	
     }
 	});
 	console.log("Listening to Exit Request events");
@@ -17,10 +17,11 @@ async function validateRequest(
 	index: number, 
 	oracle: Oracle 
 ) {
-  let user: Validator | undefined = await oracle.db.get(sender, index);
-  if(user) {
-    user.exitRequested = true;
-    await oracle.db.insert(sender, index, user); 
+  const validator: Validator | undefined = await oracle.db.get(index);
+  // Validate caller as owner
+  if(validator && (validator.eth1 === sender)) {
+    validator.exitRequested = true;
+    await oracle.db.insert(index, validator); 
   } 
 }
 

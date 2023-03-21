@@ -5,7 +5,8 @@ import { Contract } from "ethers";
 import { 
   Registered, 
   ExitRequested,
-  VoluntaryExits
+  VoluntaryExits,
+  BlockListener
 } from "./listeners";
 
 export class Oracle extends Config {
@@ -24,6 +25,7 @@ export class Oracle extends Config {
     Registered(this);
     ExitRequested(this);
     VoluntaryExits(this);
+    BlockListener(this);
   }
 
   stop(): void {

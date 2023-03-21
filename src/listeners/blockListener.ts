@@ -1,70 +1,69 @@
 import EventSource from "eventsource";
-import { Config } from './config';
+import { Oracle } from '../oracle';
+import { DB } from '../db';
+import { Validator } from '../types';
+import { Contract } from 'ethers';
 
-export async function startBlockListener(config: Config) {
-  const eth2 = new EventSource(`${config.network.beacon}/eth/v1/events?topics=finalized_checkpoint`);
+export async function BlockListener(oracle: Oracle) {
+  const beacon = oracle.network.beacon;
+  const db = oracle.db;
+  const contract = oracle.contract;
+  const eth2 = new EventSource(`${beacon}/eth/v1/events?topics=finalized_checkpoint`);
+
   eth2.addEventListener('finalized_checkpoint', async (e)  => {
     const { epoch } = JSON.parse(e.data);	
-    const { data } = await reqEpochSlots(epoch);
+    const { data } = await reqEpochSlots(epoch, beacon);
 
     console.log("Processing epoch:", Number(epoch));
 
     for(let i = 0; i < data.length; i++) {
       const { slot, validator_index } = data[i];
-      const user = await isUser(contract, Number(validator_index));
-      if(user) {
-        const res = await reqSlotInfo(slot);
+      const validator = await oracle.db.get(validator_index);
+      if(validator) {
+        const res = await reqSlotInfo(slot, beacon);
         res !== undefined ? 
-          await validateSlot(user, res.body, contract) : 
-          await addMissedSlot(user); 
+          await validateSlot(validator, res.body, contract, db) : 
+          await addMissedSlot(validator, db); 
       }
     }
   });
   console.log("Listening for new finalized_checkpoints");
 }
 
-async function addMissedSlot(user: any) {
-  if(collections.users != undefined) {
-    user.missedSlots += 1;
-    await collections.users.updateOne({validatorIndex: user.validatorIndex}, { $set: user});
-    console.log(`Missed proposal: validator with index ${user.validatorIndex}`);
-  }
+async function addMissedSlot(validator: Validator, db: DB) {
+    validator.slashMiss += 1;
+    await db.insert(validator.index, validator);
+    console.log(`Missed proposal: validator with index ${validator.index}`);
 }
 
-async function validateSlot(user: any, body: any, contract: Contract) {
-  if(collections.users != undefined) {
-    const { fee_recipient, block_hash } = body.execution_payload;
-    const block: any = await contract.provider.getBlockWithTransactions(block_hash);
-    // Check builder not swapping address
-    if( (fee_recipient.toLowerCase() != contract.address.toLowerCase()) && 
-       (block.transactions[block.transactions.length - 1].to.toLowerCase() != contract.address.toLowerCase())) 
-      {
-        user.slashFee += 1;
-        console.log(`Proposed block with incorrect fee recipient: validator with index ${user.validatorIndex}`);
-      } else { 
-        // Activation
-        if(!user.firstBlockProposed) {
-          user.firstBlockProposed = true
-          console.log(`Activated: validator with index ${user.validatorIndex}`);
-        } 
-        console.log(`Proposed block: validator with index ${user.validatorIndex}`);
-      }
+async function validateSlot(
+  validator: Validator, 
+  body: any, 
+  contract: Contract, 
+  db: DB
+) {
+  const { fee_recipient, block_hash } = body.execution_payload;
+  const block: any = await contract.provider.getBlockWithTransactions(block_hash);
 
-      await collections.users.updateOne({validatorIndex: user.validatorIndex}, { $set: user});
-  }
+  // Check builder not swapping address
+  if( (fee_recipient.toLowerCase() != contract.address.toLowerCase()) && 
+     (block.transactions[block.transactions.length - 1].to.toLowerCase() != contract.address.toLowerCase())) 
+    {
+      validator.slashFee += 1;
+      console.log(`Proposed block with incorrect fee recipient: validator with index ${validator.index}`);
+    } else { 
+      // Activation
+      if(!validator.firstBlockProposed) {
+        validator.firstBlockProposed = true
+        console.log(`Activated: validator with index ${validator.index}`);
+      } 
+      console.log(`Proposed block: validator with index ${validator.index}`);
+    }
+  await db.insert(validator.index, validator)
 }
 
-async function isUser(contract: Contract, validator_index: number) : Promise<any> {
-  if(collections.users != undefined) {
-    const query = {validatorIndex: validator_index};
-    const user = await collections.users.findOne(query);
-    return user ? user : undefined;
-  }
-  return undefined;
-}
-
-async function reqSlotInfo(slot: number): Promise<any> {
-  const url = `${process.env.PRATER_NODE}/eth/v2/beacon/blocks/${slot}`;	
+async function reqSlotInfo(slot: number, beacon: string): Promise<any> {
+  const url = `${beacon}/eth/v2/beacon/blocks/${slot}`;	
   const headers = {
     method: "GET",
     headers: {
@@ -77,8 +76,8 @@ async function reqSlotInfo(slot: number): Promise<any> {
   return res.code === 404 ? undefined : res.data.message;
 }
 
-async function reqEpochSlots(epoch: number): Promise<any> {
-  const url = `${process.env.PRATER_NODE}/eth/v1/validator/duties/proposer/${epoch}`;	
+async function reqEpochSlots(epoch: number, beacon: string): Promise<any> {
+  const url = `${beacon}/eth/v1/validator/duties/proposer/${epoch}`;	
   const headers = {
     method: "GET",
     headers: {

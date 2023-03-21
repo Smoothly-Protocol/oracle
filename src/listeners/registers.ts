@@ -34,6 +34,7 @@ async function verifyValidator(
 		if(verified) {
 			const newUser: Validator = {
         index: index, 
+        eth1: eth1Addr.toLowerCase(),
         rewards: 0,
         slashMiss: 0,
         slashFee: 0, 
@@ -43,7 +44,7 @@ async function verifyValidator(
         exitRequested: false,
         active: true
       };
-      await oracle.db.insert(eth1Addr, index, newUser);
+      await oracle.db.insert(index, newUser);
       console.log(`Successfully created user: with validator ${index} for ${eth1Addr}`)
 		} else {
       console.log(`Onowned User: with validator ${index} for ${eth1Addr}`);

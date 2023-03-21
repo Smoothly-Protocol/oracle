@@ -9,7 +9,7 @@ export const EMPTY_ROOT: string = "0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996
 
 export const GOERLI: NetInfo = {
   rpc: "https://eth-goerli.alchemyapi.io/v2/zmsxPR7pKHtiLvAkZ1R61BYtCqnCg0yc",
-  contractAddress: "0x5FbDB2315678afecb367f032d93F642f64180aa3",
+  contractAddress: "0x83c48420e4D42020F0B4bd6843F82C4349666759",
   beacon: "http://unstable.prater.beacon-api.nimbus.team",
   beaconchainApi: "https://goerli.beaconcha.in"
 }

@@ -26,27 +26,27 @@ export class DB {
     }
   }
 
-  async insert(eth1: string, index: number, validator: Validator): Promise<void> {
-      const key = `${eth1}${index}`.toLowerCase();
+  async insert(index: number, validator: Validator): Promise<void> {
+      const key = `${index}`;
       const obj = JSON.stringify(validator);
       await this.db.put(Buffer.from(key), Buffer.from(obj));
   }
 
-  async get(eth1: string, index: number): Promise<Validator | undefined> {
-    const key = `${eth1}${index}`.toLowerCase();
+  async get(index: number): Promise<Validator | undefined> {
+    const key = `${index}`;
     const validator = await this.db.get(Buffer.from(key));
     return validator != null 
       ? JSON.parse(validator.toString()) 
       : undefined;
   }
 
-	async delete(eth1: string, index: number): Promise<void> {
-    const key = `${eth1}${index}`.toLowerCase();
+	async delete(index: number): Promise<void> {
+    const key = `${index}`;
     await this.db.del(Buffer.from(key));
 	}
 
-  async getProof(eth1: string, index: number): Promise<any> {
-    const key = Buffer.from(`${eth1}${index}`.toLowerCase());
+  async getProof(index: number): Promise<any> {
+    const key = Buffer.from(`${index}`);
     const root = this.db.root();
     const proof = await this.db.createProof(key);
     const value = await this.db.verifyProof(root, key, proof) as Buffer;

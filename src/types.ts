@@ -1,5 +1,6 @@
 export interface Validator {
   index: number, 
+  eth1: string,
   rewards: number, 
   slashMiss: number, 
   slashFee: number 

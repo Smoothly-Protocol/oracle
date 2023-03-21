@@ -26,6 +26,7 @@ describe("Exits", () => {
     // Hardcode user to db
     const newUser: Validator = {
       index: indexes[0], 
+      eth1: oracle.signer.address.toLowerCase(),
       rewards: 0,
       slashMiss: 0,
       slashFee: 0, 
@@ -36,7 +37,6 @@ describe("Exits", () => {
       active: true
     };
     await oracle.db.insert(
-      oracle.signer.address, 
       indexes[0],
       newUser 
     );
@@ -46,12 +46,12 @@ describe("Exits", () => {
   it("picks up and validates exit of validator from contract", async () => {
     await contract.requestExit(indexes); 
     await delay(5000);
-    const result: any = await oracle.db.get(oracle.signer.address, indexes[0])
+    const result: any = await oracle.db.get(indexes[0])
     assert.equal(result.exitRequested, true);
   }).timeout(20000);
 
   after(async () => {
-    await oracle.db.delete(oracle.signer.address, indexes[0])
+    await oracle.db.delete(indexes[0])
     oracle.stop();
   });
 });
