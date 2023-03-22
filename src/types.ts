@@ -15,7 +15,8 @@ export interface NetInfo {
   rpc: string,
   contractAddress: string, 
   beacon: string,
-  beaconchainApi: string
+  beaconchainApi: string,
+  deploymentEpoch: number
 }
 
 export interface Defaults {

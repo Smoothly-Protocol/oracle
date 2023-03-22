@@ -2,7 +2,7 @@ import EventSource from "eventsource";
 import { Oracle } from '../oracle';
 import { DB } from '../db';
 import { Validator } from '../types';
-import { Contract } from 'ethers';
+import { Contract, utils } from 'ethers';
 
 export async function BlockListener(oracle: Oracle) {
   const beacon = oracle.network.beacon;
@@ -12,22 +12,62 @@ export async function BlockListener(oracle: Oracle) {
 
   eth2.addEventListener('finalized_checkpoint', async (e)  => {
     const { epoch } = JSON.parse(e.data);	
-    const { data } = await reqEpochSlots(epoch, beacon);
+    processEpoch(epoch, beacon, db, contract, false);
+  });
 
-    console.log("Processing epoch:", Number(epoch));
+  console.log("Listening for new finalized_checkpoints");
+}
 
-    for(let i = 0; i < data.length; i++) {
-      const { slot, validator_index } = data[i];
-      const validator = await oracle.db.get(validator_index);
-      if(validator) {
-        const res = await reqSlotInfo(slot, beacon);
-        res !== undefined ? 
-          await validateSlot(validator, res.body, contract, db) : 
-          await addMissedSlot(validator, db); 
+export async function processEpoch(
+  epoch: number, 
+  beacon: string, 
+  db: DB,
+  contract: Contract,
+  syncing: boolean
+) {
+  const { data } = await reqEpochSlots(epoch, beacon);
+
+  console.log("Processing epoch:", Number(epoch));
+
+  for(let i = 0; i < data.length; i++) {
+    let res: any; 
+    const { slot, validator_index } = data[i];
+
+    // Filter events in that slot
+    if(syncing) {
+      res = await reqSlotInfo(slot, beacon);
+      if(res !== undefined) {
+        const { block_number } = res.body.execution_payload;
+        // Alchemy doesn't let me query more than 4 logs at once
+        const events1 = await contract.queryFilter({
+          address: contract.address,
+          topics: [
+           utils.id("Registered(address, uint)"),
+           utils.id("RewardsWithdrawal(address, uint)"),
+           utils.id("StakeWithdrawal(address, uint)"),
+           utils.id("StakeAdded(address, uint, uint)"),
+          ] 
+        }, Number(block_number), Number(block_number))
+        const events2 = await contract.queryFilter({
+          address: contract.address,
+          topics: [
+           utils.id("ExitRequested(address, uint[], uint)"),
+           utils.id("Epoch(uint, bytes32, bytes32, bytes32)")
+          ] 
+        }, Number(block_number), Number(block_number))
+        console.log(events1);
+        console.log(events2);
       }
     }
-  });
-  console.log("Listening for new finalized_checkpoints");
+
+    const validator = await db.get(validator_index);
+    if(validator) {
+      const res = await reqSlotInfo(slot, beacon);
+      res !== undefined ? 
+        await validateSlot(validator, res.body, contract, db) : 
+        await addMissedSlot(validator, db); 
+    }
+  }
 }
 
 async function addMissedSlot(validator: Validator, db: DB) {
@@ -90,3 +130,17 @@ async function reqEpochSlots(epoch: number, beacon: string): Promise<any> {
   return res;
 }
 
+export async function reqEpochCheckpoint(beacon: string): Promise<any> {
+  const url = `${beacon}/eth/v1/beacon/states/head/finality_checkpoints`;	
+  const headers = {
+    method: "GET",
+    headers: {
+      "Accept": "application/json",
+      "Content-Type": "application/json",
+    }
+  };
+  const req = await fetch(url, headers);
+  const res = await req.json();
+  const epoch = res.data.finalized.epoch;
+  return epoch;
+}

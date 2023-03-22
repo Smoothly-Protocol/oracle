@@ -52,4 +52,8 @@ export class DB {
     const value = await this.db.verifyProof(root, key, proof) as Buffer;
     return value != null ? [proof, value] : undefined;
   }
+
+  root(): Buffer {
+    return this.db.root();
+  }
 }
