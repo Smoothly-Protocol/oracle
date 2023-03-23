@@ -12,6 +12,7 @@ export async function BlockListener(oracle: Oracle) {
 
   eth2.addEventListener('finalized_checkpoint', async (e)  => {
     const { epoch } = JSON.parse(e.data);	
+    console.log("Processing epoch:", Number(e.data.slot));
     processEpoch(epoch, beacon, db, contract, false);
   });
 
@@ -27,15 +28,24 @@ export async function processEpoch(
 ) {
   const { data } = await reqEpochSlots(epoch, beacon);
 
-  console.log("Processing epoch:", Number(epoch));
+  console.log("Syncing epoch:", Number(epoch));
 
-  for(let i = 0; i < data.length; i++) {
-    let res: any; 
-    const { slot, validator_index } = data[i];
+  // Fetch slots in parallel
+  let req = data.map((r: any) => {
+    const { slot, validator_index } = r
+    return { 
+      res: reqSlotInfo(slot, beacon),
+      validator_index: validator_index,
+      _slot: slot
+    }
+  });
 
-    // Filter events in that slot
+  for(let slot of req) { 
+    const { _slot, validator_index } = slot;
+    const res: any = await slot.res;
+
+    // Filter events 
     if(syncing) {
-      res = await reqSlotInfo(slot, beacon);
       if(res !== undefined) {
         const { block_number } = res.body.execution_payload;
         // Alchemy doesn't let me query more than 4 logs at once
@@ -60,11 +70,11 @@ export async function processEpoch(
       }
     }
 
+    // Process beacon state
     const validator = await db.get(validator_index);
     if(validator) {
-      const res = await reqSlotInfo(slot, beacon);
       res !== undefined ? 
-        await validateSlot(validator, res.body, contract, db) : 
+        await validateSlot(validator, slot.body, contract, db) : 
         await addMissedSlot(validator, db); 
     }
   }
