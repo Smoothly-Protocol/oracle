@@ -50,8 +50,11 @@ export class Oracle extends Config {
     }
   }
 
+  // Rethink this to make it faster
+  // I'm thinking download all slots first concurrently and then process
+  // all of them
   async fullSync(current: number, to: number, db: DB): Promise<Buffer> {
-    if(current <= to) {
+    while(current <= to) {
       await processEpoch(current, this.network.beacon, db, this.contract, true);
       await this.fullSync(current+1, to, db);
     }

@@ -12,7 +12,7 @@ export const GOERLI: NetInfo = {
   contractAddress: "0x56EE0A17812D7CF5f2Db4ce892e4f2a211575132",
   beacon: "http://unstable.prater.beacon-api.nimbus.team",
   beaconchainApi: "https://goerli.beaconcha.in",
-  deploymentEpoch: 164097 
+  deploymentEpoch: 164323 
 }
 
 export const MAINNET: NetInfo = {

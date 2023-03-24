@@ -3,6 +3,7 @@ import { Oracle } from '../oracle';
 import { DB } from '../db';
 import { Validator } from '../types';
 import { Contract, utils } from 'ethers';
+import { filterLogs } from "../utils";
 
 export async function BlockListener(oracle: Oracle) {
   const beacon = oracle.network.beacon;
@@ -25,65 +26,55 @@ export async function processEpoch(
   db: DB,
   contract: Contract,
   syncing: boolean
-) {
+)  {
   const { data } = await reqEpochSlots(epoch, beacon);
 
   console.log("Syncing epoch:", Number(epoch));
 
   // Fetch slots in parallel
-  let req = data.map((r: any) => {
-    const { slot, validator_index } = r
-    return { 
-      res: reqSlotInfo(slot, beacon),
-      validator_index: validator_index,
-      _slot: slot
-    }
-  });
-
-  for(let slot of req) { 
-    const { _slot, validator_index } = slot;
-    const res: any = await slot.res;
-
-    // Filter events 
-    if(syncing) {
-      if(res !== undefined) {
-        const { block_number } = res.body.execution_payload;
-        // Alchemy doesn't let me query more than 4 logs at once
-        const events1 = await contract.queryFilter({
-          address: contract.address,
-          topics: [
-           utils.id("Registered(address, uint)"),
-           utils.id("RewardsWithdrawal(address, uint)"),
-           utils.id("StakeWithdrawal(address, uint)"),
-           utils.id("StakeAdded(address, uint, uint)"),
-          ] 
-        }, Number(block_number), Number(block_number))
-        const events2 = await contract.queryFilter({
-          address: contract.address,
-          topics: [
-           utils.id("ExitRequested(address, uint[], uint)"),
-           utils.id("Epoch(uint, bytes32, bytes32, bytes32)")
-          ] 
-        }, Number(block_number), Number(block_number))
-        console.log(events1);
-        console.log(events2);
+  let promises: Promise<any>[] = [];
+  for(let _slot of data) {
+    const { slot, validator_index } = _slot;
+    promises.push(reqSlotInfo(slot, beacon).then(async (s: any) => {
+      if(s !== undefined) {
+        const { block_number } = s.body.execution_payload;
+        const logs = await Promise.all([filterLogs(block_number, contract)]);
+        s["logs"] = logs[0];
+        return s;
+      } else {
+        return {
+          slot: slot, 
+          proposer_index: validator_index,
+          logs: []
+        };
       }
+    }))
+  }
+  const slots = await Promise.all(promises);
+
+  for(let _slot of slots) { 
+    const { proposer_index, body, logs } = _slot;
+
+    // Process eth1 logs
+    if(logs.length > 0) {
+      console.log(logs);
     }
 
     // Process beacon state
-    const validator = await db.get(validator_index);
+    const validator = await db.get(proposer_index);
     if(validator) {
-      res !== undefined ? 
-        await validateSlot(validator, slot.body, contract, db) : 
+      body !== undefined ? 
+        await validateSlot(validator, body, contract, db) : 
         await addMissedSlot(validator, db); 
     }
   }
 }
 
+
 async function addMissedSlot(validator: Validator, db: DB) {
-    validator.slashMiss += 1;
-    await db.insert(validator.index, validator);
-    console.log(`Missed proposal: validator with index ${validator.index}`);
+  validator.slashMiss += 1;
+  await db.insert(validator.index, validator);
+  console.log(`Missed proposal: validator with index ${validator.index}`);
 }
 
 async function validateSlot(
@@ -109,7 +100,7 @@ async function validateSlot(
       } 
       console.log(`Proposed block: validator with index ${validator.index}`);
     }
-  await db.insert(validator.index, validator)
+    await db.insert(validator.index, validator)
 }
 
 async function reqSlotInfo(slot: number, beacon: string): Promise<any> {
