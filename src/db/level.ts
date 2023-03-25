@@ -3,7 +3,11 @@ import { Level } from 'level';
 
 const ENCODING_OPTS = { keyEncoding: 'buffer', valueEncoding: 'buffer' };
 
-export class LevelDB implements DB {
+interface ITERATOR {
+  iterator(filter: object): Promise<object>;
+}
+
+export class LevelDB implements DB, ITERATOR {
   _leveldb: Level<string, any>
 
   constructor(leveldb: Level<string, any>) {
@@ -34,6 +38,14 @@ export class LevelDB implements DB {
 
   async batch(opStack: BatchDBOp[]): Promise<void> {
     await this._leveldb.batch(opStack, ENCODING_OPTS)
+  }
+
+  async iterator(filter: object): Promise<any> {
+    let values = [];
+    for await (const [key, value] of this._leveldb.iterator(filter)) {
+      values.push(JSON.parse("{"+value.split("{")[1]));
+    }
+    return values;
   }
 
   copy(): DB {

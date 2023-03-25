@@ -7,17 +7,15 @@ import { Validator } from '../types';
 
 export class DB {
   db: Trie;
+  level: LevelDB;
+  mapDB: MapDB;
 
   constructor(_root: string, _testing: boolean) {
     try {
-      let db;
-      if(_testing) {
-        db = new MapDB(); 
-      } else {
-        db = new LevelDB(new Level(`${DEFAULTS.folder}/db`))
-      }
+      this.mapDB = new MapDB(); 
+      this.level = new LevelDB(new Level(`${DEFAULTS.folder}/db`))
       this.db = new Trie({
-        db: db,
+        db: _testing ? this.mapDB : this.level,
         useKeyHashing: true,
         root: Buffer.from(_root.slice(2), 'hex')
       })
@@ -44,6 +42,11 @@ export class DB {
     const key = `${index}`;
     await this.db.del(Buffer.from(key));
 	}
+
+  async iterateAll(): Promise<any> {
+    const values = await this.level.iterator({ gt: 'a'});
+    return values;
+  }
 
   async getProof(index: number): Promise<any> {
     const key = Buffer.from(`${index}`);
