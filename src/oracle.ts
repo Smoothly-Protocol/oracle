@@ -10,6 +10,7 @@ import {
   processEpoch,
   reqEpochCheckpoint
 } from "./listeners";
+import { Rebalancer } from "./jobs";
 
 export class Oracle extends Config {
   db: DB;  
@@ -59,6 +60,10 @@ export class Oracle extends Config {
       await this.fullSync(current+1, to, db);
     }
     return db.root();
+  }
+
+  async rebalance(): Promise<void> {
+    Rebalancer(this); 
   }
 
   stop(): void {

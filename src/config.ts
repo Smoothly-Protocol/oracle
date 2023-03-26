@@ -3,7 +3,8 @@ import {
   providers, 
   Contract, 
   Wallet, 
-  ContractFactory 
+  ContractFactory,
+  BigNumber 
 } from "ethers"; 
 import { 
   artifact,
@@ -46,6 +47,10 @@ export class Config {
     } catch(err: any) {
       throw new Error("Network configuration error");
     }
+  }
+
+  async getBalance(): Promise<BigNumber> {
+    return await this.contract.provider.getBalance(this.contract.address)
   }
 
   validateWallet(pk: string): Wallet {

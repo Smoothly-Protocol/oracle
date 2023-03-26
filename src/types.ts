@@ -1,3 +1,5 @@
+import { BigNumber } from "ethers"; 
+
 export interface Validator {
   index: number, 
   eth1: string,
@@ -9,6 +11,13 @@ export interface Validator {
   firstMissedSlot: boolean,  
   exitRequested: boolean,
   active: boolean
+}
+
+export interface Rebalancer {
+  validValidators: Validator[],  
+  slashedValidators: Validator[],  
+  tRewards: BigNumber,
+  tStake: BigNumber
 }
 
 export interface NetInfo {

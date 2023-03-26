@@ -1,63 +1,59 @@
 import * as cron from "node-cron";
-import * as dotenv from 'dotenv';
-import * as path from 'path';
-
 import { providers, Contract, utils, BigNumber, Wallet } from "ethers";
+import { Validator } from "../types";
+import { Oracle } from "../oracle";
 
-// DB
-import { collections } from "../db/src/database.service";
-import User from "../db/models/user";
+export async function Rebalancer (oracle: Oracle) {
+  //cron.schedule('* * * * *', async () => {
+/*
+    const validator: Validator = {
+      index: 400, 
+      eth1: "0x9993994103413249124812835095858585".toLowerCase(),
+      rewards: 10,
+      slashMiss: 0,
+      slashFee: 1, 
+      stake: 0.65e18,
+      firstBlockProposed: false, 
+      firstMissedSlot: false,
+      exitRequested: false,
+      active: true
+    };
+		const validator2 = validator;
+		validator2.index = 10;
+		validator2.rewards = 1000;
+		validator2.slashFee = 0;
 
-// Load Environment variables
-dotenv.config({
-  path: path.resolve(__dirname, '../.env')
-});
+		await oracle.db.insert(validator.index, validator);
+		await oracle.db.insert(validator2.index, validator2);
+		console.log(await oracle.db.root().toString('hex'));
+*/
+		const contract = oracle.contract;
+    const { validValidators, slashedValidators, tRewards, tStake } = await oracle.db.getRebalancerData();
 
-const pk = process.env.PRIVATE_KEY as string;
-const FEE = 25; // 2.5% Protocol_fee on rebalance
-const SLASH_FEE = utils.parseEther("0.05");
-const MISSED_PROPOSAL_FEE = utils.parseEther("0.015");
+		const total = (await oracle.getBalance()).sub(tRewards.add(tStake));
+		console.log("Total", total);
 
-export async function startRebalancerCron (contract: Contract) {
-  cron.schedule('0 22 * * *', async () => {
-    if(collections.users != undefined) {
+		if(total.gt(utils.parseEther("0.001")) && validValidators.length > 0) {
+			let [usersSlashed, slashedEth] = await slashUsers(slashedValidators, contract);
+			let [usersIncluded, fee] = await fundUsers(validValidators, total.add(slashedEth), contract);
+			let obj: any = usersIncluded.concat(usersSlashed);
 
-      const validUsers = await collections.users.find({
-        slashFee: { $eq: 0 } ,
-        missedSlots: { $eq: 0 } 
-      }).toArray();
-
-      const slashedUsers = await collections.users.find({
-        $or: [
-          {slashFee: { $gt: 0 }},
-          {missedSlots: { $gt: 0 }} 
-        ]
-      }).toArray();
-
-      const total = await contract.getRebalanceRewards();
-      console.log("Total", total);
-
-      if(total.gt(utils.parseEther("0.0001")) && validUsers.length > 0) {
-        let [usersSlashed, slashedEth] = await slashUsers(slashedUsers, contract);
-        let [usersIncluded, fee] = await fundUsers(validUsers, total.add(slashedEth), contract);
-        let obj: any = usersIncluded.concat(usersSlashed);
-
-        console.log("Total slashed ETH", slashedEth); 
-        // Call rebalance in contract
-        try {
-          const signer = new Wallet(pk, contract.provider);
-          const tx = await contract.connect(signer).rebalanceRewards(obj, fee);
-        } catch(err) {
-          console.log(err);
-        }
-      } else {
-        const currentTimestamp = Math.floor(Date.now() / 1000);
-        console.log(`Didn't recieve any block rewards for today ${currentTimestamp}`);
-      }
-    }
-  });
+			console.log("Total slashed ETH", slashedEth); 
+			// Call rebalance in contract
+			try {
+				const signer = new Wallet(pk, contract.provider);
+				const tx = await contract.connect(signer).rebalanceRewards(obj, fee);
+			} catch(err) {
+				console.log(err);
+			}
+		} else {
+			const currentTimestamp = Math.floor(Date.now() / 1000);
+			console.log(`Didn't recieve any block rewards for today ${currentTimestamp}`);
+		}
+	}
+ // });
 }
-
+/*
 async function includeValidUsers(users: Array<User>, contract: Contract): Promise<any> {
   let obj = [];
   for(let user of users) {
@@ -140,4 +136,4 @@ async function slashUsers(users: Array<any>, contract: Contract): Promise<any> {
   }
   return [obj, tSlashes.add(tRewards)];
 }
-
+*/

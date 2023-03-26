@@ -1,13 +1,10 @@
 import { BatchDBOp, DB } from '@ethereumjs/trie'
 import { Level } from 'level';
+import { Validator } from '../types';
 
 const ENCODING_OPTS = { keyEncoding: 'buffer', valueEncoding: 'buffer' };
 
-interface ITERATOR {
-  iterator(filter: object): Promise<object>;
-}
-
-export class LevelDB implements DB, ITERATOR {
+export class LevelDB implements DB {
   _leveldb: Level<string, any>
 
   constructor(leveldb: Level<string, any>) {
@@ -38,14 +35,6 @@ export class LevelDB implements DB, ITERATOR {
 
   async batch(opStack: BatchDBOp[]): Promise<void> {
     await this._leveldb.batch(opStack, ENCODING_OPTS)
-  }
-
-  async iterator(filter: object): Promise<any> {
-    let values = [];
-    for await (const [key, value] of this._leveldb.iterator(filter)) {
-      values.push(JSON.parse("{"+value.split("{")[1]));
-    }
-    return values;
   }
 
   copy(): DB {

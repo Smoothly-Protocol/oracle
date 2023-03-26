@@ -21,7 +21,7 @@ async function main(): Promise<void> {
     const network = opts.network;
     const oracle = new Oracle(network, pk);
     // TODO: Sync node from beginning
-    oracle.sync();
+    oracle.rebalance();
   } catch(err) {
     console.error(err);
   }
