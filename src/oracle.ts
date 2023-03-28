@@ -1,3 +1,4 @@
+import * as cron from "node-cron";
 import { Config } from "./config";
 import { DB } from "./db";
 import { EMPTY_ROOT } from "./utils";
@@ -63,7 +64,9 @@ export class Oracle extends Config {
   }
 
   async rebalance(): Promise<void> {
-    Rebalancer(this); 
+  //cron.schedule('* * * * *', async () => {
+    await Rebalancer(this); 
+  //});
   }
 
   stop(): void {

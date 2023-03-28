@@ -1,5 +1,4 @@
 #!/usr/bin/env bash
-echo $1
 echo "Starting anvil as private network..."
 anvil > /dev/null 2>&1 &
 sleep 3

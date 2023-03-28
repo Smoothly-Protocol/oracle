@@ -416,6 +416,14 @@
   resolved "https://registry.yarnpkg.com/@noble/secp256k1/-/secp256k1-1.6.3.tgz#7eed12d9f4404b416999d0c87686836c4c5c9b94"
   integrity sha512-T04e4iTurVy7I8Sw4+c5OSN9/RkPlo1uKxAomtxQNLq8j1uPAqnsqG1bqvY3Jv7c13gyr6dui0zmh/I3+f/JaQ==
 
+"@openzeppelin/merkle-tree@^1.0.4":
+  version "1.0.4"
+  resolved "https://registry.yarnpkg.com/@openzeppelin/merkle-tree/-/merkle-tree-1.0.4.tgz#9019c2990ffdb56fca232c210d1e1132cbd68924"
+  integrity sha512-gNMYRgIn7mkPWpE2sBGfE12fFM5pfbGrDr0leaMdCkmFyccQlqWYL4p0FedcVqN6X0ETJGTa+UKF1fUWAzv9VQ==
+  dependencies:
+    "@ethersproject/abi" "^5.7.0"
+    ethereum-cryptography "^1.1.2"
+
 "@scure/base@~1.1.0":
   version "1.1.1"
   resolved "https://registry.yarnpkg.com/@scure/base/-/base-1.1.1.tgz#ebb651ee52ff84f420097055f4bf46cfba403938"

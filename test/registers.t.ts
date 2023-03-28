@@ -10,7 +10,7 @@ import * as dotenv from 'dotenv';
 import * as path from 'path';
 
 //disable logs
-console.log = function () {};
+//console.log = function () {};
 
 // Load Environment variables
 dotenv.config({

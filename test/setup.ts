@@ -28,12 +28,13 @@ export async function setup(): Promise<Oracle> {
 	try {
 		const provider = new providers.JsonRpcProvider("http://127.0.0.1:8545");
 		const [owner] = await getSigners(provider);
+		const oracle = new Oracle("local", pks[0]);
 		const contract = await(new ContractFactory(
 			artifact["abi"], 
 			artifact["bytecode"],
 			owner
 		)).deploy();
-		const oracle = new Oracle("local", pks[0]).updateContract(contract);
+    oracle.updateContract(contract);
     return oracle;
 	} catch (err: any) {
 		throw new Error(err);

@@ -3,19 +3,18 @@ import { BigNumber } from "ethers";
 export interface Validator {
   index: number, 
   eth1: string,
-  rewards: number, 
+  rewards: BigNumber, 
   slashMiss: number, 
   slashFee: number 
-  stake: number, 
+  stake: BigNumber, 
   firstBlockProposed: boolean, 
   firstMissedSlot: boolean,  
   exitRequested: boolean,
   active: boolean
 }
 
-export interface Rebalancer {
-  validValidators: Validator[],  
-  slashedValidators: Validator[],  
+export interface TrieRebalance {
+  includedValidators: Validator[],  
   tRewards: BigNumber,
   tStake: BigNumber
 }

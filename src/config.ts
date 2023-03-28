@@ -37,7 +37,7 @@ export class Config {
     this.contract = new Contract(
       this.network.contractAddress,
       artifact["abi"],
-      new providers.JsonRpcProvider(this.network.rpc)
+      this.signer//new providers.JsonRpcProvider(this.network.rpc)
     );
   }
 

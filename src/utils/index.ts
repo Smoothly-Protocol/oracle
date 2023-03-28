@@ -3,7 +3,7 @@ export {
   FEE, 
   STAKE_FEE, 
   SLASH_FEE, 
-  MISSED_PROPOSAL_FEE,
+  MISS_FEE,
   GOERLI,
   MAINNET,
   LOCAL,

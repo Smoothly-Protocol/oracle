@@ -2,13 +2,13 @@ import { assert } from "chai";
 import { Trie } from '@ethereumjs/trie';
 import { setup } from "./setup";
 import { getProof, delay } from "./utils";
-import { providers, Contract, Wallet, utils } from "ethers";
+import { BigNumber, providers, Contract, Wallet, utils } from "ethers";
 import { Oracle } from '../src/oracle';
 import { STAKE_FEE } from "../src/utils";
 import { Validator } from "../src/types";
 
 //disable logs
-console.log = function () {};
+//console.log = function () {};
 
 describe("Exits", () => {
   let oracle: Oracle;
@@ -27,7 +27,7 @@ describe("Exits", () => {
     const newUser: Validator = {
       index: indexes[0], 
       eth1: oracle.signer.address.toLowerCase(),
-      rewards: 0,
+      rewards: BigNumber.from("0"),
       slashMiss: 0,
       slashFee: 0, 
       stake: STAKE_FEE,

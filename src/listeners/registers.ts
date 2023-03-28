@@ -35,7 +35,7 @@ async function verifyValidator(
 			const newUser: Validator = {
         index: index, 
         eth1: eth1Addr.toLowerCase(),
-        rewards: 0,
+        rewards: BigNumber.from("0"),
         slashMiss: 0,
         slashFee: 0, 
         stake: STAKE_FEE,
