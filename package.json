@@ -7,7 +7,7 @@
 	"license": "MIT",
 	"scripts": {
 		"start": "NODE_NO_WARNINGS=1 ts-node ./src/index.ts",
-    "test": " ./scripts/start_anvil.sh && NODE_NO_WARNINGS=1 mocha -r ts-node/register 'test/**.t.ts'"
+		"test": "./scripts/test.sh"
 	},
 	"devDependencies": {
 		"@types/chai": "^4.3.4",
@@ -21,6 +21,7 @@
 		"@ethereumjs/rlp": "^4.0.0",
 		"@ethereumjs/trie": "^5.0.0",
 		"@ethereumjs/util": "^8.0.2",
+		"@openzeppelin/merkle-tree": "^1.0.4",
 		"@types/cors": "^2.8.12",
 		"@types/express": "^4.17.14",
 		"@types/node-cron": "^3.0.4",
