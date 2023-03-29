@@ -1,2 +1,2 @@
 export { artifact } from "./artifact";
-export { delay, getProof } from "./helpers";
+export { delay, getProof, getMerkleProof } from "./helpers";

@@ -24,14 +24,10 @@ export class Oracle extends Config {
   }
 
   start(): void {
-    if(this.synced) {
       Registered(this);
       ExitRequested(this);
       VoluntaryExits(this);
       BlockListener(this);
-    } else {
-      this.sync();
-    }
   }
 
   async sync(): Promise<void> {

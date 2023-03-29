@@ -1,9 +1,11 @@
 import { Contract, utils, BigNumber } from "ethers";
 import { Validator, TrieRebalance } from "../types";
-import { MISS_FEE, SLASH_FEE, FEE, STAKE_FEE } from "../utils";
+import { MISS_FEE, SLASH_FEE, FEE, STAKE_FEE, DEFAULTS } from "../utils";
 import { Oracle } from "../oracle";
 import { DB } from "../db";
 import { StandardMerkleTree } from "@openzeppelin/merkle-tree";
+import fs from "fs";
+import * as path from 'path';
 
 export async function Rebalancer (oracle: Oracle) {
     try {
@@ -26,6 +28,7 @@ export async function Rebalancer (oracle: Oracle) {
         withdrawalsRoot,
         exitsRoot,
         db.root(),
+        fee
       );
       await tx.wait();
     } catch(err) {
@@ -47,7 +50,7 @@ async function processRebalance(db: DB): Promise<TrieRebalance> {
         if(validator.slashFee !== 0 || validator.slashMiss !== 0) {
           validator = await slashValidator(validator, db);
         } else if(validator.active) {
-          if(validator.stake > SLASH_FEE) {
+          if(BigNumber.from(validator.stake).eq(SLASH_FEE)) {
             includedValidators.push(validator);
           }
         }
@@ -89,7 +92,6 @@ async function slashValidator(validator: Validator, db: DB): Promise<Validator> 
   }
 
   // Calculate eth to slash
-  try{
   if( isSlashed ) {
     const missedSlashes = MISS_FEE.mul(BigNumber.from(`${missedSlots}`));
     const feeSlashes = SLASH_FEE.mul(BigNumber.from(`${validator.slashFee}`));
@@ -98,16 +100,13 @@ async function slashValidator(validator: Validator, db: DB): Promise<Validator> 
     
     // Make sure user has enough stake
     validator.stake = BigNumber.from(validator.stake);
-    if(validator.stake.lt(tFees)) {
+    if(validator.stake.lte(tFees)) {
       tFees = validator.stake; 
       validator.active = false;
     } 
     validator.stake = validator.stake.sub(tFees);
   }
-  } catch(err) {
-    console.log(err)
-  }
-
+  
   // Update db
   validator.slashFee = 0;
   validator.slashMiss = 0;
@@ -130,28 +129,40 @@ async function generateTrees(db: DB): Promise<string[]> {
       })
       .on('end', fulfilled);
     });
-    const withdrawalsRoot = StandardMerkleTree.of(
+    const withdrawalsTree = StandardMerkleTree.of(
       withdrawals, 
       ["address", "uint256"]
-    ).root;
-    const exitsRoot = StandardMerkleTree.of(
+    );
+    const exitsTree = StandardMerkleTree.of(
       exits, 
       ["address", "uint256"]
-    ).root;
-    return [withdrawalsRoot, exitsRoot];
+    );
+    fs.writeFileSync(
+      path.resolve(__dirname, "../../.smoothly/withdrawals.json"), 
+      JSON.stringify(withdrawalsTree.dump())
+    )
+    fs.writeFileSync(
+      path.resolve(__dirname, "../../.smoothly/exits.json"), 
+      JSON.stringify(exitsTree.dump())
+    )
+    return [withdrawalsTree.root, exitsTree.root];
   } catch(err: any) {
     throw new Error(`Fail to generate Trees: ${err}`);
   }
 }
 
 async function fundUsers(includedValidators: Validator[], total: BigNumber, db: DB): Promise<BigNumber> {
-  const _fee = total.mul(FEE).div(1000);
-  const validatorShare = total.sub(_fee).div(includedValidators.length);
-  for(let validator of includedValidators) {
-    validator.rewards = BigNumber.from(validator.rewards).add(validatorShare);
-    await db.insert(validator.index, validator);
-    console.log(`Funded ${validator.index} with ${utils.formatEther(validatorShare)}`); 
+  try { 
+    const _fee = total.mul(FEE).div(1000);
+    const validatorShare = total.sub(_fee).div(includedValidators.length);
+    for(let validator of includedValidators) {
+      validator.rewards = BigNumber.from(validator.rewards).add(validatorShare);
+      await db.insert(validator.index, validator);
+      console.log(`Funded ${validator.index} with ${utils.formatEther(validatorShare)}`); 
+    }
+    return _fee;
+  } catch (err: any) {
+    throw new Error("No validators to fund on rebalance");
   }
-  return _fee;
 }
 
