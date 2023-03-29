@@ -1,11 +1,12 @@
-import { Contract, utils, BigNumber } from "ethers";
-import { Validator, TrieRebalance } from "../types";
-import { MISS_FEE, SLASH_FEE, FEE, STAKE_FEE, DEFAULTS } from "../utils";
-import { Oracle } from "../oracle";
-import { DB } from "../db";
-import { StandardMerkleTree } from "@openzeppelin/merkle-tree";
 import fs from "fs";
 import * as path from 'path';
+import { Contract, utils, BigNumber } from "ethers";
+import { StandardMerkleTree } from "@openzeppelin/merkle-tree";
+import { Validator, TrieRebalance } from "../types";
+import { MISS_FEE, SLASH_FEE, FEE, STAKE_FEE } from "../utils";
+import { DEFAULTS } from '../config';
+import { Oracle } from "./oracle";
+import { DB } from "../db";
 
 export async function Rebalancer (oracle: Oracle) {
     try {

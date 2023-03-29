@@ -1,7 +1,7 @@
 import { providers, Contract, utils, BigNumber } from "ethers";
-import { ValidatorInfo, Validator } from "../types";
+import { ValidatorInfo, Validator } from "../../types";
 import { Oracle } from '../oracle';
-import { STAKE_FEE } from "../utils";
+import { STAKE_FEE } from "../../utils";
 
 export function Registered(oracle: Oracle): void {
   const contract = oracle.contract;
@@ -12,7 +12,7 @@ export function Registered(oracle: Oracle): void {
 	console.log("Listening to register events");
 }
 
-async function verifyValidator(
+export async function verifyValidator(
   eth1Addr: string, 
   id: number,
   oracle: Oracle 

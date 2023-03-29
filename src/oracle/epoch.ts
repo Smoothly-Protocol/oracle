@@ -1,20 +1,24 @@
 import EventSource from "eventsource";
-import { Oracle } from '../oracle';
+import { Oracle } from './oracle';
 import { DB } from '../db';
 import { Validator } from '../types';
 import { Contract, utils } from 'ethers';
 import { filterLogs } from "../utils";
+import { 
+  verifyValidator, 
+  validateExitRequest,
+  validateWithdrawalRewards,
+  validateWithdrawalStake,
+  validateAddedStake
+} from "./events";
 
-export async function BlockListener(oracle: Oracle) {
-  const beacon = oracle.network.beacon;
-  const db = oracle.db;
-  const contract = oracle.contract;
-  const eth2 = new EventSource(`${beacon}/eth/v1/events?topics=finalized_checkpoint`);
+export async function EpochListener(oracle: Oracle) {
+  const eth2 = new EventSource(`${oracle.network.beacon}/eth/v1/events?topics=finalized_checkpoint`);
 
   eth2.addEventListener('finalized_checkpoint', async (e)  => {
     const { epoch } = JSON.parse(e.data);	
     console.log("Processing epoch:", Number(e.data.slot));
-    processEpoch(epoch, beacon, db, contract, false);
+    processEpoch(epoch, oracle);
   });
 
   console.log("Listening for new finalized_checkpoints");
@@ -22,11 +26,11 @@ export async function BlockListener(oracle: Oracle) {
 
 export async function processEpoch(
   epoch: number, 
-  beacon: string, 
-  db: DB,
-  contract: Contract,
-  syncing: boolean
+  oracle: Oracle,
 )  {
+  const beacon = oracle.network.beacon;
+  const db = oracle.db;
+  const contract = oracle.contract;
   const { data } = await reqEpochSlots(epoch, beacon);
 
   console.log("Syncing epoch:", Number(epoch));
@@ -57,7 +61,34 @@ export async function processEpoch(
 
     // Process eth1 logs
     if(logs.length > 0) {
-      console.log(logs);
+      for(let log of logs) {
+        const event = log.event;
+        const args = log.args;
+        switch(event) {
+          case 'Registered':
+            await verifyValidator(args[0], args[1], oracle);
+            break;
+          case 'RewardsWithdrawal':
+            await validateWithdrawalRewards(args[0], args[1], oracle);
+            break;
+          case 'StakeWithdrawal':
+            await validateWithdrawalStake(args[0], args[1], oracle);
+            break;
+          case 'StakeAdded':
+            await validateAddedStake(args[0], args[1], oracle);
+            break;
+          case 'ExitRequested':
+            await validateExitRequest(args[0], args[1], oracle);
+            break;
+          case 'Epoch':
+            break;
+        }  
+      }
+    }
+
+    //Process voluntary_exit
+    if(body && body.voluntary_exits.length > 0) {
+      await voluntaryExits(body.voluntary_exits, db);
     }
 
     // Process beacon state
@@ -70,6 +101,17 @@ export async function processEpoch(
   }
 }
 
+async function voluntaryExits(data: any, db: DB) { 
+  for(let exit of data) {
+    const index = exit.message.validator_index;
+    const validator = await db.get(index);
+    if(validator) {
+      validator.active = false;
+      await db.insert(index, validator);
+      console.log("Voluntary exit: validator with index", index);
+    }
+  }
+}
 
 async function addMissedSlot(validator: Validator, db: DB) {
   validator.slashMiss += 1;

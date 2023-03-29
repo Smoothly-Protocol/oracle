@@ -1,4 +1,4 @@
-import { NetInfo, Defaults } from "./types";
+import { NetInfo, Defaults } from "../types";
 import { 
   providers, 
   Contract, 
@@ -7,11 +7,11 @@ import {
   BigNumber 
 } from "ethers"; 
 import { 
-  artifact,
   GOERLI,
   MAINNET,
   LOCAL
-} from './utils';
+} from './networks';
+import { artifact } from '../utils';
 
 export class Config {
   contract: Contract;

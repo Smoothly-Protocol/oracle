@@ -1,17 +1,13 @@
 import * as cron from "node-cron";
-import { Config } from "./config";
-import { DB } from "./db";
-import { EMPTY_ROOT } from "./utils";
+import { Config } from "../config";
+import { DB } from "../db";
+import { EMPTY_ROOT } from "../utils";
 import { Contract, utils } from "ethers"; 
 import { 
-  Registered, 
-  ExitRequested,
-  VoluntaryExits,
-  BlockListener,
   processEpoch,
   reqEpochCheckpoint
-} from "./listeners";
-import { Rebalancer } from "./jobs";
+} from "./epoch";
+import { Rebalancer } from "./rebalancer";
 
 export class Oracle extends Config {
   db: DB;  
@@ -24,10 +20,12 @@ export class Oracle extends Config {
   }
 
   start(): void {
+    /*
       Registered(this);
       ExitRequested(this);
       VoluntaryExits(this);
       BlockListener(this);
+     */
   }
 
   async sync(): Promise<void> {
@@ -53,7 +51,7 @@ export class Oracle extends Config {
   // all of them
   async fullSync(current: number, to: number, db: DB): Promise<Buffer> {
     while(current <= to) {
-      await processEpoch(current, this.network.beacon, db, this.contract, true);
+      await processEpoch(current, this);
       await this.fullSync(current+1, to, db);
     }
     return db.root();

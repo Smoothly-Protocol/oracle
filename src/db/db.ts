@@ -1,7 +1,7 @@
 import { Trie, MapDB } from '@ethereumjs/trie'
 import { RLP } from '@ethereumjs/rlp'
 import { Level } from 'level';
-import { DEFAULTS } from '../utils';
+import { DEFAULTS } from '../config';
 import { LevelDB } from './level';
 import { Validator } from '../types';
 import { BigNumber } from "ethers";
