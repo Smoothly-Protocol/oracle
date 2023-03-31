@@ -11,6 +11,7 @@ export async function getProof(user: any, trie: Trie) {
 export const delay = (ms: number) => new Promise(res => setTimeout(res, ms));
 
 export function getMerkleProof(tree: any, addr: string): any {
+  let arr: Array<any> = [];
   for (const [i, v] of tree.entries()) {
     if(v[0] === addr) {
       return tree.getProof(i);

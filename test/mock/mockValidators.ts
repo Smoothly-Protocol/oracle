@@ -29,7 +29,7 @@ export const validators: Validator[] = [
   },
   {
     index: 300, 
-    eth1: "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266".toLowerCase(),
+    eth1: "0xf38Fd6e51aad88F6F4ce6aB8827279cffFb92266".toLowerCase(),
     rewards: BigNumber.from("0"),
     slashMiss: 0,
     slashFee: 0, 
@@ -41,7 +41,7 @@ export const validators: Validator[] = [
   },
   {
     index: 400, 
-    eth1: "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266".toLowerCase(),
+    eth1: "0xf38Fd6e51aad88F6F4ce6aB8827279cffFb92266".toLowerCase(),
     rewards: BigNumber.from("0"),
     slashMiss: 0,
     slashFee: 0, 

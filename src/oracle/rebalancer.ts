@@ -117,27 +117,37 @@ async function slashValidator(validator: Validator, db: DB): Promise<Validator> 
 }
 
 async function generateTrees(db: DB): Promise<string[]> {
-  let withdrawals: Array<[string, BigNumber]> = [];
-  let exits: Array<[string, BigNumber]> = [];
+  let withdrawals: Array<[string, number, BigNumber]> = [];
+  let exits: Array<[string, number, BigNumber]> = [];
   try { 
     const stream = await db.getStream();
     await new Promise((fulfilled) => { 
       stream
       .on('data', async (data: any) => {
         let validator = JSON.parse(data.value.toString());
-        withdrawals.push([validator.eth1, validator.rewards]);
-        exits.push([validator.eth1, validator.stake]);
+        if(BigNumber.from(validator.rewards).gt(0)) {
+          withdrawals.push([validator.eth1, validator.index, validator.rewards]);
+        } 
+        if(validator.exitRequested) {
+          console.log("exit requested");
+          exits.push([validator.eth1, validator.index, validator.stake]);
+          validator.exitRequested = false;
+          await db.insert(validator.index, validator);
+        }
       })
       .on('end', fulfilled);
     });
+    const emptyTree = [["0x0000000000000000000000000000000000000000", [0], BigNumber.from("0")]];
     const withdrawalsTree = StandardMerkleTree.of(
-      withdrawals, 
-      ["address", "uint256"]
+      withdrawals.length > 0 ? packValidators(withdrawals, []) : emptyTree,
+      ["address", "uint[]", "uint"]
     );
     const exitsTree = StandardMerkleTree.of(
-      exits, 
-      ["address", "uint256"]
+      exits.length > 0 ? packValidators(exits, []) : emptyTree,
+      ["address", "uint[]", "uint"]
     );
+
+    // Write to disk
     fs.writeFileSync(
       path.resolve(__dirname, "../../.smoothly/withdrawals.json"), 
       JSON.stringify(withdrawalsTree.dump())
@@ -167,3 +177,34 @@ async function fundUsers(includedValidators: Validator[], total: BigNumber, db: 
   }
 }
 
+function packValidators(
+  validators: Array<[string, number, BigNumber]>,
+  result: Array<[string, number[], BigNumber]>
+) 
+: Array<[string, number[], BigNumber]> {
+
+  if(validators.length === 0) {
+    return result;
+  }
+
+  let arr: number[] = [validators[0][1]]; 
+  result.push([validators[0][0], arr, BigNumber.from(validators[0][2])]) ;
+  validators.splice(0,1);
+
+  let tmp = [...validators]
+  let pos = result.length - 1;
+  for(let x = 0; x < validators.length; x++) {
+    if(result[pos][0] === validators[x][0]) {
+      result[pos][1].push(validators[x][1]);
+      result[pos][2] = result[pos][2].add(validators[x][2]);
+      for(let i = 0; i < tmp.length; i++) {
+        if(tmp[i] === validators[x]){
+          tmp.splice(i,1);
+          break;
+        }
+      }
+    }
+  }
+
+  return packValidators(tmp, result);
+}

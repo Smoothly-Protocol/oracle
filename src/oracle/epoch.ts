@@ -69,16 +69,16 @@ export async function processEpoch(
             await verifyValidator(args[0], args[1], oracle);
             break;
           case 'RewardsWithdrawal':
-            await validateWithdrawalRewards(args[0], args[1], oracle);
+            await validateWithdrawalRewards(args[0], args[1], args[2], oracle);
             break;
           case 'StakeWithdrawal':
-            await validateWithdrawalStake(args[0], args[1], oracle);
+            await validateWithdrawalStake(args[0], args[1], args[2], oracle);
             break;
           case 'StakeAdded':
-            await validateAddedStake(args[0], args[1], oracle);
+            await validateAddedStake(args[0], args[1], args[2], oracle);
             break;
           case 'ExitRequested':
-            await validateExitRequest(args[0], args[1], oracle);
+            await validateExitRequest(args[0], args[1], args[2], oracle);
             break;
           case 'Epoch':
             break;

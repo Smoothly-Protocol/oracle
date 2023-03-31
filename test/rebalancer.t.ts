@@ -3,10 +3,10 @@ import { setup } from "./setup";
 import { validators } from "./mock";
 import { utils, Wallet, BigNumber } from "ethers";
 import { Validator } from "../src/types";
-import { Oracle } from "../src/oracle";
+import { Oracle, WithdrawalRequested } from "../src/oracle";
 import { STAKE_FEE, FEE } from "../src/utils";
 import { StandardMerkleTree } from "@openzeppelin/merkle-tree";
-import { getMerkleProof } from "./utils";
+import { delay } from "./utils";
 import fs from "fs";
 import * as path from 'path';
 
@@ -25,15 +25,16 @@ describe("Rebalancer", () => {
 		} 
 	})
 
-	beforeEach(async () => {
-		// Simulate value recieved by validators 
-		await oracle.signer.sendTransaction({
-			value: utils.parseEther("0.5"),
-			to: oracle.contract.address
-		});
-	});
 
 	describe("Fund Validators", () => {
+    beforeEach(async () => {
+      // Simulate value recieved by validators 
+      await oracle.signer.sendTransaction({
+        value: utils.parseEther("0.5"),
+        to: oracle.contract.address
+      });
+    });
+
 		it("funds all validators evenly with fee", async () => {
 			const fee = utils.parseEther("0.1").mul(FEE).div(1000);
 			await oracle.rebalance();
@@ -50,6 +51,14 @@ describe("Rebalancer", () => {
 	});
 
 	describe("First block not proposed", () => {
+    beforeEach(async () => {
+      // Simulate value recieved by validators 
+      await oracle.signer.sendTransaction({
+        value: utils.parseEther("0.5"),
+        to: oracle.contract.address
+      });
+    });
+
 		it("zeros out validator on bad fee_recipient", async () => {
 			const startValidator: Validator | undefined = await oracle.db.get(100);
 			if(startValidator) {
@@ -82,6 +91,15 @@ describe("Rebalancer", () => {
 	})
 
 	describe("First block proposed", () => {
+
+    beforeEach(async () => {
+      // Simulate value recieved by validators 
+      await oracle.signer.sendTransaction({
+        value: utils.parseEther("0.5"),
+        to: oracle.contract.address
+      });
+    });
+
 		it("slashes validator on bad fee_recipient", async () => {
 			const startValidator: Validator | undefined = await oracle.db.get(100);
 			if(startValidator) {
@@ -168,10 +186,10 @@ describe("Rebalancer", () => {
 			const tree = StandardMerkleTree.load(data);   
 			const validator = await oracle.db.get(500) as Validator;
 
-			let proof: any = getMerkleProof(tree, validator.eth1);
+			let proof: any = tree.getProof([validator.eth1, [500, 200], BigNumber.from("0x1e2d4490b1799955")]);
 			let failed = false;
 			try {
-				await oracle.contract.withdrawRewards(proof, BigNumber.from(String(12e18)));
+				await oracle.contract.withdrawRewards(proof, [500, 200], utils.parseEther("100"));
 			} catch {
 				failed = true;
 			}
@@ -188,13 +206,17 @@ describe("Rebalancer", () => {
 			const tree = StandardMerkleTree.load(data);   
 			const validator = await oracle.db.get(500) as Validator;
 
-			let proof: any = getMerkleProof(tree, validator.eth1);
+      const expectedRewards = BigNumber.from("0x1e2d4490b1799955");
+			let proof: any = tree.getProof([validator.eth1, [500, 200], expectedRewards]);
 
+      WithdrawalRequested(oracle);
 			const startBalance = await oracle.getBalance();
-			await oracle.contract.withdrawRewards(proof, validator.rewards);
+			await oracle.contract.withdrawRewards(proof, [500,200], expectedRewards);
+      await delay(5000);
+
 			const finalBalance = await oracle.getBalance();
-			assert.equal(startBalance.gt(finalBalance), true);
-		})
+			assert.equal(startBalance.sub(expectedRewards).eq(finalBalance), true);
+		}).timeout(20000);
 
 	})
 
@@ -218,3 +240,4 @@ describe("Rebalancer", () => {
 		);
 	});
 })
+
