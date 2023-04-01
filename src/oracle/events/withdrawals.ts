@@ -34,5 +34,14 @@ export async function validateWithdrawalStake(
 	value: number, 
 	oracle: Oracle 
 ) {
+  sender = sender.toLowerCase();
+  for(let index of indexes) {
+    const validator: Validator | undefined = await oracle.db.get(index);
+    // Validate caller as owner
+    if(validator && (validator.eth1 === sender)) {
+      validator.stake = BigNumber.from("0");
+      await oracle.db.insert(index, validator); 
+    } 
+  }
 }
 
