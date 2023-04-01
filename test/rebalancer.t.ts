@@ -114,6 +114,7 @@ describe("Rebalancer", () => {
 				assert.deepEqual(BigNumber.from(finalValidator.stake), utils.parseEther("0"));
 				assert.deepEqual(BigNumber.from(finalValidator.rewards), utils.parseEther("0"));  
 				assert.deepEqual(finalValidator.active, false);  
+				assert.deepEqual(finalValidator.deactivated, true);  
 			}
 		})
 
@@ -171,6 +172,7 @@ describe("Rebalancer", () => {
 				assert.equal(finalValidator.slashMiss, 0);  
 				assert.deepEqual(BigNumber.from(finalValidator.stake), utils.parseEther("0"));
 				assert.deepEqual(finalValidator.active, false);  
+				assert.deepEqual(finalValidator.deactivated, true);  
 			}
 		})
 	})
@@ -184,12 +186,12 @@ describe("Rebalancer", () => {
 				)
 			)
 			const tree = StandardMerkleTree.load(data);   
-			const validator = await oracle.db.get(500) as Validator;
+			const validator = await oracle.db.get(200) as Validator;
 
-			let proof: any = tree.getProof([validator.eth1, [500, 200], BigNumber.from("0x1e2d4490b1799955")]);
+			let proof: any = tree.getProof([validator.eth1, [200], validator.rewards]);
 			let failed = false;
 			try {
-				await oracle.contract.withdrawRewards(proof, [500, 200], utils.parseEther("100"));
+				await oracle.contract.withdrawRewards(proof, [200], utils.parseEther("100"));
 			} catch {
 				failed = true;
 			}
@@ -204,18 +206,17 @@ describe("Rebalancer", () => {
 				)
 			)
 			const tree = StandardMerkleTree.load(data);   
-			const validator = await oracle.db.get(500) as Validator;
+			const validator = await oracle.db.get(200) as Validator;
 
-      const expectedRewards = BigNumber.from("0x1e2d4490b1799955");
-			let proof: any = tree.getProof([validator.eth1, [500, 200], expectedRewards]);
+			let proof: any = tree.getProof([validator.eth1, [200], validator.rewards]);
 
       WithdrawalRequested(oracle);
 			const startBalance = await oracle.getBalance();
-			await oracle.contract.withdrawRewards(proof, [500,200], expectedRewards);
+			await oracle.contract.withdrawRewards(proof, [200], validator.rewards);
       await delay(5000);
 
 			const finalBalance = await oracle.getBalance();
-			assert.equal(startBalance.sub(expectedRewards).eq(finalBalance), true);
+			assert.equal(startBalance.sub(validator.rewards).eq(finalBalance), true);
 		}).timeout(20000);
 
 	})

@@ -6,17 +6,18 @@ import { STAKE_FEE } from "../../utils";
 export function Registered(oracle: Oracle): void {
   const contract = oracle.contract;
 	const filter = contract.filters.Registered();
-	contract.on(filter, (sender, index) => {
-    verifyValidator(sender, index, oracle);
+	contract.on(filter, (sender, indexes) => {
+    verifyValidator(sender, indexes, oracle);
 	});
 	console.log("Listening to register events");
 }
 
 export async function verifyValidator(
   eth1Addr: string, 
-  id: number,
+  indexes: number[],
   oracle: Oracle 
 ) {
+  for(let id of indexes) {
 	const url = `${oracle.network.beaconchainApi}/api/v1/validator/eth1/${eth1Addr}`;
 	const headers = {
 		method: "GET",
@@ -32,20 +33,32 @@ export async function verifyValidator(
 		data = res.data.length != undefined ? res.data : data.push(res.data);
 		const { verified, index } = proofOwnership(eth1Addr, id, data);
 		if(verified) {
-			const newUser: Validator = {
-        index: index, 
-        eth1: eth1Addr.toLowerCase(),
-        rewards: BigNumber.from("0"),
-        slashMiss: 0,
-        slashFee: 0, 
-        stake: STAKE_FEE,
-        firstBlockProposed: false, 
-        firstMissedSlot: false,
-        exitRequested: false,
-        active: true
-      };
-      await oracle.db.insert(index, newUser);
-      console.log(`Successfully created user: with validator ${index} for ${eth1Addr}`)
+      const validator: Validator | undefined = await oracle.db.get(index);
+      if(!validator) {
+        const newUser: Validator = {
+          index: index, 
+          eth1: eth1Addr.toLowerCase(),
+          rewards: BigNumber.from("0"),
+          slashMiss: 0,
+          slashFee: 0, 
+          stake: STAKE_FEE,
+          firstBlockProposed: false, 
+          firstMissedSlot: false,
+          exitRequested: false,
+          active: true,
+          deactivated: false
+        };
+        await oracle.db.insert(index, newUser);
+        console.log(`Successfully created user: with validator ${index} for ${eth1Addr}`)
+      } else if(validator.deactivated) {
+        console.log(`Validator Deactivated: with validator ${index} for ${eth1Addr}`)
+      } else if(!validator.active) {
+        validator.active = true;
+        await oracle.db.insert(index, validator);
+        console.log(`Welcome validator: with validator ${index} for ${eth1Addr}`)
+      } else if(validator.active) {
+        console.log(`Validator already registered: with validator ${index} for ${eth1Addr}`)
+      }
 		} else {
       console.log(`Onowned User: with validator ${index} for ${eth1Addr}`);
 		}
@@ -54,6 +67,7 @@ export async function verifyValidator(
 		console.log(" User:", eth1Addr);
 		console.log(" Response:", res);
 	}
+  }
 }
 
 function proofOwnership(

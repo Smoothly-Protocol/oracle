@@ -103,6 +103,7 @@ async function slashValidator(validator: Validator, db: DB): Promise<Validator> 
     validator.stake = BigNumber.from(validator.stake);
     if(validator.stake.lte(tFees)) {
       tFees = validator.stake; 
+      validator.deactivated = true;
       validator.active = false;
     } 
     validator.stake = validator.stake.sub(tFees);
@@ -125,13 +126,15 @@ async function generateTrees(db: DB): Promise<string[]> {
       stream
       .on('data', async (data: any) => {
         let validator = JSON.parse(data.value.toString());
-        if(BigNumber.from(validator.rewards).gt(0)) {
+        if(BigNumber.from(validator.rewards).gt(0) && validator.firstBlockProposed) {
           withdrawals.push([validator.eth1, validator.index, validator.rewards]);
         } 
         if(validator.exitRequested) {
+          // Handle the rewards 
           console.log("exit requested");
           exits.push([validator.eth1, validator.index, validator.stake]);
           validator.exitRequested = false;
+          validator.active = false;
           await db.insert(validator.index, validator);
         }
       })

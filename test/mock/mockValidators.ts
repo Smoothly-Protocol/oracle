@@ -13,7 +13,8 @@ export const validators: Validator[] = [
     firstBlockProposed: false, 
     firstMissedSlot: false,
     exitRequested: false,
-    active: true
+    active: true,
+    deactivated: false 
   },
   {
     index: 200, 
@@ -25,7 +26,8 @@ export const validators: Validator[] = [
     firstBlockProposed: false, 
     firstMissedSlot: false,
     exitRequested: false,
-    active: true
+    active: true,
+    deactivated: false 
   },
   {
     index: 300, 
@@ -37,7 +39,8 @@ export const validators: Validator[] = [
     firstBlockProposed: false, 
     firstMissedSlot: false,
     exitRequested: false,
-    active: true
+    active: true,
+    deactivated: false 
   },
   {
     index: 400, 
@@ -49,7 +52,8 @@ export const validators: Validator[] = [
     firstBlockProposed: false, 
     firstMissedSlot: false,
     exitRequested: false,
-    active: true
+    active: true,
+    deactivated: false 
   },
   {
     index: 500, 
@@ -61,7 +65,8 @@ export const validators: Validator[] = [
     firstBlockProposed: false, 
     firstMissedSlot: false,
     exitRequested: false,
-    active: true
+    active: true,
+    deactivated: false 
   },
 ];
 

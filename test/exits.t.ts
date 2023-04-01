@@ -34,7 +34,8 @@ describe("Exits", () => {
       firstBlockProposed: false, 
       firstMissedSlot: false,
       exitRequested: false,
-      active: true
+      active: true,
+      deactivated: false
     };
     await oracle.db.insert(
       indexes[0],

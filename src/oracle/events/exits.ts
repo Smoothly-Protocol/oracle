@@ -4,8 +4,8 @@ import { Validator } from "../../types";
 export function ExitRequested(oracle: Oracle) {
   const contract = oracle.contract;
 	const filter = contract.filters.ExitRequested();
-	contract.on(filter, (sender, indexes, epoch) => {
-      validateExitRequest(sender, indexes, epoch, oracle);	
+	contract.on(filter, (sender, indexes) => {
+      validateExitRequest(sender, indexes, oracle);	
 	});
 	console.log("Listening to Exit Request events");
 }
@@ -13,7 +13,6 @@ export function ExitRequested(oracle: Oracle) {
 export async function validateExitRequest(
 	sender: string, 
 	indexes: number[], 
-  epoch: number,
 	oracle: Oracle 
 ) {
   sender = sender.toLowerCase();

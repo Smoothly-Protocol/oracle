@@ -10,7 +10,8 @@ export interface Validator {
   firstBlockProposed: boolean, 
   firstMissedSlot: boolean,  
   exitRequested: boolean,
-  active: boolean
+  active: boolean,
+  deactivated: boolean
 }
 
 export interface TrieRebalance {

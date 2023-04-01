@@ -78,7 +78,7 @@ export async function processEpoch(
             await validateAddedStake(args[0], args[1], args[2], oracle);
             break;
           case 'ExitRequested':
-            await validateExitRequest(args[0], args[1], args[2], oracle);
+            await validateExitRequest(args[0], args[1], oracle);
             break;
           case 'Epoch':
             break;
