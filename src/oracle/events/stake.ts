@@ -1,3 +1,4 @@
+import { BigNumber } from "ethers";
 import { Oracle } from '../oracle';
 import { Validator } from "../../types";
 
