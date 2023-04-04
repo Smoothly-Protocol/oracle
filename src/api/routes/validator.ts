@@ -1,12 +1,13 @@
-import { Router, Request, Response } from 'express';
+import { Application, Request, Response } from 'express';
+import { DB } from '../../db';
 
-export const validator = Router();
-
-validator.get(
-  '/validator/:index', 
-  async (req: Request, res: Response): Promise<void> => {
-    const index = req.params.index;
-    res.json({
-      index: index
-    })
-});
+export async function ValidatorRoutes(app: Application, db: DB) {  
+  app.get(
+    '/validator/:index', 
+    async (req: Request, res: Response): Promise<void> => {
+      const index = req.params.index;
+      res.json({
+        index: index
+      })
+  });
+}

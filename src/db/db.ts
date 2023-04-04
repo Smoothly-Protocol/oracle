@@ -11,8 +11,9 @@ export class DB {
 
   constructor(_root: string, _testing: boolean) {
     try {
+      const level = new Level(`${DEFAULTS.folder}/db`);
       this.db = new Trie({
-        db: _testing ? new MapDB() : new LevelDB(new Level(`${DEFAULTS.folder}/db`)),
+        db: _testing ? new MapDB() : new LevelDB(level),
         useKeyHashing: true,
         root: Buffer.from(_root.slice(2), 'hex')
       })

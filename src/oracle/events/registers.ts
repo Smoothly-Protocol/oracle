@@ -54,6 +54,7 @@ export async function verifyValidator(
         console.log(`Validator Deactivated: with validator ${index} for ${eth1Addr}`)
       } else if(!validator.active) {
         validator.active = true;
+        validator.firstBlockProposed = false;
         await oracle.db.insert(index, validator);
         console.log(`Welcome validator: with validator ${index} for ${eth1Addr}`)
       } else if(validator.active) {

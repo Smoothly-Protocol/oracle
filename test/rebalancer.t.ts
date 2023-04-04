@@ -236,8 +236,8 @@ describe("Rebalancer", () => {
 			.on('end', fulfilled);
 		});
 		assert.equal(
-			Number(balance.toHexString()), 
-			Number(tRewards.add(tStake).toHexString())
+			utils.formatUnits(balance, 9), 
+			utils.formatUnits(tRewards.add(tStake), 9)
 		);
 	});
 })

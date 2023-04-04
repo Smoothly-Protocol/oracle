@@ -40,6 +40,7 @@ export class LevelDB implements DB {
   copy(): DB {
     return new LevelDB(this._leveldb)
   }
+
 }
 
 

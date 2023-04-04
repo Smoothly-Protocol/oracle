@@ -1,4 +1,5 @@
 import { Oracle } from './oracle';
+import { API } from './api';
 import { Command } from 'commander';
 
 const program = new Command();
@@ -19,9 +20,11 @@ async function main(): Promise<void> {
   try {
     const pk = opts.privateKey; //"0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff"
     const network = opts.network;
+    const port = process.env.PORT || 4000;
     const oracle = new Oracle(network, pk);
     // TODO: Sync node from beginning
-    oracle.sync();
+    //oracle.sync();
+    const api =  new API(oracle.db, port as number);
   } catch(err) {
     console.error(err);
   }

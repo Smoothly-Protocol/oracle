@@ -6,6 +6,7 @@ import { BigNumber, providers, Contract, Wallet, utils } from "ethers";
 import { Oracle } from '../src/oracle';
 import { STAKE_FEE } from "../src/utils";
 import { Validator } from "../src/types";
+import { ExitRequested } from "../src/oracle/events/exits";
 
 //disable logs
 //console.log = function () {};
@@ -41,7 +42,7 @@ describe("Exits", () => {
       indexes[0],
       newUser 
     );
-    oracle.start()
+    ExitRequested(oracle);
   })
 
   it("picks up and validates exit of validator from contract", async () => {
