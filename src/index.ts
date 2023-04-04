@@ -24,7 +24,7 @@ async function main(): Promise<void> {
     const oracle = new Oracle(network, pk);
     // TODO: Sync node from beginning
     //oracle.sync();
-    const api =  new API(oracle.db, port as number);
+    const api =  new API(oracle, port as number);
   } catch(err) {
     console.error(err);
   }

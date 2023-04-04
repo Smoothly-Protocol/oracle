@@ -1,8 +1,8 @@
 import { Application, Request, Response } from 'express';
 import { BigNumber } from 'ethers';
-import { DB } from '../../db';
+import { Oracle } from '../../oracle';
 
-export async function PoolRoutes(app: Application, db: DB) {  
+export async function PoolRoutes(app: Application, oracle: Oracle) {  
   app.get('/poolstats/:root', async (req: Request, res: Response): Promise<void> =>  {
       const root = req.params.root;
 
@@ -11,10 +11,10 @@ export async function PoolRoutes(app: Application, db: DB) {
       let deactivated: number = 0; 
       let tMiss: number = 0;
       let tFee: number = 0;
-      let tValue: BigNumber = BigNumber.from("0");
+      let tRewards: BigNumber = BigNumber.from("0");
       let tStake: BigNumber = BigNumber.from("0");
 
-      const stream = await db.getStream();
+      const stream = await oracle.db.getStream();
       await new Promise((fulfilled) => { 
         stream
         .on('data', async (data: any) => {
@@ -28,8 +28,8 @@ export async function PoolRoutes(app: Application, db: DB) {
           }
           tMiss += validator.slashMiss;
           tFee += validator.slashFee;
-          tValue = tValue.add(BigNumber.from(validator.rewards));
-          tStake = tValue.add(BigNumber.from(validator.stake));
+          tRewards = tRewards.add(BigNumber.from(validator.rewards));
+          tStake = tStake.add(BigNumber.from(validator.stake));
         })
         .on('end', fulfilled);
       });
@@ -37,8 +37,9 @@ export async function PoolRoutes(app: Application, db: DB) {
       res.json({
         awaiting_activation: awaitingActivation,
         activated: activated,
-        total_value: tValue, 
+        total_rewards: tRewards, 
         total_stake: tStake,
+        total_value: (await oracle.getBalance()).sub(tRewards.add(tStake)),
         total_miss: tMiss,
         total_fee: tFee  
       })
