@@ -39,9 +39,23 @@ export async function PoolRoutes(app: Application, oracle: Oracle) {
         activated: activated,
         total_rewards: tRewards, 
         total_stake: tStake,
-        total_value: (await oracle.getBalance()).sub(tRewards.add(tStake)),
+        total_value: tRewards.add(await tWithdrawals(oracle)), 
+        total_value_period: (await oracle.getBalance()).sub(tRewards.add(tStake)),
         total_miss: tMiss,
         total_fee: tFee  
       })
   });
+}
+
+async function tWithdrawals(oracle: Oracle): Promise<BigNumber> {
+  let tWithdrawals: BigNumber = BigNumber.from("0");
+  const filter = oracle.contract.RewardsWithdrawal();
+  const withdrawals = await oracle.contract.queryFilter(filter);
+  for(let w of withdrawals) {
+    const x = w as any; 
+    if(x.args[2] !== undefined){
+      tWithdrawals =  tWithdrawals.add(x.args[2])
+    }
+  } 
+  return tWithdrawals;
 }

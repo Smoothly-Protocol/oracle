@@ -37,3 +37,8 @@ export interface ValidatorInfo {
 	valid_signature: boolean;
 	validatorindex: number;	
 }
+
+export interface Proofs {
+  withdrawals: string[],
+  exits: string[]
+}

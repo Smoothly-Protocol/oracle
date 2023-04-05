@@ -1,24 +1,11 @@
 import { Application, Request, Response } from 'express';
 import { Oracle } from '../../oracle';
-import { Validator, ValidatorInfo } from '../../types';
+import { Validator, ValidatorInfo, Proofs } from '../../types';
+import { StandardMerkleTree } from "@openzeppelin/merkle-tree";
+import fs from "fs";
+import * as path from 'path';
 
 export async function ValidatorRoutes(app: Application, oracle: Oracle) {  
-  /*
-  app.get('/validator/:index', async (req: Request, res: Response): Promise<void> => {
-    const index = Number(req.params.index);
-    const validator = await oracle.db.get(index);
-
-    if(validator) {
-      res.json(validator)
-    } else {
-      res.json({
-        status: 404,
-        msg: "Validator not found"
-      })
-    }
-  });
- */
-
   app.get('/validator/:eth1Addr', async (req: Request, res: Response): Promise<void> => {
     const eth1Addr = req.params.eth1Addr;
     const registered: Validator[] = [];
@@ -47,9 +34,11 @@ export async function ValidatorRoutes(app: Application, oracle: Oracle) {
       }
       res.json({
         registered: registered,
-        unregistered: unregistered
+        unregistered: unregistered,
+        proofs: await getProofs(eth1Addr.toLowerCase())
       })
-    } catch { 
+    } catch(err: any) { 
+      console.log(err);
       res.json({
         status: 500,
         err: 'NETWORK_ERROR'
@@ -57,3 +46,39 @@ export async function ValidatorRoutes(app: Application, oracle: Oracle) {
     }
   });
 }
+
+async function getProofs(eth1Addr: string): Promise<Proofs> {
+  let proofs: Proofs = { withdrawals: [], exits: [] };
+  const dataWithdrawals: any = JSON.parse(
+    fs.readFileSync(
+      path.resolve(__dirname, "../../../.smoothly/withdrawals.json"),
+      'utf8'
+    )
+  );
+  const dataExits: any = JSON.parse(
+    fs.readFileSync(
+      path.resolve(__dirname, "../../../.smoothly/withdrawals.json"),
+      'utf8'
+    )
+  );
+  
+  // Get withdrawal proof 
+  const withdrawals = StandardMerkleTree.load(dataWithdrawals);   
+  for (const [i, v] of withdrawals.entries()) {
+    if (v[0] === eth1Addr) {
+      proofs.withdrawals = withdrawals.getProof(i);
+      break;
+    }
+  }
+
+  // Get exit proof 
+  const exits = StandardMerkleTree.load(dataExits);   
+  for (const [i, v] of exits.entries()) {
+    if (v[0] === eth1Addr) {
+      proofs.exits = exits.getProof(i);
+      break;
+    }
+  }
+  
+  return proofs;
+};
