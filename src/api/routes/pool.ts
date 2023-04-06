@@ -1,5 +1,5 @@
 import { Application, Request, Response } from 'express';
-import { BigNumber } from 'ethers';
+import { BigNumber, Contract } from 'ethers';
 import { Oracle } from '../../oracle';
 
 export async function PoolRoutes(app: Application, oracle: Oracle) {  
@@ -33,13 +33,16 @@ export async function PoolRoutes(app: Application, oracle: Oracle) {
         })
         .on('end', fulfilled);
       });
-
+      
+      let tWithdrawals: BigNumber = await totalWithdrawals(oracle.contract);
+      let tValue: BigNumber = tRewards.add(tWithdrawals);
       res.json({
         awaiting_activation: awaitingActivation,
         activated: activated,
         total_rewards: tRewards, 
         total_stake: tStake,
-        total_value: tRewards.add(await tWithdrawals(oracle)), 
+        total_value: tValue, 
+        total_withdrawals: tWithdrawals,
         total_value_period: (await oracle.getBalance()).sub(tRewards.add(tStake)),
         total_miss: tMiss,
         total_fee: tFee  
@@ -47,10 +50,10 @@ export async function PoolRoutes(app: Application, oracle: Oracle) {
   });
 }
 
-async function tWithdrawals(oracle: Oracle): Promise<BigNumber> {
+async function totalWithdrawals(contract: Contract): Promise<BigNumber> {
   let tWithdrawals: BigNumber = BigNumber.from("0");
-  const filter = oracle.contract.RewardsWithdrawal();
-  const withdrawals = await oracle.contract.queryFilter(filter);
+  const filter = contract.filters.RewardsWithdrawal();
+  const withdrawals = await contract.queryFilter(filter);
   for(let w of withdrawals) {
     const x = w as any; 
     if(x.args[2] !== undefined){
