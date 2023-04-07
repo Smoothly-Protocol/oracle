@@ -6,7 +6,7 @@ import fs from "fs";
 import * as path from 'path';
 
 export async function ValidatorRoutes(app: Application, oracle: Oracle) {  
-  app.get('/validator/:eth1Addr', async (req: Request, res: Response): Promise<void> => {
+  app.get('/validators/:eth1Addr', async (req: Request, res: Response): Promise<void> => {
     const eth1Addr = req.params.eth1Addr;
     const registered: Validator[] = [];
     const unregistered: number[] = [];
@@ -34,11 +34,9 @@ export async function ValidatorRoutes(app: Application, oracle: Oracle) {
       }
       res.json({
         registered: registered,
-        unregistered: unregistered,
-        proofs: await getProofs(eth1Addr.toLowerCase())
+        unregistered: unregistered
       })
     } catch(err: any) { 
-      console.log(err);
       res.json({
         status: 500,
         err: 'NETWORK_ERROR'

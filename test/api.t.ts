@@ -114,7 +114,7 @@ async function getPoolStats(root: string) {
 }
 
 async function getValidatorData(eth1Addr: string) {
-  const url = `http://localhost:4000/validator/${eth1Addr}`;
+  const url = `http://localhost:4000/validators/${eth1Addr}`;
     const headers = {
     method: "GET",
     headers: {

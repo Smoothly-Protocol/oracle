@@ -3,9 +3,7 @@ import { BigNumber, Contract } from 'ethers';
 import { Oracle } from '../../oracle';
 
 export async function PoolRoutes(app: Application, oracle: Oracle) {  
-  app.get('/poolstats/:root', async (req: Request, res: Response): Promise<void> =>  {
-      const root = req.params.root;
-
+  app.get('/poolstats', async (req: Request, res: Response): Promise<void> =>  {
       let awaitingActivation: number = 0;
       let activated: number = 0; 
       let deactivated: number = 0; 
@@ -44,6 +42,7 @@ export async function PoolRoutes(app: Application, oracle: Oracle) {
         total_value: tValue, 
         total_withdrawals: tWithdrawals,
         total_value_period: (await oracle.getBalance()).sub(tRewards.add(tStake)),
+        average_value: 0,
         total_miss: tMiss,
         total_fee: tFee  
       })
