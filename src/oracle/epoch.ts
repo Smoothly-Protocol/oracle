@@ -17,8 +17,8 @@ export async function EpochListener(oracle: Oracle) {
 
   eth2.addEventListener('finalized_checkpoint', async (e)  => {
     const { epoch } = JSON.parse(e.data);	
-    console.log("Processing epoch:", Number(e.data.slot));
-    processEpoch(epoch, oracle);
+    console.log("Processing epoch:", Number(epoch));
+    processEpoch(epoch, false, oracle);
   });
 
   console.log("Listening for new finalized_checkpoints");
@@ -26,14 +26,13 @@ export async function EpochListener(oracle: Oracle) {
 
 export async function processEpoch(
   epoch: number, 
+  syncing: boolean,
   oracle: Oracle,
 )  {
   const beacon = oracle.network.beacon;
   const db = oracle.db;
   const contract = oracle.contract;
   const { data } = await reqEpochSlots(epoch, beacon);
-
-  console.log("Syncing epoch:", Number(epoch));
 
   // Fetch slots in parallel
   let promises: Promise<any>[] = [];
@@ -60,7 +59,7 @@ export async function processEpoch(
     const { proposer_index, body, logs } = _slot;
 
     // Process eth1 logs
-    if(logs.length > 0) {
+    if(logs.length > 0 && syncing) {
       for(let log of logs) {
         const event = log.event;
         const args = log.args;

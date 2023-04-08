@@ -1,7 +1,10 @@
-export { verifyValidator } from "./registers";
-export { validateExitRequest } from "./exits";
-export { validateAddedStake } from "./stake";
+export { verifyValidator, Registered } from "./registers";
+export { validateExitRequest, ExitRequested } from "./exits";
+export { validateAddedStake, StakeAdded } from "./stake";
 export { 
   validateWithdrawalRewards,
-  validateWithdrawalStake
+  validateWithdrawalStake,
+  StakeWithdrawal,
+  RewardsWithdrawal
 } from "./withdrawals";
+

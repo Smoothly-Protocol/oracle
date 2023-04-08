@@ -24,5 +24,6 @@ export async function validateExitRequest(
       await oracle.db.insert(index, validator); 
     } 
   }
+  console.log(`Exit request from: ${sender} with ${indexes}`);
 }
 

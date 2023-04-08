@@ -22,9 +22,9 @@ async function main(): Promise<void> {
     const network = opts.network;
     const port = process.env.PORT || 4000;
     const oracle = new Oracle(network, pk);
-    // TODO: Sync node from beginning
-    //oracle.sync();
     const api =  new API(oracle, port as number);
+    // TODO: Sync node from beginning
+    oracle.start();
   } catch(err) {
     console.error(err);
   }

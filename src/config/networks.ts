@@ -2,7 +2,7 @@ import { NetInfo } from "../types";
 
 export const GOERLI: NetInfo = {
   rpc: "https://eth-goerli.alchemyapi.io/v2/zmsxPR7pKHtiLvAkZ1R61BYtCqnCg0yc",
-  contractAddress: "0x56EE0A17812D7CF5f2Db4ce892e4f2a211575132",
+  contractAddress: "0x22f635b0B45010C087612B6700f660b047C17A7d",
   beacon: "http://unstable.prater.beacon-api.nimbus.team",
   beaconchainApi: "https://goerli.beaconcha.in",
   deploymentEpoch: 164323 

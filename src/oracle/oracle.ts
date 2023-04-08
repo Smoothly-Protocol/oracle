@@ -5,9 +5,17 @@ import { EMPTY_ROOT } from "../utils";
 import { Contract, utils } from "ethers"; 
 import { 
   processEpoch,
-  reqEpochCheckpoint
+  reqEpochCheckpoint,
+  EpochListener
 } from "./epoch";
 import { Rebalancer } from "./rebalancer";
+import { 
+  Registered,
+  ExitRequested,
+  StakeAdded,
+  StakeWithdrawal,
+  RewardsWithdrawal
+} from './events';
 
 export class Oracle extends Config {
   db: DB;  
@@ -20,12 +28,15 @@ export class Oracle extends Config {
   }
 
   start(): void {
-    /*
-      Registered(this);
-      ExitRequested(this);
-      VoluntaryExits(this);
-      BlockListener(this);
-     */
+    EpochListener(this);
+    Registered(this);
+    ExitRequested(this);
+    StakeAdded(this);
+    StakeWithdrawal(this);
+    RewardsWithdrawal(this);
+    cron.schedule('* * * * *', async () => {
+      Rebalancer(this); 
+    });
   }
 
   async sync(): Promise<void> {
@@ -51,16 +62,10 @@ export class Oracle extends Config {
   // all of them
   async fullSync(current: number, to: number, db: DB): Promise<Buffer> {
     while(current <= to) {
-      await processEpoch(current, this);
+      await processEpoch(current, true, this);
       await this.fullSync(current+1, to, db);
     }
     return db.root();
-  }
-
-  async rebalance(): Promise<void> {
-  //cron.schedule('* * * * *', async () => {
-    await Rebalancer(this); 
-  //});
   }
 
   stop(): void {

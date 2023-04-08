@@ -2,6 +2,15 @@ import { BigNumber } from "ethers";
 import { Oracle } from '../oracle';
 import { Validator } from "../../types";
 
+export function StakeAdded(oracle: Oracle) {
+  const contract = oracle.contract;
+	const filter = contract.filters.StakeAdded();
+	contract.on(filter, (sender, index, value) => {
+      validateAddedStake(sender, index, value, oracle);	
+	});
+	console.log("Listening to StakeAdded events");
+}
+
 export async function validateAddedStake(
 	sender: string, 
   index: number,

@@ -167,6 +167,11 @@ async function generateTrees(db: DB): Promise<string[]> {
 
 async function fundUsers(includedValidators: Validator[], total: BigNumber, db: DB): Promise<BigNumber> {
   try { 
+    if(total.lt(utils.parseEther("0.001"))) {
+      throw "No funds to rebalance on this period"; 
+    } else if(includedValidators.length < 1) {
+      throw "No validators available for rebalance";
+    }
     const _fee = total.mul(FEE).div(1000);
     const validatorShare = total.sub(_fee).div(includedValidators.length);
     for(let validator of includedValidators) {
@@ -176,7 +181,7 @@ async function fundUsers(includedValidators: Validator[], total: BigNumber, db: 
     }
     return _fee;
   } catch (err: any) {
-    throw new Error("No validators to fund on rebalance");
+    throw err;
   }
 }
 

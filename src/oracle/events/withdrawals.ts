@@ -1,14 +1,23 @@
-import { BigNumber } from "ethers";
+import { BigNumber, utils } from "ethers";
 import { Oracle } from '../oracle';
 import { Validator } from "../../types";
 
-export function WithdrawalRequested(oracle: Oracle) {
+export function StakeWithdrawal(oracle: Oracle) {
+  const contract = oracle.contract;
+	const filter = contract.filters.StakeWithdrawal();
+	contract.on(filter, (sender, indexes, value) => {
+    validateWithdrawalStake(sender, indexes, value, oracle);	
+	});
+  console.log("Listening to StakeWithdrawal events");
+}
+
+export function RewardsWithdrawal(oracle: Oracle) {
   const contract = oracle.contract;
 	const filter = contract.filters.RewardsWithdrawal();
 	contract.on(filter, (sender, indexes, value) => {
     validateWithdrawalRewards(sender, indexes, value, oracle);	
 	});
-	console.log("Listening to Exit Request events");
+  console.log("Listening to RewardsWithdrawal events");
 }
 
 export async function validateWithdrawalRewards(
@@ -26,6 +35,7 @@ export async function validateWithdrawalRewards(
       await oracle.db.insert(index, validator); 
     } 
   }
+  console.log(`${sender} withdrawal for ${utils.formatEther(value)}`);
 }
 
 export async function validateWithdrawalStake(
@@ -43,5 +53,6 @@ export async function validateWithdrawalStake(
       await oracle.db.insert(index, validator); 
     } 
   }
+  console.log(`${sender} exited validators: ${indexes} with ${utils.formatEther(value)} stake`);
 }
 
