@@ -50,9 +50,12 @@ export async function validateWithdrawalStake(
     // Validate caller as owner
     if(validator && (validator.eth1 === sender)) {
       validator.stake = BigNumber.from("0");
+      if(!validator.firstBlockProposed) {
+        validator.rewards = BigNumber.from("0");
+      }
       await oracle.db.insert(index, validator); 
     } 
   }
-  console.log(`${sender} exited validators: ${indexes} with ${utils.formatEther(value)} stake`);
+  console.log(`${sender} exited validators: ${indexes}`);
 }
 

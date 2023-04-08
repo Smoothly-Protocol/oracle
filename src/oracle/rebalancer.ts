@@ -131,7 +131,6 @@ async function generateTrees(db: DB): Promise<string[]> {
         } 
         if(validator.exitRequested) {
           // Handle the rewards 
-          console.log("exit requested");
           exits.push([validator.eth1, validator.index, validator.stake]);
           validator.exitRequested = false;
           validator.active = false;
