@@ -132,7 +132,6 @@ async function generateTrees(db: DB): Promise<string[]> {
         if(validator.exitRequested) {
           // Handle the rewards 
           exits.push([validator.eth1, validator.index, validator.stake]);
-          validator.exitRequested = false;
           validator.active = false;
           await db.insert(validator.index, validator);
         }

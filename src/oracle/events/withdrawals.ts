@@ -50,6 +50,7 @@ export async function validateWithdrawalStake(
     // Validate caller as owner
     if(validator && (validator.eth1 === sender)) {
       validator.stake = BigNumber.from("0");
+      validator.exitRequested = true;
       if(!validator.firstBlockProposed) {
         validator.rewards = BigNumber.from("0");
       }
