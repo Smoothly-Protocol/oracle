@@ -1,4 +1,3 @@
-export { artifact } from "./artifact";
 export { 
   FEE, 
   STAKE_FEE, 

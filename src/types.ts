@@ -22,7 +22,8 @@ export interface TrieRebalance {
 
 export interface NetInfo {
   rpc: string,
-  contractAddress: string, 
+  pool: string, 
+  governance: string, 
   beacon: string,
   beaconchainApi: string,
   deploymentEpoch: number

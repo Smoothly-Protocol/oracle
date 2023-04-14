@@ -11,10 +11,11 @@ import {
   MAINNET,
   LOCAL
 } from './networks';
-import { artifact } from '../utils';
+import { pool, governance } from '../artifacts';
 
 export class Config {
   contract: Contract;
+  governance: Contract;
   signer: Wallet;
   network: NetInfo;
 
@@ -33,11 +34,18 @@ export class Config {
     // Signer
     this.signer = this.validateWallet(_pk);
 
-    // Blockchain
+    // Smoothly Pool 
     this.contract = new Contract(
-      this.network.contractAddress,
-      artifact["abi"],
-      this.signer//new providers.JsonRpcProvider(this.network.rpc)
+      this.network.pool,
+      pool["abi"],
+      this.signer
+    );
+    
+    // Governance 
+    this.governance = new Contract(
+      this.network.governance,
+      governance["abi"],
+      this.signer
     );
   }
 

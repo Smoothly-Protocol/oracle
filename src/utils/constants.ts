@@ -1,6 +1,6 @@
 import { utils, BigNumber } from "ethers";
 
-export const FEE: number = 15; // 0.15% Protocol_fee on rebalance
+export const FEE: number = 150; // 1.5% Protocol_fee on rebalance
 export const STAKE_FEE: BigNumber = utils.parseEther("0.065");
 export const SLASH_FEE: BigNumber = utils.parseEther("0.065");
 export const MISS_FEE: BigNumber = utils.parseEther("0.015");

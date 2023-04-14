@@ -10,7 +10,7 @@ import { DB } from "../db";
 
 export async function Rebalancer (oracle: Oracle) {
     try {
-      const contract = oracle.contract;
+      const contract = oracle.governance;
       const db = oracle.db;
 
       const { 
@@ -24,13 +24,13 @@ export async function Rebalancer (oracle: Oracle) {
       const fee = await fundUsers(includedValidators, total, db);
       const [withdrawalsRoot, exitsRoot] = await generateTrees(db);
 
-      // Call to contract
-      const tx = await contract.connect(oracle.signer).updateEpoch(
+      // Propose Epoch to governance contract  
+      const tx = await contract.connect(oracle.signer).proposeEpoch([
         withdrawalsRoot,
         exitsRoot,
         db.root(),
         fee
-      );
+      ]);
       await tx.wait();
     } catch(err) {
       console.log(err);
