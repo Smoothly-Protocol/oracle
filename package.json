@@ -1,5 +1,5 @@
 {
-	"name": "oracle_api",
+	"name": "smoothly_cli",
 	"version": "1.0.0",
 	"description": "Oracle api for Rewards Smoothing Protocol smart contracts.",
 	"author": "Noah Figueras",
