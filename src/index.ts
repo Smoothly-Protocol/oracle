@@ -24,7 +24,7 @@ async function main(): Promise<void> {
     const pk = opts.privateKey; 
     const network = opts.network;
     const checkpoint = opts.checkpoint || undefined;
-    const port = process.env.PORT || 4000;
+    const port = process.env.PORT || 4040;
     const oracle = new Oracle(network, pk);
     const api =  new API(oracle, port as number);
     // Sync from checkpoint if provided
