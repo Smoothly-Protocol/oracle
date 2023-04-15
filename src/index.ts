@@ -11,6 +11,7 @@ program
   .version('0.0.1')
   .usage('[OPTIONS]...')
   .option('-n, --network <value>', 'Select network [goerli, mainnet]', 'local')
+  .option('-s, --sync <checkpoint>', 'Select checkpoint to sync from')
   .requiredOption('-pk, --private-key <value>', 'Add eth1 validator account private key.')
   .parse(process.argv);
 
@@ -18,12 +19,16 @@ const opts = program.opts();
 
 async function main(): Promise<void> {
   try {
-    const pk = opts.privateKey; //"0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff"
+    const pk = opts.privateKey; 
     const network = opts.network;
+    const checkpoint = opts.checkpoint || undefined;
     const port = process.env.PORT || 4000;
     const oracle = new Oracle(network, pk);
     const api =  new API(oracle, port as number);
-    // TODO: Sync node from beginning
+    // Sync from checkpoint if provided
+    if(checkpoint) {
+      await oracle.sync(checkpoint);
+    } 
     oracle.start();
   } catch(err) {
     console.error(err);

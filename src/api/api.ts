@@ -1,6 +1,11 @@
 import express, { Application } from 'express';
 import cors from 'cors';
-import { ValidatorRoutes, PoolRoutes, TreeRoutes } from './routes';
+import { 
+  ValidatorRoutes, 
+  PoolRoutes, 
+  TreeRoutes,
+  Checkpoint
+} from './routes';
 import { Oracle } from '../oracle';
 
 export class API { 
@@ -28,6 +33,7 @@ export class API {
     ValidatorRoutes(this.app, this.oracle); 
     PoolRoutes(this.app, this.oracle);
     TreeRoutes(this.app, this.oracle);
+    Checkpoint(this.app, this.oracle);
   }
 }
 

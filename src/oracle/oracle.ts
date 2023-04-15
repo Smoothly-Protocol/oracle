@@ -34,26 +34,20 @@ export class Oracle extends Config {
     StakeAdded(this);
     StakeWithdrawal(this);
     RewardsWithdrawal(this);
-    cron.schedule('* * * * *', async () => {
-      Rebalancer(this); 
-    });
+    cron.schedule('0 17 * * *', async () => {
+      this.rebalance()
+    }, {timezone: "America/Los_Angeles"});
   }
 
-  async sync(): Promise<void> {
+  async sync(checkpoint: string): Promise<void> {
     try { 
-      const tmpDB = new DB(EMPTY_ROOT, true);
-      const root = await this.getRoot();  
-      const checkpoint = await reqEpochCheckpoint(this.network.beacon);  
-      // Sync from contract deployment epoch
-      const computedRoot = await this.fullSync(
-        this.network.deploymentEpoch, 
-        checkpoint,
-        tmpDB
-      );
-      console.log(root);
-      console.log(computedRoot.toString('hex'));
+      const req = await fetch(`${checkpoint}/checkpoint`);
+      const res = await req.json();
+      for(let validator of res.data) {
+        this.db.insert(validator.index, validator);
+      }
     } catch (err: any) {
-      console.log(err);
+      throw new Error("Sync failed, make sure checkpoint is active");
     }
   }
 
@@ -68,13 +62,18 @@ export class Oracle extends Config {
     return db.root();
   }
 
+  async rebalance(): Promise<void> {
+    Rebalancer(this); 
+  }
+
   stop(): void {
     this.contract.provider.removeAllListeners();
   }
 
   // Used for testing
-  updateContract(contract: Contract): Oracle {
+  updateContract(contract: Contract, governance: Contract): Oracle {
     this.contract = contract; 
+    this.governance = governance; 
     return this;
   }
 }

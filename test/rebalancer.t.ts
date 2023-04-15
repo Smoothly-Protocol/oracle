@@ -3,7 +3,8 @@ import { setup } from "./setup";
 import { validators } from "./mock";
 import { utils, Wallet, BigNumber } from "ethers";
 import { Validator } from "../src/types";
-import { Oracle, WithdrawalRequested } from "../src/oracle";
+import { Oracle } from "../src/oracle";
+import { RewardsWithdrawal } from "../src/oracle/events";
 import { STAKE_FEE, FEE } from "../src/utils";
 import { StandardMerkleTree } from "@openzeppelin/merkle-tree";
 import { delay } from "./utils";
@@ -210,7 +211,7 @@ describe("Rebalancer", () => {
 
 			let proof: any = tree.getProof([validator.eth1, [200], validator.rewards]);
 
-      WithdrawalRequested(oracle);
+      RewardsWithdrawal(oracle);
 			const startBalance = await oracle.getBalance();
 			await oracle.contract.withdrawRewards(proof, [200], validator.rewards);
       await delay(5000);

@@ -1,5 +1,5 @@
 import { Oracle } from "../src/oracle";
-import { artifact } from "../src/utils";
+import { pool, governance } from "../src/artifacts";
 import { 
   Wallet, 
   ContractFactory,
@@ -7,7 +7,7 @@ import {
 } from "ethers";
 
 // Default 10 accounts from anvil
-const pks = [
+export const pks = [
   "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80",
   "0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d",
   "0x5de4111afa1a4b94908f83103eb1f1706367c2e68ca870fc3fb9a804cdab365a",
@@ -24,17 +24,29 @@ export function getSigners(provider: any): Array<Wallet> {
   return pks.map((pk: string): Wallet => { return new Wallet(pk, provider) });
 }
 
+export async function time1Day(provider: any): Promise<void> {
+  const oneDay = 24 * 60 * 60;
+  await provider.send("evm_increaseTime",[oneDay]);
+}
+
 export async function setup(): Promise<Oracle> {
   try {
     const provider = new providers.JsonRpcProvider("http://127.0.0.1:8545");
     const [owner] = await getSigners(provider);
     const oracle = new Oracle("local", pks[0]);
     const contract = await(new ContractFactory(
-      artifact["abi"], 
-      artifact["bytecode"],
+      pool["abi"], 
+      pool["bytecode"],
       owner
     )).deploy();
-    oracle.updateContract(contract);
+    const gov = await(new ContractFactory(
+      governance["abi"], 
+      governance["bytecode"],
+      owner
+    )).deploy(contract.address);
+    await contract.transferOwnership(gov.address);
+    await gov.addOperators([owner.address]);
+    oracle.updateContract(contract, gov);
     return oracle;
   } catch (err: any) {
     throw new Error(err);

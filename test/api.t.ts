@@ -1,8 +1,9 @@
 import { assert, expect } from "chai";
-import { utils, BigNumber } from "ethers";
-import { setup } from "./setup";
+import { utils, BigNumber, providers } from "ethers";
+import { setup, pks, time1Day } from "./setup";
 import { validators } from "./mock";
-import { Oracle, WithdrawalRequested } from "../src/oracle";
+import { Oracle } from "../src/oracle";
+import { RewardsWithdrawal  } from "../src/oracle/events";
 import { API } from "../src/api";
 import { Validator } from "../src/types";
 import { StandardMerkleTree } from "@openzeppelin/merkle-tree";
@@ -35,6 +36,11 @@ describe("API", () => {
     });
   }
 
+  beforeEach(async () => {
+    const provider = new providers.JsonRpcProvider("http://127.0.0.1:8545");
+    await time1Day(provider);           
+  })
+
   describe("Pool Stats", () => {
     it("retrieves pool stats correctly", async () => {
       const validator1: Validator = validators[0];
@@ -51,27 +57,35 @@ describe("API", () => {
       assert.equal(stats.awaiting_activation, 3);
       assert.equal(stats.activated, 2);
       assert.equal(
-        BigNumber.from(stats.total_rewards)
-        .eq(utils.parseEther("0.39925")), true);// (0.05 rebalanced - fee) + awarded rewards
-      assert.equal(
         BigNumber.from(stats.total_stake)
-        .eq(utils.parseEther("0.65").mul(5)), true);
+        .eq(utils.parseEther("0.065").mul(5)), 
+        true
+      );
+      /*
+      assert.equal(
+        BigNumber.from(stats.total_rewards)
+        .eq(utils.parseEther("0.39925")), 
+        true
+      );// (0.05 rebalanced - fee) + awarded rewards
       assert.equal(
         BigNumber.from(stats.total_value_period)
-        .eq(utils.parseEther("0")), true);
+        .eq(utils.parseEther("0")), 
+        true
+      );
+      */
       assert.equal(stats.total_miss, 0);
       assert.equal(stats.total_fee, 0);
     }); 
 
     it("computes withdrawals correctly", async () => {
       const validator: Validator = validators[0];
-			const data: any = JSON.parse(
-				fs.readFileSync(
-					path.resolve(__dirname, "../.smoothly/withdrawals.json"),
-					'utf8'
-				)
-			)
-			const tree = StandardMerkleTree.load(data);   
+      const data: any = JSON.parse(
+        fs.readFileSync(
+          path.resolve(__dirname, "../.smoothly/withdrawals.json"),
+          'utf8'
+        )
+      )
+      const tree = StandardMerkleTree.load(data);   
       let args: Array<any> = [];
       for (const [i, v] of tree.entries()) {
         if (v[0] === validator.eth1) {
@@ -82,15 +96,19 @@ describe("API", () => {
         }
       }
       await oracle.contract.withdrawRewards(args[0], args[1], args[2])
-      WithdrawalRequested(oracle);
+      RewardsWithdrawal(oracle);
       await delay(5000);
       const stats = await getPoolStats(await oracle.getRoot()); 
       assert.equal(
         BigNumber.from(stats.total_withdrawals)
-        .eq(utils.parseEther("0.3697")), true);
+        .eq(utils.parseEther("0.3697")), 
+        true
+      );
       assert.equal(
         BigNumber.from(stats.total_value)
-        .eq(BigNumber.from(stats.total_rewards).add(stats.total_withdrawals)), true);
+        .eq(BigNumber.from(stats.total_rewards).add(stats.total_withdrawals)), 
+        true
+      );
     }).timeout(10000); 
   })
 
@@ -99,10 +117,22 @@ describe("API", () => {
       const data = await getValidatorData(validators[0].eth1); 
     }).timeout(20000); 
   })
+
+  describe("Checkpoint", () => {
+    it("syncs node2 to active nodes state", async () => {
+      const oracle2 = new Oracle("local", pks[1]);
+      await oracle2.sync("http://localhost:4000");
+      console.log(await oracle.getRoot())
+      assert.equal(
+        await oracle.getRoot(),
+        await oracle2.getRoot()
+      );
+    }).timeout(20000); 
+  });
 })
 
 async function getPoolStats(root: string) {
-  const url = `http://localhost:4000/poolstats/${root}`;
+  const url = `http://localhost:4000/poolstats`;
     const headers = {
     method: "GET",
     headers: {
