@@ -1,3 +1,5 @@
+#! /usr/bin/env node
+
 import { Oracle } from './oracle';
 import { API } from './api';
 import { Command } from 'commander';
