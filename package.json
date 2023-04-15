@@ -2,13 +2,17 @@
 	"name": "oracle_api",
 	"version": "1.0.0",
 	"description": "Oracle api for Rewards Smoothing Protocol smart contracts.",
-	"main": "index.js",
 	"author": "Noah Figueras",
 	"license": "MIT",
+	"main": "dist/index.js",
 	"scripts": {
 		"start": "NODE_NO_WARNINGS=1 ts-node ./src/index.ts",
+    "build": "npx tsc",
 		"test": "./scripts/test.sh"
 	},
+  "bin": {
+    "smoothly_cli": "./dist/index.js"
+  },
 	"devDependencies": {
 		"@types/chai": "^4.3.4",
 		"@types/eventsource": "^1.1.9",
