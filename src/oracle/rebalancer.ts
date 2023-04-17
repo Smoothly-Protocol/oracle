@@ -1,5 +1,6 @@
 import fs from "fs";
 import * as path from 'path';
+import { homedir } from 'os';
 import { Contract, utils, BigNumber } from "ethers";
 import { StandardMerkleTree } from "@openzeppelin/merkle-tree";
 import { Validator, TrieRebalance } from "../types";
@@ -150,11 +151,11 @@ async function generateTrees(db: DB): Promise<string[]> {
 
     // Write to disk
     fs.writeFileSync(
-      path.resolve(__dirname, "../../.smoothly/withdrawals.json"), 
+      path.resolve(homedir(), ".smoothly/withdrawals.json"), 
       JSON.stringify(withdrawalsTree.dump())
     )
     fs.writeFileSync(
-      path.resolve(__dirname, "../../.smoothly/exits.json"), 
+      path.resolve(homedir(), ".smoothly/exits.json"), 
       JSON.stringify(exitsTree.dump())
     )
     return [withdrawalsTree.root, exitsTree.root];

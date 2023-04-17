@@ -5,13 +5,14 @@ import { DEFAULTS } from '../config';
 import { LevelDB } from './level';
 import { Validator } from '../types';
 import { BigNumber } from "ethers";
+import { homedir } from 'os';
 
 export class DB {
   db: Trie;
 
   constructor(_root: string, _testing: boolean) {
     try {
-      const level = new Level(`${DEFAULTS.folder}/db`);
+      const level = new Level(`${homedir}/${DEFAULTS.folder}/db`);
       this.db = new Trie({
         db: _testing ? new MapDB() : new LevelDB(level),
         useKeyHashing: true,
