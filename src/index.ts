@@ -23,12 +23,13 @@ async function main(): Promise<void> {
   try {
     const pk = opts.privateKey; 
     const network = opts.network;
-    const checkpoint = opts.checkpoint || undefined;
+    const checkpoint = opts.sync || undefined;
     const port = process.env.PORT || 4040;
     const oracle = new Oracle(network, pk);
     const api =  new API(oracle, port as number);
     // Sync from checkpoint if provided
     if(checkpoint) {
+      console.log("Syncing from checkpoint node...");
       await oracle.sync(checkpoint);
     } 
     oracle.start();

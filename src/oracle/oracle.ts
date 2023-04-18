@@ -44,22 +44,11 @@ export class Oracle extends Config {
       const req = await fetch(`${checkpoint}/checkpoint`);
       const res = await req.json();
       for(let validator of res.data) {
-        this.db.insert(validator.index, validator);
+        await this.db.insert(validator.index, validator);
       }
     } catch (err: any) {
       throw new Error("Sync failed, make sure checkpoint is active");
     }
-  }
-
-  // Rethink this to make it faster
-  // I'm thinking download all slots first concurrently and then process
-  // all of them
-  async fullSync(current: number, to: number, db: DB): Promise<Buffer> {
-    while(current <= to) {
-      await processEpoch(current, true, this);
-      await this.fullSync(current+1, to, db);
-    }
-    return db.root();
   }
 
   async rebalance(): Promise<void> {
