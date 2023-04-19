@@ -2,3 +2,4 @@ node_modules
 .env
 .smoothly
 dist
+yarn-error.log
