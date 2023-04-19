@@ -12,7 +12,7 @@
 ## Prerequisites
 
 - :gear: [NodeJS](https://nodejs.org/) (LTS)
-- :toolbox: [Yarn](https://yarnpkg.com/)/[Lerna](https://lerna.js.org/)
+- :toolbox: [Yarn](https://yarnpkg.com/)/[npm](https://npmjs.com/)
 
 ## Usage 
 `smoothly_cli -pk <YOUR_PRIVATE_KEY> -c <SYNC_CHECKPOINT> -n <goerli defaults>` 
