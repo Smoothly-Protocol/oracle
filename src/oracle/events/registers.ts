@@ -17,7 +17,6 @@ export async function verifyValidator(
   indexes: number[],
   oracle: Oracle 
 ) {
-  for(let id of indexes) {
 	const url = `${oracle.network.beaconchainApi}/api/v1/validator/eth1/${eth1Addr}`;
 	const headers = {
 		method: "GET",
@@ -31,45 +30,46 @@ export async function verifyValidator(
 	if(res.status === "OK") {
 		let data: Array<ValidatorInfo> = [];
 		data = res.data.length != undefined ? res.data : data.push(res.data);
-		const { verified, index } = proofOwnership(eth1Addr, id, data);
-		if(verified) {
-      const validator: Validator | undefined = await oracle.db.get(index);
-      if(!validator) {
-        const newUser: Validator = {
-          index: index, 
-          eth1: eth1Addr.toLowerCase(),
-          rewards: BigNumber.from("0"),
-          slashMiss: 0,
-          slashFee: 0, 
-          stake: STAKE_FEE,
-          firstBlockProposed: false, 
-          firstMissedSlot: false,
-          exitRequested: false,
-          active: true,
-          deactivated: false
-        };
-        await oracle.db.insert(index, newUser);
-        console.log(`Successfully created user: with validator ${index} for ${eth1Addr}`)
-      } else if(validator.deactivated) {
-        console.log(`Validator Deactivated: with validator ${index} for ${eth1Addr}`)
-      } else if(!validator.active) {
-        validator.active = true;
-        validator.stake = STAKE_FEE;
-        validator.firstBlockProposed = false;
-        await oracle.db.insert(index, validator);
-        console.log(`Welcome validator: with validator ${index} for ${eth1Addr}`)
-      } else if(validator.active) {
-        console.log(`Validator already registered: with validator ${index} for ${eth1Addr}`)
+    for(let id of indexes) {
+      const { verified, index } = proofOwnership(eth1Addr, id, data);
+      if(verified) {
+        const validator: Validator | undefined = await oracle.db.get(index);
+        if(!validator) {
+          const newUser: Validator = {
+            index: index, 
+            eth1: eth1Addr.toLowerCase(),
+            rewards: BigNumber.from("0"),
+            slashMiss: 0,
+            slashFee: 0, 
+            stake: STAKE_FEE,
+            firstBlockProposed: false, 
+            firstMissedSlot: false,
+            exitRequested: false,
+            active: true,
+            deactivated: false
+          };
+          await oracle.db.insert(index, newUser);
+          console.log(`Successfully created user: with validator ${index} for ${eth1Addr}`)
+        } else if(validator.deactivated) {
+          console.log(`Validator Deactivated: with validator ${index} for ${eth1Addr}`)
+        } else if(!validator.active) {
+          validator.active = true;
+          validator.stake = STAKE_FEE;
+          validator.firstBlockProposed = false;
+          await oracle.db.insert(index, validator);
+          console.log(`Welcome validator: with validator ${index} for ${eth1Addr}`)
+        } else if(validator.active) {
+          console.log(`Validator already registered: with validator ${index} for ${eth1Addr}`)
+        }
+      } else {
+        console.log(`Onowned User: with validator ${index} for ${eth1Addr}`);
       }
-		} else {
-      console.log(`Onowned User: with validator ${index} for ${eth1Addr}`);
-		}
+  }
 	} else {
 		console.log("ERR: something went wrong on verifyValidator req call.");
 		console.log(" User:", eth1Addr);
 		console.log(" Response:", res);
 	}
-  }
 }
 
 function proofOwnership(

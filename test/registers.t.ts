@@ -52,7 +52,7 @@ describe("Registers users event listener", () => {
     const validators = [1];
     await contract.registerBulk(
       validators, 
-      {value: utils.parseEther("0.65")}
+      {value: STAKE_FEE}
     );
     await delay(5000);
     const result: any = await oracle.db.get(1);
@@ -64,7 +64,7 @@ describe("Registers users event listener", () => {
     const validators = indexes;
     await contract.connect(validatorAcc).registerBulk(
       validators, 
-      {value: utils.parseEther("1.30")}
+      {value: STAKE_FEE.mul(2)}
     );
     // Wait for event listeners to get picked up
     await delay(8000);
@@ -80,7 +80,7 @@ describe("Registers users event listener", () => {
     const validators = indexes;
     await contract.connect(validatorAcc).registerBulk(
       validators, 
-      {value: utils.parseEther("1.30")}
+      {value: STAKE_FEE.mul(2)}
     );
     // Wait for event listeners to get picked up
     await delay(5000);
@@ -94,7 +94,7 @@ describe("Registers users event listener", () => {
     await oracle.db.insert(validators[0], validator);
     await contract.connect(validatorAcc).registerBulk(
       validators, 
-      {value: utils.parseEther("1.30")}
+      {value: STAKE_FEE.mul(2)}
     );
     // Wait for event listeners to get picked up
     await delay(5000);
@@ -108,7 +108,7 @@ describe("Registers users event listener", () => {
     await oracle.db.insert(validators[1], validator);
     await contract.connect(validatorAcc).registerBulk(
       validators, 
-      {value: utils.parseEther("1.30")}
+      {value: STAKE_FEE.mul(2)}
     );
     // Wait for event listeners to get picked up
     await delay(5000);
