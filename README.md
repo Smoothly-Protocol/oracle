@@ -1,4 +1,4 @@
-<p align="center"><a href="https://0xsmoothly.notion.site/"><img width="500" title="Smoothly" src='assets/web_logo.png' /></a></p>
+<p align="center"><a href="https://0xsmoothly.notion.site/"><img width="300" title="Smoothly" src='assets/web_logo.png' /></a></p>
 
 # Smoothly Pool Operator Node
 
