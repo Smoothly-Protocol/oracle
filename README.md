@@ -1,8 +1,18 @@
+<p align="center"><a href="https://0xsmoothly.notion.site/"><img width="500" title="Smoothly" src='assets/web_logo.png' /></a></p>
+
 # Smoothly Pool Operator Node
 
-## Install 
-Requirements are: `node` and `npm`.  
-`git clone` repository and `npm i -g`.  
+[![GitHub release (latest by date)](https://img.shields.io/github/v/release/Smoothly-Protocol/oracle?label=Github)](https://github.com/Smoothly-Protocol/oracle/releases/latest)
+![ES Version](https://img.shields.io/badge/ES-2020-yellow)
+![Node Version](https://img.shields.io/badge/node-18.x-green)
+
+## Getting Started 
+
+
+## Prerequisites
+
+- :gear: [NodeJS](https://nodejs.org/) (LTS)
+- :toolbox: [Yarn](https://yarnpkg.com/)/[Lerna](https://lerna.js.org/)
 
 ## Usage 
 `smoothly_cli -pk <YOUR_PRIVATE_KEY> -c <SYNC_CHECKPOINT> -n <goerli defaults>` 
