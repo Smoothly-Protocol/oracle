@@ -7,6 +7,7 @@ export async function Checkpoint(app: Application, oracle: Oracle) {
     try {
 			let validators: Validator[] = [];
       const stream = await oracle.db.getStream();
+      const root = await oracle.db.root();
       await new Promise((fulfilled) => { 
         stream
         .on('data', async (data: any) => {
@@ -15,6 +16,7 @@ export async function Checkpoint(app: Application, oracle: Oracle) {
         .on('end', fulfilled);
       });
       res.json({
+        root: root.toString('hex'),
 				data: validators
 			});
     } catch {
