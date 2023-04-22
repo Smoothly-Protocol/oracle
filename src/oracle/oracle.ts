@@ -19,12 +19,10 @@ import {
 
 export class Oracle extends Config {
   db: DB;  
-  synced: boolean;
 
-  constructor(_network: string, _pk: string) {
+  constructor(_network: string, _pk: string, _root: string) {
     super(_network, _pk);
-    this.db = new DB(EMPTY_ROOT, _network === "local");
-    this.synced = false;
+    this.db = new DB(_root, _network === "local");
   }
 
   start(): void {
@@ -48,6 +46,16 @@ export class Oracle extends Config {
       }
     } catch (err: any) {
       throw new Error("Sync failed, make sure checkpoint is active");
+    }
+  }
+
+  async fullSync(current: number): Promise<any> {
+    current === 0 ? current = this.network.deploymentEpoch : 0;
+    try {
+      await processEpoch(current, true, this);
+      return this.fullSync(current + 1);
+    } catch(err: any) {
+      return 0;
     }
   }
 

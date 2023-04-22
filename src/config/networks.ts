@@ -6,7 +6,7 @@ export const GOERLI: NetInfo = {
   governance: "0xCD98b998d6C3e5685dD46bc9F7f056A3E5dd8AF5",
   beacon: "http://unstable.prater.beacon-api.nimbus.team",
   beaconchainApi: "https://goerli.beaconcha.in",
-  deploymentEpoch: 164323 
+  deploymentEpoch: 169060 
 }
 
 export const MAINNET: NetInfo = {

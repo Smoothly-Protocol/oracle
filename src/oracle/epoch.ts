@@ -1,3 +1,6 @@
+import fs from "fs";
+import * as path from 'path';
+import { homedir } from 'os';
 import EventSource from "eventsource";
 import { Oracle } from './oracle';
 import { DB } from '../db';
@@ -32,11 +35,21 @@ export async function processEpoch(
   const beacon = oracle.network.beacon;
   const db = oracle.db;
   const contract = oracle.contract;
-  const { data } = await reqEpochSlots(epoch, beacon);
+  const checkpoint = syncing ? await reqEpochCheckpoint(beacon) : 0;
+  const res = await reqEpochSlots(epoch, beacon);
+
+  // Handle invalid epoch
+  if(res.code) {
+    throw `Code: ${res.code}, Message: ${res.message}`;
+  } else if(syncing && epoch > Number(checkpoint)) {
+    throw `Checkpoint reached`;
+  }
+
+  syncing ? console.log("Syncing epoch:", epoch) : 0;
 
   // Fetch slots in parallel
   let promises: Promise<any>[] = [];
-  for(let _slot of data) {
+  for(let _slot of res.data) {
     const { slot, validator_index } = _slot;
     promises.push(reqSlotInfo(slot, beacon).then(async (s: any) => {
       if(s !== undefined) {
@@ -57,7 +70,7 @@ export async function processEpoch(
 
   for(let _slot of slots) { 
     const { proposer_index, body, logs } = _slot;
-
+    
     // Process eth1 logs
     if(logs.length > 0 && syncing) {
       for(let log of logs) {
@@ -98,6 +111,12 @@ export async function processEpoch(
         await addMissedSlot(validator, db); 
     }
   }
+
+  // Write new Head to Disk
+  fs.writeFileSync(
+    path.resolve(homedir(), ".smoothly/head.json"), 
+    JSON.stringify({root: db.root().toString('hex'), epoch: epoch})
+  )
 }
 
 async function voluntaryExits(data: any, db: DB) { 
@@ -105,6 +124,7 @@ async function voluntaryExits(data: any, db: DB) {
     const index = exit.message.validator_index;
     const validator = await db.get(index);
     if(validator) {
+      validator.deactivated = true;
       validator.active = false;
       await db.insert(index, validator);
       console.log("Voluntary exit: validator with index", index);

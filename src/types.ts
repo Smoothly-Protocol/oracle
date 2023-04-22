@@ -20,6 +20,11 @@ export interface TrieRebalance {
   tStake: BigNumber
 }
 
+export interface Head {
+	root: string,
+	epoch: number
+}
+
 export interface NetInfo {
   rpc: string,
   pool: string, 

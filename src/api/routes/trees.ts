@@ -1,7 +1,8 @@
-import { Application, Request, Response } from 'express';
-import { Oracle } from '../../oracle';
 import fs from "fs";
 import * as path from 'path';
+import { homedir } from 'os';
+import { Application, Request, Response } from 'express';
+import { Oracle } from '../../oracle';
 
 export async function TreeRoutes(app: Application, oracle: Oracle) {
   app.get('/tree/:name', async (req: Request, res: Response): Promise<void> => {
@@ -9,7 +10,7 @@ export async function TreeRoutes(app: Application, oracle: Oracle) {
       const name: string = req.params.name;
       const data: any = JSON.parse(
         fs.readFileSync(
-          path.resolve(__dirname, `../../../.smoothly/${name}.json`),
+          path.resolve(homedir(), `.smoothly/${name}.json`),
           'utf8'
         )
       );

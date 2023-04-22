@@ -16,7 +16,7 @@ export class DB {
       this.db = new Trie({
         db: _testing ? new MapDB() : new LevelDB(level),
         useKeyHashing: true,
-        root: Buffer.from(_root.slice(2), 'hex')
+        root: Buffer.from(_root, 'hex')
       })
     } catch(err: any) {
       throw new Error("MPT trie for db failed to initialize");
