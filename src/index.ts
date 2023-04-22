@@ -37,7 +37,7 @@ async function main(): Promise<void> {
 		const data = existsHead();
 		if(data) {
 			root = data.root;
-			epoch = data.epoch + 1;
+			epoch = Number(data.epoch) + 1;
 		} 
 
     const oracle = new Oracle(network, pk, root);
