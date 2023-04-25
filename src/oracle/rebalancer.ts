@@ -26,16 +26,23 @@ export async function Rebalancer (oracle: Oracle) {
       const [withdrawalsRoot, exitsRoot] = await generateTrees(db);
 
       // Propose Epoch to governance contract  
-      const tx = await contract.connect(oracle.signer).proposeEpoch([
-        withdrawalsRoot,
-        exitsRoot,
-        db.root(),
-        fee
-      ]);
-      await tx.wait();
+      const epochData = [withdrawalsRoot, exitsRoot, db.root(), fee];
+      await proposeEpoch(epochData, oracle);
     } catch(err) {
       console.log(err);
     }
+}
+
+async function proposeEpoch(epochData: any, oracle: Oracle): Promise<void> {
+  try {
+    const contract = oracle.governance;
+    const tx = await contract.connect(oracle.signer).proposeEpoch(epochData);
+    await tx.wait();
+  } catch(err: any) {
+    console.log("Error: proposing epoch, trying again in 30 sec")
+    console.log("Warning: make sure your address is funded and registered as operator")
+    setTimeout(async () => {await proposeEpoch(epochData, oracle)}, 30000);
+  }
 }
 
 async function processRebalance(db: DB): Promise<TrieRebalance> {
