@@ -16,7 +16,7 @@ program
   .description('CLI for running a node that supoorts the smoothly pool validator network')
   .version('0.0.1')
   .usage('[OPTIONS]...')
-  .option('-n, --network <value>', 'Select network [goerli, mainnet]', 'local')
+  .option('-n, --network <value>', 'Select network [goerli, mainnet]', 'goerli')
   .option('-s, --sync <checkpoint>', 'Select checkpoint to sync from')
   .requiredOption('-pk, --private-key <value>', 'Add eth1 validator account private key.')
   .parse(process.argv);
