@@ -1,4 +1,5 @@
 import { Oracle } from "../src/oracle";
+import { EMPTY_ROOT } from "../src/utils";
 import { pool, governance } from "../src/artifacts";
 import { 
   Wallet, 
@@ -33,7 +34,7 @@ export async function setup(): Promise<Oracle> {
   try {
     const provider = new providers.JsonRpcProvider("http://127.0.0.1:8545");
     const [owner] = await getSigners(provider);
-    const oracle = new Oracle("local", pks[0]);
+    const oracle = new Oracle("local", pks[0], EMPTY_ROOT);
     const contract = await(new ContractFactory(
       pool["abi"], 
       pool["bytecode"],

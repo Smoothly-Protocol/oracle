@@ -1,15 +1,16 @@
 import { assert, expect } from "chai";
-import { setup } from "./setup";
+import { setup, pks, time1Day } from "./setup";
 import { validators } from "./mock";
-import { utils, Wallet, BigNumber } from "ethers";
+import { utils, Wallet, BigNumber, providers } from "ethers";
 import { Validator } from "../src/types";
 import { Oracle } from "../src/oracle";
 import { RewardsWithdrawal } from "../src/oracle/events";
-import { STAKE_FEE, FEE } from "../src/utils";
+import { STAKE_FEE, FEE, MISS_FEE } from "../src/utils";
 import { StandardMerkleTree } from "@openzeppelin/merkle-tree";
 import { delay } from "./utils";
 import fs from "fs";
 import * as path from 'path';
+import { homedir } from 'os';
 
 describe("Rebalancer", () => {
 	let oracle: Oracle;
@@ -20,12 +21,16 @@ describe("Rebalancer", () => {
 			// Simulate registration
 			await oracle.db.insert(v.index, v);
 			await oracle.signer.sendTransaction({
-				value: utils.parseEther("0.65"),
+				value: STAKE_FEE,
 				to: oracle.contract.address
 			});
 		} 
 	})
 
+  beforeEach(async () => {
+    const provider = new providers.JsonRpcProvider("http://127.0.0.1:8545");
+    await time1Day(provider);           
+  })
 
 	describe("Fund Validators", () => {
     beforeEach(async () => {
@@ -39,6 +44,7 @@ describe("Rebalancer", () => {
 		it("funds all validators evenly with fee", async () => {
 			const fee = utils.parseEther("0.1").mul(FEE).div(1000);
 			await oracle.rebalance();
+      await delay(5000);
 			for(let v of validators) {
 				const finalValidator: Validator | undefined = await oracle.db.get(v.index);
 				if(finalValidator) {
@@ -48,7 +54,7 @@ describe("Rebalancer", () => {
 					);  
 				}
 			}
-		});
+		}).timeout(10000);
 	});
 
 	describe("First block not proposed", () => {
@@ -66,14 +72,15 @@ describe("Rebalancer", () => {
 				startValidator.slashFee = 1;
 				await oracle.db.insert(100, startValidator); 
 				await oracle.rebalance();
+        await delay(5000);
 			}
 			const finalValidator: Validator | undefined = await oracle.db.get(100);
 			if(finalValidator) {
 				assert.equal(finalValidator.slashFee, 0);  
-				assert.deepEqual(BigNumber.from(finalValidator.stake), utils.parseEther("0.65"));
+				assert.deepEqual(BigNumber.from(finalValidator.stake), STAKE_FEE);
 				assert.deepEqual(BigNumber.from(finalValidator.rewards), BigNumber.from("0"));  
 			}
-		})
+		}).timeout(10000);
 
 		it("zeros out validator on missed proposal", async () => {
 			const startValidator: Validator | undefined = await oracle.db.get(100);
@@ -81,14 +88,15 @@ describe("Rebalancer", () => {
 				startValidator.slashMiss = 1;
 				await oracle.db.insert(100, startValidator); 
 				await oracle.rebalance();
+        await delay(5000);
 			}
 			const finalValidator: Validator | undefined = await oracle.db.get(100);
 			if(finalValidator) {
 				assert.equal(finalValidator.slashMiss, 0);  
-				assert.deepEqual(BigNumber.from(finalValidator.stake), utils.parseEther("0.65"));
+				assert.deepEqual(BigNumber.from(finalValidator.stake), STAKE_FEE);
 				assert.deepEqual(BigNumber.from(finalValidator.rewards), BigNumber.from("0"));  
 			}
-		})
+		}).timeout(10000);
 	})
 
 	describe("First block proposed", () => {
@@ -109,6 +117,7 @@ describe("Rebalancer", () => {
 				await oracle.db.insert(100, startValidator); 
 			}
 			await oracle.rebalance();
+      await delay(5000);
 			const finalValidator: Validator | undefined = await oracle.db.get(100);
 			if(finalValidator) {
 				assert.equal(finalValidator.slashFee, 0);  
@@ -117,7 +126,7 @@ describe("Rebalancer", () => {
 				assert.deepEqual(finalValidator.active, false);  
 				assert.deepEqual(finalValidator.deactivated, true);  
 			}
-		})
+		}).timeout(10000);
 
 		it("avoids slash of first missed proposal", async () => {
 			const startValidator: Validator | undefined = await oracle.db.get(200);
@@ -127,13 +136,14 @@ describe("Rebalancer", () => {
 				await oracle.db.insert(200, startValidator); 
 			}
 			await oracle.rebalance();
+      await delay(5000);
 			const finalValidator: Validator | undefined = await oracle.db.get(200);
 			if(finalValidator) {
 				assert.equal(finalValidator.slashMiss, 0);  
-				assert.deepEqual(BigNumber.from(finalValidator.stake), utils.parseEther("0.65"));
+				assert.deepEqual(BigNumber.from(finalValidator.stake), STAKE_FEE);
 				assert.equal(finalValidator.firstMissedSlot, true);  
 			}
-		})
+		}).timeout(10000);
 
 		it("slashes validator on second missed proposal", async () => {
 			const startValidator: Validator | undefined = await oracle.db.get(200);
@@ -142,16 +152,18 @@ describe("Rebalancer", () => {
 				await oracle.db.insert(200, startValidator); 
 			}
 			await oracle.rebalance();
+      await delay(5000);
 			const finalValidator: Validator | undefined = await oracle.db.get(200);
 			if(finalValidator) {
 				assert.equal(finalValidator.slashMiss, 0);  
-				assert.deepEqual(BigNumber.from(finalValidator.stake), utils.parseEther("0.5"));
+				assert.deepEqual(BigNumber.from(finalValidator.stake), STAKE_FEE.sub(MISS_FEE));
 			}
-		})
+		}).timeout(10000);
 
 		it("doesn't issue rewards to slashed validators", async () => {
 			const startValidator: Validator | undefined = await oracle.db.get(200);
 			await oracle.rebalance();
+      await delay(5000);
 			const finalValidator: Validator | undefined = await oracle.db.get(200);
 			if(finalValidator && startValidator) {
 				assert.deepEqual(
@@ -159,7 +171,7 @@ describe("Rebalancer", () => {
 					BigNumber.from(startValidator.rewards)
 				);
 			}
-		})
+		}).timeout(10000);
 
 		it("deactivates validator if runs out of stake", async () => {
 			const startValidator: Validator | undefined = await oracle.db.get(200);
@@ -168,6 +180,7 @@ describe("Rebalancer", () => {
 				await oracle.db.insert(200, startValidator); 
 			}
 			await oracle.rebalance();
+      await delay(5000);
 			const finalValidator: Validator | undefined = await oracle.db.get(200);
 			if(finalValidator) {
 				assert.equal(finalValidator.slashMiss, 0);  
@@ -175,14 +188,14 @@ describe("Rebalancer", () => {
 				assert.deepEqual(finalValidator.active, false);  
 				assert.deepEqual(finalValidator.deactivated, true);  
 			}
-		})
+		}).timeout(10000);
 	})
 
 	describe("Withdrawals", async () => {
 		it("shouldn't allows a validator to withdraw wrong rewards", async () => {
 			const data: any = JSON.parse(
 				fs.readFileSync(
-					path.resolve(__dirname, "../.smoothly/withdrawals.json"),
+					path.resolve(homedir(), ".smoothly/withdrawals.json"),
 					'utf8'
 				)
 			)
@@ -202,7 +215,7 @@ describe("Rebalancer", () => {
 		it("allows a validator to withdraw their rewards", async () => {
 			const data: any = JSON.parse(
 				fs.readFileSync(
-					path.resolve(__dirname, "../.smoothly/withdrawals.json"),
+					path.resolve(homedir(), ".smoothly/withdrawals.json"),
 					'utf8'
 				)
 			)

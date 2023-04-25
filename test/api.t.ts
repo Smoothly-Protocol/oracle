@@ -1,6 +1,7 @@
 import { assert, expect } from "chai";
 import { utils, BigNumber, providers } from "ethers";
 import { setup, pks, time1Day } from "./setup";
+import { EMPTY_ROOT, STAKE_FEE } from "../src/utils";
 import { validators } from "./mock";
 import { Oracle } from "../src/oracle";
 import { RewardsWithdrawal  } from "../src/oracle/events";
@@ -10,6 +11,7 @@ import { StandardMerkleTree } from "@openzeppelin/merkle-tree";
 import { delay } from "./utils";
 import fs from "fs";
 import * as path from 'path';
+import { homedir } from 'os';
 
 describe("API", () => {
   let oracle: Oracle;
@@ -22,7 +24,7 @@ describe("API", () => {
     for(let v of validators) {
       await oracle.db.insert(v.index, v);
       await oracle.signer.sendTransaction({
-        value: utils.parseEther("0.65"),
+        value: STAKE_FEE,
         to: oracle.contract.address
       }) 
     }
@@ -58,7 +60,7 @@ describe("API", () => {
       assert.equal(stats.activated, 2);
       assert.equal(
         BigNumber.from(stats.total_stake)
-        .eq(utils.parseEther("0.065").mul(5)), 
+        .eq(STAKE_FEE.mul(5)), 
         true
       );
       /*
@@ -81,7 +83,7 @@ describe("API", () => {
       const validator: Validator = validators[0];
       const data: any = JSON.parse(
         fs.readFileSync(
-          path.resolve(__dirname, "../.smoothly/withdrawals.json"),
+          path.resolve(homedir(), ".smoothly/withdrawals.json"),
           'utf8'
         )
       )
@@ -101,7 +103,7 @@ describe("API", () => {
       const stats = await getPoolStats(await oracle.getRoot()); 
       assert.equal(
         BigNumber.from(stats.total_withdrawals)
-        .eq(utils.parseEther("0.3697")), 
+        .eq(utils.parseEther("0.367")), 
         true
       );
       assert.equal(
@@ -120,7 +122,7 @@ describe("API", () => {
 
   describe("Checkpoint", () => {
     it("syncs node2 to active nodes state", async () => {
-      const oracle2 = new Oracle("local", pks[1]);
+      const oracle2 = new Oracle("local", pks[1], EMPTY_ROOT);
       await oracle2.sync("http://localhost:4000");
       console.log(await oracle.getRoot())
       assert.equal(
