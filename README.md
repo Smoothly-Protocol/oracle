@@ -6,16 +6,32 @@
 ![ES Version](https://img.shields.io/badge/ES-2020-yellow)
 ![Node Version](https://img.shields.io/badge/node-18.x-green)
 
-## Getting Started 
-
-
 ## Prerequisites
 
 - :gear: [NodeJS](https://nodejs.org/) (LTS)
 - :toolbox: [Yarn](https://yarnpkg.com/)/[npm](https://npmjs.com/)
 
+## Getting Started 
+
+To start git clone the repository and `cd` into it.
+
+### Docker
+
+```
+docker build -t smoothly .
+docker run -d -e "PK=APPROVED_OPERATOR_ETH1_PRIVATE_KEY" smoothly
+```
+
+### Source Build
+
+```
+npm install 
+npm run build
+npm link
+```
+
 ## Usage 
-`smoothly_cli -pk <YOUR_PRIVATE_KEY> -c <SYNC_CHECKPOINT> -n <goerli defaults>` 
+`smoothly_cli -pk <YOUR_PRIVATE_KEY> -s <CHECKPOINT_NODE_SYNC> -n <goerli defaults>` 
 
 ## Tests 
 
