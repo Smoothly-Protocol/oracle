@@ -31,6 +31,7 @@ export interface NetInfo {
   governance: string, 
   beacon: string,
   beaconchainApi: string,
+  relays: string[],
   deploymentEpoch: number
 }
 

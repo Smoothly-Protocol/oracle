@@ -6,6 +6,11 @@ export const GOERLI: NetInfo = {
   governance: "0xCD98b998d6C3e5685dD46bc9F7f056A3E5dd8AF5",
   beacon: "http://unstable.prater.beacon-api.nimbus.team",
   beaconchainApi: "https://goerli.beaconcha.in",
+  relays: [
+    "https://boost-relay-goerli.flashbots.net",
+    "https://relay-stag.ultrasound.money",
+    "https://goerli.aestus.live"
+  ],
   deploymentEpoch: 169060 
 }
 
@@ -15,6 +20,7 @@ export const MAINNET: NetInfo = {
   governance: "N/A",
   beacon: "http://unstable.mainnet.beacon-api.nimbus.team/",
   beaconchainApi: "https://beaconcha.in",
+  relays: [],
   deploymentEpoch: 163682
 }
 
@@ -24,6 +30,7 @@ export const LOCAL: NetInfo = {
   governance:"0x5FbDB2315678afecb367f032d93F642f64180aa3",
   beacon: "http://unstable.prater.beacon-api.nimbus.team/",
   beaconchainApi: "https://goerli.beaconcha.in",
+  relays: [],
   deploymentEpoch: 0 
 }
 

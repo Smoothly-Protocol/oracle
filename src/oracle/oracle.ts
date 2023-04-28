@@ -9,6 +9,7 @@ import {
   EpochListener
 } from "./epoch";
 import { Rebalancer } from "./rebalancer";
+import { MonitorRelays } from "./relays";
 import { 
   Registered,
   ExitRequested,
@@ -32,6 +33,7 @@ export class Oracle extends Config {
     StakeAdded(this);
     StakeWithdrawal(this);
     RewardsWithdrawal(this);
+    MonitorRelays(this);
     cron.schedule('0 17 * * *', async () => {
       this.rebalance()
     }, {timezone: "America/Los_Angeles"});
