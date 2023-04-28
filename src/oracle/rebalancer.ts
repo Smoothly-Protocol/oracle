@@ -21,9 +21,12 @@ export async function Rebalancer (oracle: Oracle) {
       } = await processRebalance(db);
       
       const total = (await oracle.getBalance()).sub(tRewards.add(tStake));
-
       const fee = await fundUsers(includedValidators, total, db);
+
       const [withdrawalsRoot, exitsRoot] = await generateTrees(db);
+
+      console.log("Total Rewards:", utils.formatEther(total));
+      console.log("Operator Fee:", utils.formatEther(fee));
 
       // Propose Epoch to governance contract  
       const epochData = [withdrawalsRoot, exitsRoot, db.root(), fee];
