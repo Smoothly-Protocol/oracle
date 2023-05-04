@@ -25,9 +25,21 @@ docker run -d -e "PK=APPROVED_OPERATOR_ETH1_PRIVATE_KEY" smoothly
 ### Source Build
 
 ```
-npm install 
+sudo apt update
+sudo apt install build-essential libssl-dev curl
+curl -o- [https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.1/install.sh](https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.1/install.sh) | bash
+source ~/.bashrc
+nvm --version
+nvm ls-remote
+nvm install v18.16.0
+sudo apt install git
+git clone https://github.com/Smoothly-Protocol/oracle.git
+cd oracle
+npm run build
+npm install typescript
 npm run build
 npm link
+smoothly_cli -pk <your private key> -s https://node-goerli.smoothly.money -n goerli
 ```
 
 ## Usage 
