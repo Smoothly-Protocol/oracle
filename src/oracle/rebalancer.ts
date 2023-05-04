@@ -61,10 +61,14 @@ async function processRebalance(db: DB): Promise<TrieRebalance> {
         let validator = JSON.parse(data.value.toString());
         if(validator.slashFee !== 0 || validator.slashMiss !== 0) {
           validator = await slashValidator(validator, db);
-        } else if(validator.active) {
+        } else if(validator.active && !validator.excludeRebalance) {
           if(BigNumber.from(validator.stake).eq(SLASH_FEE)) {
             includedValidators.push(validator);
           }
+        }
+        
+        if(validator.excludeRebalance) {
+          console.log(`Validator ${validator.index} excluded`);
         }
 
         tRewards = tRewards.add(validator.rewards);

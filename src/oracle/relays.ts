@@ -1,4 +1,5 @@
 import { Oracle } from "./oracle";
+import { Validator } from "../types";
 
 const headers = {
   method: "GET",
@@ -8,20 +9,55 @@ const headers = {
   }
 };
 
-export async function MonitorRelays(oracle: Oracle) {
+export async function MonitorRelays(oracle: Oracle): Promise<void> {
   try {
-    const { relays, beacon } = oracle.network;
-    const pubKey = await getPubKey(beacon, 368721);
+    const { relays, beacon, pool } = oracle.network;
+    const db = oracle.db;
 
-    for(let relay of relays) {
-      const url = `${relay}/relay/v1/data/validator_registration?pubkey=${pubKey}`;	
-      const req = await fetch(url, headers);
-      const res = await req.json();
-      if(res.code === 400) {
-        console.log("Validator not register in:", relay);
-      } else if(res.code === 500) {
-        console.log(relay, "down, due to internal error");
+    let validators: Validator[] = [];
+
+    // Get all validators
+    const stream = await db.getStream();
+    await new Promise((fulfilled) => { 
+      stream
+      .on('data', async (data: any) => {
+        validators.push(JSON.parse(data.value.toString()));
+      })
+      .on('end', fulfilled);
+    });
+
+    console.log("Starting Daily relay Monitoring, this might take a while...");
+
+    for(let validator of validators) {
+      let ltsTimestamp: number = 0;
+      const pubKey = await getPubKey(beacon, validator.index);
+
+      // Look for wrong fee recipients
+      for(let relay of relays) {
+        const res = await reqRelayRegistration(relay, pubKey);
+        
+        if(res.code === 400) {
+          console.log("Validator not registered in:", relay);
+        } else if(res.code === 500) {
+          console.log(relay, "down, due to internal error");
+        } else if(res.message) {
+          const { fee_recipient, timestamp } = res.message; 
+          const t = Number(timestamp);
+          
+          if(ltsTimestamp <= t) {
+            if(fee_recipient.toLowerCase() === pool.toLowerCase()) {
+              validator.excludeRebalance = false;
+            } else { 
+              validator.excludeRebalance = true; 
+            }
+          }
+
+          ltsTimestamp = t;
+        }
       }
+      
+      // Update
+      await db.insert(validator.index, validator);
     }
   } catch(err: any) {
     console.log(err);
@@ -37,3 +73,15 @@ async function getPubKey(beacon: string, index: number): Promise<string> {
   }
   return res.data.validator.pubkey;
 }
+
+async function reqRelayRegistration(relay: string, pubkey: string): Promise<any> {
+  try {
+    const url = `${relay}/relay/v1/data/validator_registration?pubkey=${pubkey}`;	
+    const req = await fetch(url, headers);
+    const res = await req.json();
+    return res;
+  } catch(err: any) {
+    console.log(err);
+  }
+}
+

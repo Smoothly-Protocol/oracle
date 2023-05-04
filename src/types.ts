@@ -9,6 +9,7 @@ export interface Validator {
   stake: BigNumber, 
   firstBlockProposed: boolean, 
   firstMissedSlot: boolean,  
+  excludeRebalance: boolean?,
   exitRequested: boolean,
   active: boolean,
   deactivated: boolean

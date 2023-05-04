@@ -44,6 +44,7 @@ export async function verifyValidator(
             stake: STAKE_FEE,
             firstBlockProposed: false, 
             firstMissedSlot: false,
+            excludeRebalance: false,
             exitRequested: false,
             active: true,
             deactivated: false

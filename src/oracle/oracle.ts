@@ -33,8 +33,8 @@ export class Oracle extends Config {
     StakeAdded(this);
     StakeWithdrawal(this);
     RewardsWithdrawal(this);
-    MonitorRelays(this);
-    cron.schedule('0 17 * * *', async () => {
+    cron.schedule('*/5 * * * *', async () => {
+      await MonitorRelays(this);
       this.rebalance()
     }, {timezone: "America/Los_Angeles"});
   }
