@@ -37,7 +37,7 @@ export async function MonitorRelays(oracle: Oracle): Promise<void> {
         const res = await reqRelayRegistration(relay, pubKey);
         
         if(res.code === 400) {
-          console.log("Validator not registered in:", relay);
+          console.log(`Validator ${validator.index} not registered in: ${relay}`);
         } else if(res.code === 500) {
           console.log(relay, "down, due to internal error");
         } else if(res.message) {
