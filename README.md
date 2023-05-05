@@ -74,7 +74,29 @@ Link npm to smoothly cli
 ```
 smoothly_cli -pk <your private key> -s https://node-goerli.smoothly.money -n goerli
 ```
-Run the smoothly cli replace <your private key> with the private key associated with the address used to vote in the governance contract. Initially, you'll need -s to checkpoint sync with our existing node. After client is synced, you will have a local db and can remove -s https://node-goerli.smoothly.money and restart.
+Run the smoothly cli and enter the private key associated with the whitelisted address used to vote in the governance contract. Initially, you'll need -s to checkpoint sync with our existing node. After client is synced (processing epochs), you will have a local db and can remove -s https://node-goerli.smoothly.money in future restarts. 
+
+## Update the smoothly cli
+```
+cd oracle
+```
+Move into the oracle directory
+```
+git pull
+```
+Pull new changes 
+```
+npm run build
+```
+Build with new changes
+```
+npm link
+```
+Link 
+```
+smoothly_cli -pk <your private key> -n goerli
+```
+Start smoothly_cli with checkpoint sync removed
 
 ## Usage 
 `smoothly_cli -pk <YOUR_PRIVATE_KEY> -s <CHECKPOINT_NODE_SYNC> -n <goerli defaults>` 
