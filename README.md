@@ -26,9 +26,18 @@ docker run -d -e "PK=APPROVED_OPERATOR_ETH1_PRIVATE_KEY" smoothly
 
 ```
 sudo apt update
+```
+Update your system
+```
 sudo apt install build-essential libssl-dev curl
+```
+Install essential libraries
+```
 curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.1/install.sh | bash
 source ~/.bashrc
+``` 
+Install NVM
+```
 nvm --version
 nvm ls-remote
 nvm install v18.16.0
