@@ -41,15 +41,40 @@ Install NVM
 nvm --version
 nvm ls-remote
 nvm install v18.16.0
+```
+Check version options and install v18.16.0
+```
 sudo apt install git
+```
+Install git if needed
+```
 git clone https://github.com/Smoothly-Protocol/oracle.git
+```
+Clone our repo
+```
 cd oracle
+```
+Move into the \oracle folder
+```
 npm run build
+```
+Build using npm
+```
 npm install typescript
+``` 
+Install typescript if needed
+```
 npm run build
+```
+Rebuild
+```
 npm link
+```
+Link npm to smoothly cli
+```
 smoothly_cli -pk <your private key> -s https://node-goerli.smoothly.money -n goerli
 ```
+Run the smoothly cli replace <your private key> with the private key associated with the address used to vote in the governance contract. Initially, you'll need -s to checkpoint sync with our existing node. After client is synced, you will have a local db and can remove -s https://node-goerli.smoothly.money and restart.
 
 ## Usage 
 `smoothly_cli -pk <YOUR_PRIVATE_KEY> -s <CHECKPOINT_NODE_SYNC> -n <goerli defaults>` 
