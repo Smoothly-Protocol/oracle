@@ -17,11 +17,23 @@ import {
 
 export async function EpochListener(oracle: Oracle) {
   const eth2 = new EventSource(`${oracle.network.beacon}/eth/v1/events?topics=finalized_checkpoint`);
+  let prevEpoch: number = 0;
 
   eth2.addEventListener('finalized_checkpoint', async (e)  => {
-    const { epoch } = JSON.parse(e.data);	
+    let { epoch } = JSON.parse(e.data);	
+
+    // Check for skipped epochs
+    if(prevEpoch === 0) {
+      epoch = Number(epoch);
+    } else if((prevEpoch + 1) !== Number(epoch)) {
+      const skipped = Number(prevEpoch + 1); 
+      console.log("Processing epoch:", skipped);
+      await processEpoch(skipped, false, oracle);
+    }
+
     console.log("Processing epoch:", Number(epoch));
     processEpoch(epoch, false, oracle);
+    prevEpoch = Number(epoch);
   });
 
   console.log("Listening for new finalized_checkpoints");

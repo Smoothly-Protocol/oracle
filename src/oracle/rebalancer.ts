@@ -37,7 +37,9 @@ export async function Rebalancer (oracle: Oracle) {
         const epochData = [withdrawalsRoot, exitsRoot, db.root(), fee];
         await proposeEpoch(epochData, oracle);
       } else {
-        console.log("Process rebalance: Timelock not reached");
+        const postponedTime = (timeLock - now) * 1000;
+        setTimeout(async () => {oracle.rebalance()}, postponedTime);
+        console.log("Next rebalance processing at:", timeLock, "UTC");
       }
     } catch(err) {
       console.log(err);
@@ -52,7 +54,7 @@ async function proposeEpoch(epochData: any, oracle: Oracle): Promise<void> {
   } catch(err: any) {
     console.log("Error: proposing epoch, trying again in 30 sec")
     console.log("Warning: make sure your address is funded and registered as operator")
-    setTimeout(async () => {await proposeEpoch(epochData, oracle)}, 30000);
+    setTimeout(async () => {await proposeEpoch(epochData, oracle)}, 60000);
   }
 }
 
