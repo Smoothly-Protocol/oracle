@@ -13,24 +13,32 @@ export async function Rebalancer (oracle: Oracle) {
     try {
       const contract = oracle.governance;
       const db = oracle.db;
+      const lastEpoch = await contract.lastEpoch();
+      const epochInterval = await contract.epochInterval();
+      const timeLock = Number(lastEpoch) + Number(epochInterval);
+      const now = Math.floor(Date.now() / 1000);
 
-      const { 
-        includedValidators, 
-        tRewards, 
-        tStake 
-      } = await processRebalance(db);
-      
-      const total = (await oracle.getBalance()).sub(tRewards.add(tStake));
-      const fee = await fundUsers(includedValidators, total, db);
+      if(timeLock < now) {
+        const { 
+          includedValidators, 
+          tRewards, 
+          tStake 
+        } = await processRebalance(db);
+        
+        const total = (await oracle.getBalance()).sub(tRewards.add(tStake));
+        const fee = await fundUsers(includedValidators, total, db);
 
-      const [withdrawalsRoot, exitsRoot] = await generateTrees(db);
+        const [withdrawalsRoot, exitsRoot] = await generateTrees(db);
 
-      console.log("Total Rewards:", utils.formatEther(total));
-      console.log("Operator Fee:", utils.formatEther(fee));
+        console.log("Total Rewards:", utils.formatEther(total));
+        console.log("Operator Fee:", utils.formatEther(fee));
 
-      // Propose Epoch to governance contract  
-      const epochData = [withdrawalsRoot, exitsRoot, db.root(), fee];
-      await proposeEpoch(epochData, oracle);
+        // Propose Epoch to governance contract  
+        const epochData = [withdrawalsRoot, exitsRoot, db.root(), fee];
+        await proposeEpoch(epochData, oracle);
+      } else {
+        console.log("Process rebalance: Timelock not reached");
+      }
     } catch(err) {
       console.log(err);
     }
