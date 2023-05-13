@@ -33,11 +33,12 @@ export async function MonitorRelays(oracle: Oracle): Promise<void> {
       const pubKey = await getPubKey(beacon, validator.index);
 
       // Look for wrong fee recipients
+      let nonRegistered = 0;
       for(let relay of relays) {
         const res = await reqRelayRegistration(relay, pubKey);
         
         if(res.code === 400) {
-          console.log(`Validator ${validator.index} not registered in: ${relay}`);
+          nonRegistered ++;
         } else if(res.code === 500) {
           console.log(relay, "down, due to internal error");
         } else if(res.message) {
@@ -56,6 +57,11 @@ export async function MonitorRelays(oracle: Oracle): Promise<void> {
         }
       }
       
+      if(nonRegistered === relays.length) {
+          validator.excludeRebalance = true; 
+          console.log(`Validator ${validator.index} not registered in any relays`);
+      }
+
       // Update
       await db.insert(validator.index, validator);
     }

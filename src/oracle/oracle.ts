@@ -62,7 +62,19 @@ export class Oracle extends Config {
   }
 
   async rebalance(): Promise<void> {
-    Rebalancer(this); 
+    const lastEpoch = await this.governance.lastEpoch();
+    const epochInterval = await this.governance.epochInterval();
+    const timeLock = Number(lastEpoch) + Number(epochInterval);
+    const now = Math.floor(Date.now() / 1000);
+
+    // Schedule rebalance
+    if(timeLock < now) {
+      Rebalancer(this); 
+    } else {
+      const postponedTime = (timeLock - now) * 1000;
+      setTimeout(async () => {Rebalancer(this)}, postponedTime);
+      console.log("Next rebalance processing at:", timeLock, "UTC");
+    }
   }
 
   stop(): void {

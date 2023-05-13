@@ -13,34 +13,24 @@ export async function Rebalancer (oracle: Oracle) {
     try {
       const contract = oracle.governance;
       const db = oracle.db;
-      const lastEpoch = await contract.lastEpoch();
-      const epochInterval = await contract.epochInterval();
-      const timeLock = Number(lastEpoch) + Number(epochInterval);
-      const now = Math.floor(Date.now() / 1000);
 
-      if(timeLock < now) {
-        const { 
-          includedValidators, 
-          tRewards, 
-          tStake 
-        } = await processRebalance(db);
-        
-        const total = (await oracle.getBalance()).sub(tRewards.add(tStake));
-        const fee = await fundUsers(includedValidators, total, db);
+      const { 
+        includedValidators, 
+        tRewards, 
+        tStake 
+      } = await processRebalance(db);
+      
+      const total = (await oracle.getBalance()).sub(tRewards.add(tStake));
+      const fee = await fundUsers(includedValidators, total, db);
 
-        const [withdrawalsRoot, exitsRoot] = await generateTrees(db);
+      const [withdrawalsRoot, exitsRoot] = await generateTrees(db);
 
-        console.log("Total Rewards:", utils.formatEther(total));
-        console.log("Operator Fee:", utils.formatEther(fee));
+      console.log("Total Rewards:", utils.formatEther(total));
+      console.log("Operator Fee:", utils.formatEther(fee));
 
-        // Propose Epoch to governance contract  
-        const epochData = [withdrawalsRoot, exitsRoot, db.root(), fee];
-        await proposeEpoch(epochData, oracle);
-      } else {
-        const postponedTime = (timeLock - now) * 1000;
-        setTimeout(async () => {oracle.rebalance()}, postponedTime);
-        console.log("Next rebalance processing at:", timeLock, "UTC");
-      }
+      // Propose Epoch to governance contract  
+      const epochData = [withdrawalsRoot, exitsRoot, db.root(), fee];
+      await proposeEpoch(epochData, oracle);
     } catch(err) {
       console.log(err);
     }
@@ -52,7 +42,7 @@ async function proposeEpoch(epochData: any, oracle: Oracle): Promise<void> {
     const tx = await contract.connect(oracle.signer).proposeEpoch(epochData);
     await tx.wait();
   } catch(err: any) {
-    console.log("Error: proposing epoch, trying again in 30 sec")
+    console.log("Error: proposing epoch, trying again in 1 min")
     console.log("Warning: make sure your address is funded and registered as operator")
     setTimeout(async () => {await proposeEpoch(epochData, oracle)}, 60000);
   }
@@ -71,6 +61,7 @@ async function processRebalance(db: DB): Promise<TrieRebalance> {
         let validator = JSON.parse(data.value.toString());
         if(validator.slashFee !== 0 || validator.slashMiss !== 0) {
           validator = await slashValidator(validator, db);
+          console.log(`Validator ${validator.index} excluded`);
         } else if(validator.active && !validator.excludeRebalance) {
           if(BigNumber.from(validator.stake).eq(SLASH_FEE)) {
             includedValidators.push(validator);
@@ -99,6 +90,7 @@ async function slashValidator(validator: Validator, db: DB): Promise<Validator> 
   if(!validator.firstBlockProposed) {
     // Zero out validator
     validator.rewards = BigNumber.from("0");
+    console.log(`Validator ${validator.index} zeroed out`);
   } else {
     // Skip first missed proposal only for active users
     if(validator.firstMissedSlot) {
@@ -132,6 +124,7 @@ async function slashValidator(validator: Validator, db: DB): Promise<Validator> 
       validator.active = false;
     } 
     validator.stake = validator.stake.sub(tFees);
+    console.log(`Validator ${validator.index} slashed: ${utils.formatEther(tFees)}`);
   }
   
   // Update db
@@ -215,6 +208,11 @@ function packValidators(
 : Array<[string, number[], BigNumber]> {
 
   if(validators.length === 0) {
+    // Sorting indexes to avoid different tree hashes
+    for(let i = 0; i < result.length; i++) {
+     result[i][1] = result[i][1].sort((a, b) => { return a - b});
+    }
+    console.log(result);
     return result;
   }
 
