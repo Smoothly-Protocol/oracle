@@ -42,9 +42,14 @@ async function proposeEpoch(epochData: any, oracle: Oracle): Promise<void> {
     const tx = await contract.connect(oracle.signer).proposeEpoch(epochData);
     await tx.wait();
   } catch(err: any) {
-    console.log("Error: proposing epoch, trying again in 1 min")
-    console.log("Warning: make sure your address is funded and registered as operator")
-    setTimeout(async () => {await proposeEpoch(epochData, oracle)}, 60000);
+    // EpochTimelockNotReached() selector error
+    if(err.toString().includes('0xa6339a86')) {
+      console.log("Transaction reverted: Other nodes already reached consensus");
+    } else {
+      console.log("Error: proposing epoch, trying again in 1 min")
+      console.log("Warning: make sure your address is funded and registered as operator")
+      setTimeout(async () => {await proposeEpoch(epochData, oracle)}, 60000);
+    }
   }
 }
 
@@ -212,7 +217,6 @@ function packValidators(
     for(let i = 0; i < result.length; i++) {
      result[i][1] = result[i][1].sort((a, b) => { return a - b});
     }
-    console.log(result);
     return result;
   }
 
