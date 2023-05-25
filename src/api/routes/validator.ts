@@ -26,7 +26,10 @@ export async function ValidatorRoutes(app: Application, oracle: Oracle) {
         for(let validator of data) {
           const v = await oracle.db.get(Number(validator.validatorindex));
           if(v) {
-            v.active ? registered.push(v) : unregistered.push(v.index);
+            if(!v.active) { 
+              unregistered.push(v.index);
+            }
+            registered.push(v)
           } else {
             unregistered.push(validator.validatorindex);
           }
