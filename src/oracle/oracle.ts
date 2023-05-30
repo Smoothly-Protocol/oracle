@@ -47,6 +47,7 @@ export class Oracle extends Config {
         await this.db.insert(validator.index, validator);
       }
     } catch (err: any) {
+      console.log(err);
       throw new Error("Sync failed, make sure checkpoint is active");
     }
   }
@@ -64,14 +65,14 @@ export class Oracle extends Config {
   async rebalance(): Promise<void> {
     const lastEpoch = await this.governance.lastEpoch();
     const epochInterval = await this.governance.epochInterval();
+    const { timestamp } = await this.governance.provider.getBlock("latest");
     const timeLock = Number(lastEpoch) + Number(epochInterval);
-    const now = Math.floor(Date.now() / 1000);
 
     // Schedule rebalance
-    if(timeLock < now) {
+    if(timeLock < timestamp) {
       Rebalancer(this); 
     } else {
-      const postponedTime = (timeLock - now) * 1000;
+      const postponedTime = (timeLock - timestamp) * 1000;
       setTimeout(async () => {Rebalancer(this)}, postponedTime);
       console.log("Next rebalance processing at:", timeLock, "UTC");
     }
