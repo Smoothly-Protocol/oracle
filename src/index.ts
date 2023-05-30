@@ -17,7 +17,9 @@ program
   .version('0.0.1')
   .usage('[OPTIONS]...')
   .option('-n, --network <value>', 'Select network [goerli, mainnet]', 'goerli')
-  .option('-s, --sync <checkpoint>', 'Select checkpoint to sync from')
+  .option('-s, --sync <value>', 'Select checkpoint to sync from')
+  .option('-b, --beacon <value>', 'Add custom beacon node')
+  .option('-f, --max-base-fee <value>', 'Specify max base fee allowed to pay for gas')
   .requiredOption('-pk, --private-key <value>', 'Add eth1 validator account private key.')
   .parse(process.argv);
 
@@ -25,8 +27,6 @@ const opts = program.opts();
 
 async function main(): Promise<void> {
   try {
-    const pk = opts.privateKey; 
-    const network = opts.network;
     const checkpoint = opts.sync || undefined;
     const port = process.env.PORT || 4040;
 
@@ -40,7 +40,7 @@ async function main(): Promise<void> {
 			epoch = Number(data.epoch) + 1;
 		} 
 
-    const oracle = new Oracle(network, pk, root);
+    const oracle = new Oracle(opts, root);
     const api =  new API(oracle, port as number);
 
     // Sync from checkpoint if provided

@@ -21,9 +21,9 @@ import {
 export class Oracle extends Config {
   db: DB;  
 
-  constructor(_network: string, _pk: string, _root: string) {
-    super(_network, _pk);
-    this.db = new DB(_root, _network === "local");
+  constructor(opts: any, _root: string) {
+    super(opts);
+    this.db = new DB(_root, opts.network === "local");
   }
 
   start(): void {

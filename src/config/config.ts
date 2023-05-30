@@ -19,8 +19,11 @@ export class Config {
   signer: Wallet;
   network: NetInfo;
 
-  constructor(_network: string, _pk: string) {
-    // Network 
+  constructor(opts: any) {
+    const _network = opts.network;
+    const _pk = opts.privateKey;
+
+    // Network
     if(_network === "goerli") {
       this.network = GOERLI;
     } else if(_network === "mainnet") {
@@ -30,6 +33,8 @@ export class Config {
     } else {
       throw new Error("Unknown or not supported network.");
     } 
+
+    opts.beacon ? this.network.beacon = opts.beacon : 0;
 
     // Signer
     this.signer = this.validateWallet(_pk);
