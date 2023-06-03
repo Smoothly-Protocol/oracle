@@ -4,8 +4,10 @@ import { mplex } from '@libp2p/mplex'
 import { yamux } from '@chainsafe/libp2p-yamux'
 import { noise } from '@chainsafe/libp2p-noise'
 import { gossipsub } from '@chainsafe/libp2p-gossipsub'
+import { floodsub } from '@libp2p/floodsub'
 import { pubsubPeerDiscovery } from '@libp2p/pubsub-peer-discovery'
-import { circuitRelayServer } from 'libp2p/circuit-relay'
+import { circuitRelayTransport, circuitRelayServer } from 'libp2p/circuit-relay'
+import { identifyService } from 'libp2p/identify'
 
 async function main() {
   try {
@@ -15,12 +17,13 @@ async function main() {
             '/ip4/0.0.0.0/tcp/0'
           ]
         },
-        transports: [tcp()],
+        transports: [tcp(), circuitRelayTransport()],
         streamMuxers: [yamux(), mplex()],
         connectionEncryption: [noise()],
         services: {
-          pubsub: gossipsub({ allowPublishToZeroPeers: true }),
-          relay: circuitRelayServer()
+          relay: circuitRelayServer(),
+          identify: identifyService(),
+          pubsub: floodsub()
         },
         peerDiscovery: [
           pubsubPeerDiscovery({

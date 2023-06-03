@@ -11,7 +11,7 @@
 		"build": "npx tsc",
 		"test": "./scripts/test.sh"
 	},
-  "type": "module",
+	"type": "module",
 	"bin": {
 		"smoothly_cli": "./dist/index.js"
 	},
@@ -31,6 +31,7 @@
 		"@ethereumjs/trie": "^5.0.0",
 		"@ethereumjs/util": "^8.0.2",
 		"@libp2p/bootstrap": "^8.0.0",
+		"@libp2p/floodsub": "^7.0.1",
 		"@libp2p/mplex": "^8.0.3",
 		"@libp2p/pubsub-peer-discovery": "^8.0.4",
 		"@libp2p/tcp": "^7.0.1",
