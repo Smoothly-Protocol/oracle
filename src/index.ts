@@ -43,8 +43,7 @@ async function main(): Promise<void> {
     } 
 
     const bootstrapers = [
-      '/ip4/127.0.0.1/tcp/34989/p2p/12D3KooWPMe4YawNf2o5sxzcsnTogkRzkKxdm1QAT7eUyMbV47gu',
-      '/ip4/10.29.111.57/tcp/34989/p2p/12D3KooWPMe4YawNf2o5sxzcsnTogkRzkKxdm1QAT7eUyMbV47gu'
+      '/ip4/10.29.111.57/tcp/39557/p2p/12D3KooWEbyHErbw8XYpHZkWDyAwiGgGgci2CAGpdqkWfWx2RkEN',
     ]
 
     const node = await(new Node()).createNode(bootstrapers);
@@ -53,13 +52,15 @@ async function main(): Promise<void> {
     node.addEventListener('peer:discovery', (evt) => {
         console.log(`Peer ${node.peerId.toString()} discovered: ${evt.detail.id.toString()}`)
     })
+
+    await node.start()
+
     node.services.pubsub.addEventListener('message', (evt) => {
       if(evt.detail.topic === "news") {
         console.log(`node received: ${Buffer.from(evt.detail.data).toString()} on topic ${evt.detail.topic}`)
       }
     })
 
-    await node.start()
 
     setInterval(() => {
       node.services.pubsub.publish("news", Buffer.from('Hello p2p'));

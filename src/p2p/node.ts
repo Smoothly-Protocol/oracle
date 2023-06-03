@@ -5,7 +5,9 @@ import { yamux } from '@chainsafe/libp2p-yamux'
 import { noise } from '@chainsafe/libp2p-noise'
 import { floodsub } from '@libp2p/floodsub'
 import { bootstrap } from '@libp2p/bootstrap'
+import { gossipsub } from '@chainsafe/libp2p-gossipsub'
 import { pubsubPeerDiscovery } from '@libp2p/pubsub-peer-discovery'
+import { circuitRelayTransport } from 'libp2p/circuit-relay'
 import { identifyService } from 'libp2p/identify'
 
 export class Node {
@@ -15,7 +17,8 @@ export class Node {
         listen: ['/ip4/0.0.0.0/tcp/0']
       },
       transports: [
-        tcp()
+        tcp(),
+        circuitRelayTransport()
       ],
       streamMuxers: [
         yamux(),mplex()
@@ -24,7 +27,7 @@ export class Node {
         noise()
       ],
       services: {
-        pubsub: floodsub(),
+        pubsub: gossipsub({allowPublishToZeroPeers: true}),
         identify: identifyService()
       },
       peerDiscovery: [
