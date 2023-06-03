@@ -46,27 +46,23 @@ async function main(): Promise<void> {
       '/ip4/127.0.0.1/tcp/34989/p2p/12D3KooWPMe4YawNf2o5sxzcsnTogkRzkKxdm1QAT7eUyMbV47gu',
       '/ip4/10.29.111.57/tcp/34989/p2p/12D3KooWPMe4YawNf2o5sxzcsnTogkRzkKxdm1QAT7eUyMbV47gu'
     ]
-    const node1 = await(new Node()).createNode(bootstrapers);
-    const node2 = await(new Node()).createNode(bootstrapers);
-    node1.addEventListener('peer:discovery', (evt) => {
-        console.log(`Peer ${node1.peerId.toString()} discovered: ${evt.detail.id.toString()}`)
-    })
-    node2.addEventListener('peer:discovery', (evt) => {
-        console.log(`Peer ${node1.peerId.toString()} discovered: ${evt.detail.id.toString()}`)
-    })
 
-    await node1.start()
-    await node2.start()
+    const node = await(new Node()).createNode(bootstrapers);
 
-    node1.services.pubsub.subscribe('news')
-    node1.services.pubsub.addEventListener('message', (evt) => {
+    node.services.pubsub.subscribe('news')
+    node.addEventListener('peer:discovery', (evt) => {
+        console.log(`Peer ${node.peerId.toString()} discovered: ${evt.detail.id.toString()}`)
+    })
+    node.services.pubsub.addEventListener('message', (evt) => {
       if(evt.detail.topic === "news") {
         console.log(`node received: ${Buffer.from(evt.detail.data).toString()} on topic ${evt.detail.topic}`)
       }
     })
 
+    await node.start()
+
     setInterval(() => {
-      node2.services.pubsub.publish("news", Buffer.from('Hello p2p'));
+      node.services.pubsub.publish("news", Buffer.from('Hello p2p'));
     }, 5000)
 
     const oracle = new Oracle(opts, root);
