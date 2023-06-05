@@ -6,7 +6,7 @@
 	"license": "MIT",
 	"main": "dist/index.js",
 	"scripts": {
-		"start": "NODE_NO_WARNINGS=1 ts-node ./src/index.ts",
+		"start": "DEBUG='libp2p:*' NODE_NO_WARNINGS=1 ts-node ./src/index.ts",
 		"relay": "NODE_NO_WARNINGS=1 ts-node ./src/p2p/relay.ts",
 		"build": "npx tsc",
 		"test": "./scripts/test.sh"

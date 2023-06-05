@@ -19,7 +19,6 @@ export class Node {
       },
       transports: [
         webSockets(),
-        circuitRelayTransport()
       ],
       streamMuxers: [
         yamux(),mplex()
@@ -28,7 +27,7 @@ export class Node {
         noise()
       ],
       services: {
-        pubsub: gossipsub({allowPublishToZeroPeers: true}),
+        pubsub: floodsub(),
         identify: identifyService()
       },
       peerDiscovery: [
