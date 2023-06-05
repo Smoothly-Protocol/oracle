@@ -9,15 +9,16 @@ import { gossipsub } from '@chainsafe/libp2p-gossipsub'
 import { pubsubPeerDiscovery } from '@libp2p/pubsub-peer-discovery'
 import { circuitRelayTransport } from 'libp2p/circuit-relay'
 import { identifyService } from 'libp2p/identify'
+import { webSockets } from '@libp2p/websockets'
 
 export class Node {
   async createNode(bootstrapers: any) {
     const node = await createLibp2p({
       addresses: {
-        listen: ['/ip4/0.0.0.0/tcp/0']
+        listen: ['/ip4/0.0.0.0/tcp/0/ws']
       },
       transports: [
-        tcp(),
+        webSockets(),
         circuitRelayTransport()
       ],
       streamMuxers: [

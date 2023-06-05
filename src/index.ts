@@ -9,6 +9,7 @@ import { Command } from 'commander';
 import { EMPTY_ROOT } from './utils';
 import { Head } from './types';
 import { Node } from './p2p';
+import { multiaddr } from '@multiformats/multiaddr'
 
 const program = new Command();
 
@@ -43,7 +44,7 @@ async function main(): Promise<void> {
     } 
 
     const bootstrapers = [
-      '/ip4/10.29.111.57/tcp/39557/p2p/12D3KooWEbyHErbw8XYpHZkWDyAwiGgGgci2CAGpdqkWfWx2RkEN',
+      '/dns4/auto-relay.smoothly.money/tcp/443/wss/p2p/12D3KooWEsY5WsQ48QDJzLNs6gFdvFZDJsBPj7Sdmz3EUbCXoxuC',
     ]
 
     const node = await(new Node()).createNode(bootstrapers);
@@ -53,7 +54,8 @@ async function main(): Promise<void> {
         console.log(`Peer ${node.peerId.toString()} discovered: ${evt.detail.id.toString()}`)
     })
 
-    await node.start()
+    await node.start();
+    await node.dial(multiaddr(bootstrapers[0]))
 
     node.services.pubsub.addEventListener('message', (evt) => {
       if(evt.detail.topic === "news") {
