@@ -11,6 +11,9 @@ export const GOERLI: NetInfo = {
     "https://relay-stag.ultrasound.money",
     "https://goerli.aestus.live"
   ],
+  bootstrapers: [
+      '/dns4/auto-relay.smoothly.money/tcp/443/wss/p2p/QmRLoXS3E73psYaUsma1VSbboTa2J8Z9kso1tpiGLk9WQ4',
+  ],
   deploymentEpoch: 169060 
 }
 
@@ -21,6 +24,7 @@ export const MAINNET: NetInfo = {
   beacon: "http://unstable.mainnet.beacon-api.nimbus.team/",
   beaconchainApi: "https://beaconcha.in",
   relays: [],
+  bootstrapers: [],
   deploymentEpoch: 163682
 }
 
@@ -31,6 +35,7 @@ export const LOCAL: NetInfo = {
   beacon: "http://unstable.prater.beacon-api.nimbus.team/",
   beaconchainApi: "https://goerli.beaconcha.in",
   relays: [],
+  bootstrapers: [],
   deploymentEpoch: 0 
 }
 

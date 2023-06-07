@@ -26,7 +26,7 @@ export function getSigners(provider: any): Array<Wallet> {
 }
 
 export async function time1Day(provider: any): Promise<void> {
-  const oneDay = 24 * 60 * 60;
+  const oneDay = 25 * 60 * 60;
   await provider.send("evm_increaseTime",[oneDay]);
 }
 

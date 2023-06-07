@@ -33,6 +33,7 @@ export interface NetInfo {
   beacon: string,
   beaconchainApi: string,
   relays: string[],
+  bootstrapers: string[],
   deploymentEpoch: number
 }
 

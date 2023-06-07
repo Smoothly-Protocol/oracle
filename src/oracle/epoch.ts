@@ -12,7 +12,8 @@ import {
   validateExitRequest,
   validateWithdrawalRewards,
   validateWithdrawalStake,
-  validateAddedStake
+  validateAddedStake,
+  simulateRebalance
 } from "./events";
 
 export async function EpochListener(oracle: Oracle) {
@@ -82,7 +83,7 @@ export async function processEpoch(
 
   for(let _slot of slots) { 
     const { proposer_index, body, logs } = _slot;
-    
+        
     // Process eth1 logs
     if(logs.length > 0 && syncing) {
       for(let log of logs) {
@@ -105,6 +106,7 @@ export async function processEpoch(
             await validateExitRequest(args[0], args[1], oracle);
             break;
           case 'Epoch':
+            await simulateRebalance(args[3], log.blockNumber, oracle);
             break;
         }  
       }

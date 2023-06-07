@@ -17,22 +17,34 @@ import {
   StakeWithdrawal,
   RewardsWithdrawal
 } from './events';
+import { createNode } from './p2p';
+import type { Libp2p } from 'libp2p';
 
 export class Oracle extends Config {
   db: DB;  
+  node!: Libp2p;
 
   constructor(opts: any, _root: string) {
     super(opts);
     this.db = new DB(_root, opts.network === "local");
   }
 
-  start(): void {
+  async start(): Promise<void> {
+    // Init libp2p node
+    this.node = await createNode(this.network.bootstrapers) as Libp2p;
+    
+    // Sync state
+    const lastRoot = await this.getRoot();
+
+    // Network listeners
     EpochListener(this);
     Registered(this);
     ExitRequested(this);
     StakeAdded(this);
     StakeWithdrawal(this);
     RewardsWithdrawal(this);
+
+    // Rebalancer schedule
     cron.schedule('0 17 * * *', async () => {
       await MonitorRelays(this);
       this.rebalance()

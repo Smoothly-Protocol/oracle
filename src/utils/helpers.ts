@@ -15,4 +15,4 @@ export async function filterLogs(
   filters[5] = contract.filters.Epoch();
   return contract.queryFilter(filters,Number(blockNumber), Number(blockNumber))
 }
-
+ 

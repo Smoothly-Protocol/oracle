@@ -8,8 +8,6 @@ import { API } from './api';
 import { Command } from 'commander';
 import { EMPTY_ROOT } from './utils';
 import { Head } from './types';
-import { Node } from './p2p';
-import { multiaddr } from '@multiformats/multiaddr'
 
 const program = new Command();
 
@@ -43,29 +41,6 @@ async function main(): Promise<void> {
       epoch = Number(data.epoch) + 1;
     } 
 
-    const bootstrapers = [
-      '/dns4/auto-relay.smoothly.money/tcp/443/wss/p2p/12D3KooWEgbxnySb9F739q8P5uqsNZfb3pDMjQ2A6ZwJRef6KP1J',
-    ]
-
-    const node = await(new Node()).createNode(bootstrapers);
-
-    node.addEventListener('peer:discovery', (evt) => {
-        console.log(`Peer ${node.peerId.toString()} discovered: ${evt.detail.id.toString()}`)
-    })
-
-    await node.start();
-
-    node.services.pubsub.subscribe('news')
-    node.services.pubsub.addEventListener('message', (evt) => {
-      if(evt.detail.topic === "news") {
-        console.log(`node received: ${Buffer.from(evt.detail.data).toString()} on topic ${evt.detail.topic}`)
-      }
-    })
-
-    setInterval(() => {
-      node.services.pubsub.publish("news", Buffer.from('Hello p2p'));
-    }, 1000)
-
     const oracle = new Oracle(opts, root);
     const api =  new API(oracle, port as number);
 
@@ -78,7 +53,7 @@ async function main(): Promise<void> {
       await oracle.fullSync(epoch);
     }
 
-    oracle.start();
+    await oracle.start();
   } catch(err: any) {
     if(err.message === 'Sync failed, make sure checkpoint is active') {
       throw err;

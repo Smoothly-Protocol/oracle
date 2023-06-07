@@ -53,7 +53,7 @@ async function proposeEpoch(epochData: any, oracle: Oracle): Promise<void> {
   }
 }
 
-async function processRebalance(db: DB): Promise<TrieRebalance> {
+export async function processRebalance(db: DB): Promise<TrieRebalance> {
   let tRewards: BigNumber = BigNumber.from("0");
   let tStake: BigNumber = BigNumber.from("0");
   let includedValidators: Validator[] = [];
@@ -186,7 +186,7 @@ async function generateTrees(db: DB): Promise<string[]> {
   }
 }
 
-async function fundUsers(includedValidators: Validator[], total: BigNumber, db: DB): Promise<BigNumber> {
+export async function fundUsers(includedValidators: Validator[], total: BigNumber, db: DB): Promise<BigNumber> {
   try { 
     if(total.lt(utils.parseEther("0.001"))) {
       throw "No funds to rebalance on this period"; 
