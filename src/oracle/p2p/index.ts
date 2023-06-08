@@ -1,1 +1,1 @@
-export { createNode } from "./node";
+export { Node } from "./node";
