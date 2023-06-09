@@ -9,12 +9,13 @@ import { homedir } from 'os';
 
 export class DB {
   db: Trie;
+  level: Level;
 
   constructor(_root: string, _testing: boolean) {
     try {
-      const level = new Level(`${homedir}/${DEFAULTS.folder}/db`);
+      this.level = new Level(`${homedir}/${DEFAULTS.folder}/db`);
       this.db = new Trie({
-        db: _testing ? new MapDB() : new LevelDB(level),
+        db: _testing ? new MapDB() : new LevelDB(this.level),
         useKeyHashing: true,
         root: Buffer.from(_root, 'hex')
       })
@@ -52,6 +53,38 @@ export class DB {
 
   async getStream(): Promise<any> {
     return await this.db.createReadStream();
+  }
+
+  async getRootState(_root: string): Promise<any> {
+    try {
+      await this.level.close();
+
+      const level = new Level(`${homedir}/${DEFAULTS.folder}/db`);
+      const trie = new Trie({
+        db: new LevelDB(level),
+        useKeyHashing: true,
+        root: Buffer.from(_root.slice(2), 'hex')
+      })
+
+      let validators: Validator[] = [];
+      const stream = await trie.createReadStream();
+      const root = await trie.root();
+      
+      await new Promise((fulfilled) => { 
+        stream
+        .on('data', async (data: any) => {
+          validators.push(JSON.parse(data.value.toString()));
+        })
+        .on('end', fulfilled);
+      });
+      
+      return {
+        root: root.toString('hex'),
+        data: validators
+      };
+    } catch(err: any) {
+      console.log(err);
+    }
   }
 
   root(): Buffer {

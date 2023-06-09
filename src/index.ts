@@ -19,6 +19,7 @@ program
 .usage('[OPTIONS]...')
 .option('-n, --network <value>', 'Select network [goerli, mainnet]', 'goerli')
 .option('-s, --sync <value>', 'Select checkpoint to sync from')
+.option('-p, --http-api <port>', 'Port for http api [default: 4040]', '4040')
 .option('-b, --beacon <value>', 'Add custom beacon node')
 .option('-f, --max-base-fee <value>', 'Specify max base fee allowed to pay for gas')
 .requiredOption('-pk, --private-key <value>', 'Add eth1 validator account private key.')
@@ -29,7 +30,7 @@ const opts = program.opts();
 async function main(): Promise<void> {
   try {
     const checkpoint = opts.sync || undefined;
-    const port = process.env.PORT || 4040;
+    const port = Number(opts.httpApi);
 
     let root = EMPTY_ROOT;
     let epoch = 0;
@@ -44,6 +45,7 @@ async function main(): Promise<void> {
     const oracle = new Oracle(opts, root);
     const api =  new API(oracle, port as number);
 
+    /*
     // Sync from checkpoint if provided
     if(checkpoint) {
       console.log("Syncing from checkpoint node...");
@@ -52,8 +54,9 @@ async function main(): Promise<void> {
       console.log("Syncing from last root known:", root);
       await oracle.fullSync(epoch);
     }
+   */
 
-    await oracle.start();
+    await oracle.start(epoch);
   } catch(err: any) {
     if(err.message === 'Sync failed, make sure checkpoint is active') {
       throw err;

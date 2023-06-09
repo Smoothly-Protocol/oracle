@@ -30,13 +30,19 @@ export class Oracle extends Config {
     this.p2p = new Node(this.network.bootstrapers);
   }
 
-  async start(): Promise<void> {
+  async start(epoch: number): Promise<void> {
     // Init libp2p node
     await this.p2p.createNode();
     
     // Sync state
-    const lastRoot = await this.getRoot();
-    //await this.p2p.requestSync();
+    const root = await this.getRoot();
+    const { data } = await this.db.getRootState(root);
+
+    if(data.length > 0) {
+      this.fullSync(epoch);
+    } else {
+      await this.p2p.requestSync();
+    }
 
     // Network listeners
     EpochListener(this);

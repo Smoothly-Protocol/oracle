@@ -60,6 +60,8 @@ export class Node {
 
       // Personal_id channel
       node.services.pubsub.subscribe(`${node.peerId.toString()}`)
+      // Checkpoint check
+      node.services.pubsub.subscribe('checkpoint')
 
       // Track peers
       node.addEventListener('peer:discovery', async (evt) => {
@@ -87,6 +89,9 @@ export class Node {
               this.dialPeerSync(peer.address);
             }
           }
+        } else if(evt.detail.topic === 'checkpoint'){
+          const root = Buffer.from(evt.detail.data).toString();
+          // TODO: Compare root with peers 
         }
       })
 
