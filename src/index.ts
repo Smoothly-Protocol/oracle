@@ -56,7 +56,7 @@ async function main(): Promise<void> {
     }
    */
 
-    await oracle.start(epoch);
+    await oracle.start(epoch, root);
   } catch(err: any) {
     if(err.message === 'Sync failed, make sure checkpoint is active') {
       throw err;

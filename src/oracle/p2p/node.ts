@@ -18,15 +18,19 @@ import type { Peer } from './types';
 import type { PeerId } from '@libp2p/interface-peer-id'
 import type { Libp2p } from 'libp2p';
 import { setTimeout } from "timers/promises";
+import { Validator } from '../../types';
+import { DB } from "../../db";
 
 export class Node {
   bootstrapers: string[];
   peers: Peer[];
   node!: Libp2p;
+  db: DB;
 
-  constructor(_bootstrapers: string[]) {
+  constructor(_bootstrapers: string[], _db: DB) {
     this.bootstrapers = _bootstrapers;
     this.peers = [];
+    this.db = _db;
   }
 
   async createNode(): Promise<void> {
@@ -96,13 +100,23 @@ export class Node {
       })
 
       // Handle stream muxing from peer:sync 
-      node.handle('/sync', async ({ stream }) => {
+      node.handle('/sync:peer', async ({ stream }) => {
+        let db: DB = this.db;
         pipe(
           stream,
           async function (source) {
+            // Concatenate stream
+            let str: string = '';
             for await (const msg of source) {
-              console.log(uint8ArrayToString(msg.subarray()))
+              str += uint8ArrayToString(msg.subarray())
             }
+
+            // Add data to db
+            for(let validator of JSON.parse(str).data) {
+              await db.insert(validator.index, validator);
+            }
+
+            console.log('Synced from peer to:', db.root().toString('hex'));
           }
         )
       })
@@ -135,7 +149,7 @@ export class Node {
   async dialPeerSync(peer: Multiaddr) {
       const req = await fetch('http://localhost:4040/checkpoint');
       const res = await req.json();
-      const stream = await this.node.dialProtocol(peer, ['sync'])
+      const stream = await this.node.dialProtocol(peer, ['/sync:peer'])
       await pipe(
         [uint8ArrayFromString(JSON.stringify(res))],
         stream

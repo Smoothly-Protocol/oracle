@@ -27,10 +27,10 @@ export class Oracle extends Config {
   constructor(opts: any, _root: string) {
     super(opts);
     this.db = new DB(_root, opts.network === "local");
-    this.p2p = new Node(this.network.bootstrapers);
+    this.p2p = new Node(this.network.bootstrapers, this.db);
   }
 
-  async start(epoch: number): Promise<void> {
+  async start(epoch: number, _root: string): Promise<void> {
     // Init libp2p node
     await this.p2p.createNode();
     
@@ -39,7 +39,8 @@ export class Oracle extends Config {
     const { data } = await this.db.getRootState(root);
 
     if(data.length > 0) {
-      this.fullSync(epoch);
+      console.log("Syncing from last root known:", _root);
+      await this.fullSync(epoch);
     } else {
       await this.p2p.requestSync();
     }
@@ -78,6 +79,7 @@ export class Oracle extends Config {
       await processEpoch(current, true, this);
       return this.fullSync(current + 1);
     } catch(err: any) {
+      console.log(err);
       return 0;
     }
   }

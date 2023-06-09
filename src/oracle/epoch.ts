@@ -215,6 +215,7 @@ export async function reqEpochCheckpoint(beacon: string): Promise<any> {
       "Content-Type": "application/json",
     }
   };
+  console.log(url);
   const req = await fetch(url, headers);
   const res = await req.json();
   const epoch = res.data.finalized.epoch;

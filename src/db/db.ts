@@ -69,7 +69,7 @@ export class DB {
       let validators: Validator[] = [];
       const stream = await trie.createReadStream();
       const root = await trie.root();
-      
+
       await new Promise((fulfilled) => { 
         stream
         .on('data', async (data: any) => {
@@ -77,7 +77,10 @@ export class DB {
         })
         .on('end', fulfilled);
       });
-      
+
+      await level.close()
+      await this.level.open();
+
       return {
         root: root.toString('hex'),
         data: validators
