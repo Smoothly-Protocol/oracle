@@ -13,7 +13,7 @@
 	},
 	"type": "module",
 	"bin": {
-		"smoothly_cli": "./dist/index.js"
+		"smoothly_cli": "./scripts/start.sh"
 	},
 	"devDependencies": {
 		"@types/chai": "^4.3.4",

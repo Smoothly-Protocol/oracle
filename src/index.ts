@@ -1,4 +1,4 @@
-#!/usr/bin/node --experimental-specifier-resolution=node
+#! /usr/bin/env node 
 
 import fs from "fs";
 import * as path from 'path';
