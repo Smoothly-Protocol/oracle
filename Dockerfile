@@ -16,8 +16,6 @@ RUN git clone https://github.com/Smoothly-Protocol/oracle.git .
 # Build and link
 RUN npm install && \
     npm run build && \
-    npm install typescript && \
-    npm run build && \
     npm link
 
 RUN chmod +x ./scripts/start.sh
