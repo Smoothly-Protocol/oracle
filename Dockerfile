@@ -6,4 +6,4 @@ COPY . .
 RUN npm install && npm run build
 EXPOSE 4040
 ENV PK="0x"
-CMD ["sh", "-c", "node ./dist/index.js -pk ${PK} -s https://node-goerli.smoothly.money -n goerli"]
+CMD ["sh", "-c", "node --experimental-specifier-resolution=node ./dist/index.js -pk ${PK} -s https://node-goerli.smoothly.money -n goerli"]
