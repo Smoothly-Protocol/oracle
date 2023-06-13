@@ -1,3 +1,4 @@
+import * as cron from "node-cron";
 import { createLibp2p } from 'libp2p';
 import { tcp } from '@libp2p/tcp'
 import { mplex } from '@libp2p/mplex'
@@ -20,14 +21,17 @@ import type { Libp2p } from 'libp2p';
 import { setTimeout } from "timers/promises";
 import { Validator } from '../../types';
 import { DB } from "../../db";
+import { Consensus } from "./consensus";
 
 export class Node {
   bootstrapers: string[];
   peers: Peer[];
   node!: Libp2p;
   db: DB;
+  consensus: Consensus;
 
   constructor(_bootstrapers: string[], _db: DB) {
+    this.consensus = new Consensus();
     this.bootstrapers = _bootstrapers;
     this.peers = [];
     this.db = _db;
@@ -73,21 +77,25 @@ export class Node {
 
         // Avoids relay nodes
         if(addresses.length > 0) {
-          this.peers.push({
+          const peer: Peer = {
             address: addresses[0].multiaddr,
             id: id
-          });
+          };
+          
+          // Exists peer?
+          if(this._findPeer(peer.id) === null) {
+            this.peers.push(peer);
+            console.log("Discovered Peer:", id.toString(), "total:", this.peers.length);
+          }
         }
-
-        console.log("Discovered:", id.toString());
       })
 
       // Handle pubsub messages
       node.services.pubsub.addEventListener('message', (evt) => {
+        const { from } = evt.detail as any;
         if(evt.detail.topic === `${node.peerId.toString()}`) {
           const data = Buffer.from(evt.detail.data).toString();
           if(data === 'sync') {
-            const { from } = evt.detail as any;
             const peer = this._findPeer(from);
             if(peer) {
               this.dialPeerSync(peer.address);
@@ -95,7 +103,7 @@ export class Node {
           }
         } else if(evt.detail.topic === 'checkpoint'){
           const root = Buffer.from(evt.detail.data).toString();
-          // TODO: Compare root with peers 
+          this.consensus.addVote(from, root);
         }
       })
 
@@ -140,6 +148,42 @@ export class Node {
         peerId, 
         uint8ArrayFromString('sync'),
       );
+    } catch(err: any) {
+      console.log(err);
+    }
+  }
+
+  async startConsensus(): Promise<void> {
+    try {
+      cron.schedule('0 * * * *', async () => {
+        const node: any = this.node;
+        const _root: string = this.db.root().toString('hex');
+        
+        this.consensus.reset();
+
+        await setTimeout(5000);
+
+        await node.services.pubsub.publish(
+          'checkpoint',
+          uint8ArrayFromString(_root),
+        );
+
+        await setTimeout(5000);
+        
+        const { root, peers, votes } = this.consensus.checkConsensus(_root, 0);
+        if(root === null) {
+          console.log("Operators didn't reach 2/3 of consensus offline");
+        } else if(root === _root) {
+          console.log(`Consensus reached and node in sync with root: ${root}`); 
+          console.log(`Total votes: ${peers.length}/${votes.length}`);
+        } else {
+          console.log(`Consensus reached but node is not in sync with root: ${root}`); 
+          console.log(`Total votes: ${peers.length}/${votes.length}`);
+          console.log("Requesting peers to sync");
+          await this.requestSync();
+        } 
+
+      }, {timezone: "America/Los_Angeles"});
     } catch(err: any) {
       console.log(err);
     }

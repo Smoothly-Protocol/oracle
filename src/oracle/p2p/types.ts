@@ -5,3 +5,8 @@ export interface Peer {
   address: Multiaddr;
   id: PeerId;
 }
+
+export interface Votes {
+  id: PeerId;
+  root: string;
+} 
