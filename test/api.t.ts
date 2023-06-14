@@ -122,7 +122,7 @@ describe("API", () => {
 
   describe("Checkpoint", () => {
     it("syncs node2 to active nodes state", async () => {
-      const oracle2 = new Oracle("local", pks[1], EMPTY_ROOT);
+      const oracle2 = new Oracle({network:"local", privateKey:pks[0]}, EMPTY_ROOT);
       await oracle2.sync("http://localhost:4000");
       console.log(await oracle.getRoot())
       assert.equal(

@@ -1594,7 +1594,7 @@
     "@libp2p/interface-peer-id" "^2.0.0"
     "@libp2p/peer-id" "^2.0.0"
 
-"@libp2p/peer-id-factory@^2.0.0":
+"@libp2p/peer-id-factory@^2.0.0", "@libp2p/peer-id-factory@^2.0.3":
   version "2.0.3"
   resolved "https://registry.yarnpkg.com/@libp2p/peer-id-factory/-/peer-id-factory-2.0.3.tgz#d841989494c4900e01f6e3929ef06b8cc4e56f8f"
   integrity sha512-9pwVbfghiKuiC76Pue/+tI4PD7gnw1jGVcxYD+nhcRs8ABE7NLaB7nCm99cCtvmMNRnl2JqaGgZJXt8mnvAEuQ==
@@ -2772,6 +2772,11 @@ escape-string-regexp@4.0.0:
   version "4.0.0"
   resolved "https://registry.yarnpkg.com/escape-string-regexp/-/escape-string-regexp-4.0.0.tgz#14ba83a5d373e3d311e5afca29cf5bfad965bf34"
   integrity sha512-TtpcNJ3XAzx3Gq8sWRzJaVajRs0uVxA2YAkdb1jm2YkPz4G6egUFAyA3n5vtEIZefPk5Wa4UXbKuS5fKkJWdgA==
+
+esm@^3.2.25:
+  version "3.2.25"
+  resolved "https://registry.yarnpkg.com/esm/-/esm-3.2.25.tgz#342c18c29d56157688ba5ce31f8431fbb795cc10"
+  integrity sha512-U1suiZ2oDVWv4zPO56S0NcR5QriEahGtdN2OR6FiOG4WJvcjBVFB0qI4+eKoWFH483PKGuLuu6V8Z4T5g63UVA==
 
 etag@~1.8.1:
   version "1.8.1"

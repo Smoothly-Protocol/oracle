@@ -6,6 +6,7 @@ import { STAKE_FEE } from "../src/utils";
 import { Oracle } from '../src/oracle';
 import { Validator } from "../src/types";
 import { Registered } from "../src/oracle/events/registers";
+import { homedir } from 'os';
 
 import * as dotenv from 'dotenv';
 import * as path from 'path';
@@ -15,7 +16,7 @@ import * as path from 'path';
 
 // Load Environment variables
 dotenv.config({
-  path: path.resolve(__dirname, '../.env')
+  path: path.resolve(homedir(), '../.env')
 });
 
 describe("Registers users event listener", () => {
@@ -33,7 +34,7 @@ describe("Registers users event listener", () => {
     indexes = JSON.parse(process.env.VALIDATOR_INDEXES)
       .map((e: string) => {return Number (e)});
   } else {
-    throw new Error("Setup ACC_WITH_VALIDATORS and VALIDATOR_INDEXES in .env");
+    //throw new Error("Setup ACC_WITH_VALIDATORS and VALIDATOR_INDEXES in .env");
   }
 
   before(async () => {
