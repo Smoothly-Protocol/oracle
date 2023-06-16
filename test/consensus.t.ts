@@ -36,11 +36,11 @@ describe("Consensus", () => {
 			}
 		]
 
-		for(let vote of votes) {
-			await consensus.addVote(vote.id, vote.root); 
-		}
+    await consensus.reset(votes[0].id, votes[0].root)
+    await consensus.addVote(votes[1].id, votes[1].root); 
+    await consensus.addVote(votes[2].id, votes[2].root); 
 
-		const result = consensus.checkConsensus(votes[0].root, 0);
+		const result = consensus.checkConsensus(0);
 		assert.equal(result.root, votes[0].root);
 		assert.equal(result.peers.length, 3);
 		assert.equal(result.votes.length, 3);
@@ -62,11 +62,11 @@ describe("Consensus", () => {
 			}
 		]
 
-		for(let vote of votes) {
-			await consensus.addVote(vote.id, vote.root); 
-		}
+    await consensus.reset(votes[0].id, votes[0].root)
+    await consensus.addVote(votes[1].id, votes[1].root); 
+    await consensus.addVote(votes[2].id, votes[2].root); 
 
-		const result = consensus.checkConsensus(votes[0].root, 0);
+		const result = consensus.checkConsensus(0);
 		assert.equal(result.root, votes[1].root);
 		assert.equal(result.peers.length, 2);
 		assert.equal(result.votes.length, 3);
@@ -88,11 +88,11 @@ describe("Consensus", () => {
 			}
 		]
 
-		for(let vote of votes) {
-			await consensus.addVote(vote.id, vote.root); 
-		}
+    await consensus.reset(votes[0].id, votes[0].root)
+    await consensus.addVote(votes[1].id, votes[1].root); 
+    await consensus.addVote(votes[2].id, votes[2].root); 
 
-		const result = consensus.checkConsensus(votes[0].root, 0);
+		const result = consensus.checkConsensus(0);
 		assert.equal(result.root, null);
 		assert.equal(result.peers.length, 1);
 		assert.equal(result.votes.length, 3);
@@ -114,11 +114,11 @@ describe("Consensus", () => {
 			}
 		]
 
-		for(let vote of votes) {
-			await consensus.addVote(vote.id, vote.root); 
-		}
+    await consensus.reset(votes[0].id, votes[0].root)
+    await consensus.addVote(votes[1].id, votes[1].root); 
+    await consensus.addVote(votes[2].id, votes[2].root); 
 
-		const result = consensus.checkConsensus(votes[0].root, 0);
+		const result = consensus.checkConsensus(0);
 		assert.equal(result.root, null);
 		assert.equal(result.peers.length, 1);
 		assert.equal(result.votes.length, 2);

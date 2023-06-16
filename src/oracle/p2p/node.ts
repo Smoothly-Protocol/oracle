@@ -98,6 +98,7 @@ export class Node {
           if(data === 'sync') {
             const peer = this._findPeer(from);
             if(peer) {
+              console.log('sync hit')
               this.dialPeerSync(peer.address);
             }
           }
@@ -110,23 +111,24 @@ export class Node {
       // Handle stream muxing from peer:sync 
       node.handle('/sync:peer', async ({ stream }) => {
         let db: DB = this.db;
-        pipe(
+        await pipe(
           stream,
           async function (source) {
             // Concatenate stream
             let str: string = '';
             for await (const msg of source) {
               str += uint8ArrayToString(msg.subarray())
+              console.log(str);
             }
 
             // Add data to db
             for(let validator of JSON.parse(str).data) {
+              console.log(validator);
               await db.insert(validator.index, validator);
             }
-
-            console.log('Synced from peer to:', db.root().toString('hex'));
           }
         )
+        console.log('Synced from peer to:', db.root().toString('hex'));
       })
 
       await node.start();
@@ -159,7 +161,9 @@ export class Node {
       const node: any = this.node;
       const _root: string = this.db.root().toString('hex');
       
-      this.consensus.reset();
+      this.consensus.reset(node.peerId, _root);
+
+      await setTimeout(10000);
 
       await node.services.pubsub.publish(
         'checkpoint',
@@ -168,7 +172,8 @@ export class Node {
 
       await setTimeout(10000);
       
-      const { root, peers, votes } = this.consensus.checkConsensus(_root, 0);
+      const { root, peers, votes } = this.consensus.checkConsensus(0);
+      console.log(root,peers,votes);
       if(root === null) {
         console.log("Operators didn't reach 2/3 of consensus offline");
       } else if(root === _root) {
@@ -187,6 +192,7 @@ export class Node {
 
   // Dials Peer requesting syncing
   async dialPeerSync(peer: Multiaddr) {
+    try {
       const req = await fetch('http://localhost:4040/checkpoint');
       const res = await req.json();
       const stream = await this.node.dialProtocol(peer, ['/sync:peer'])
@@ -194,6 +200,9 @@ export class Node {
         [uint8ArrayFromString(JSON.stringify(res))],
         stream
       )
+    } catch(err: any) {
+      console.log(err);
+    } 
   }
 
   private _getRandomPeer(): Peer {
