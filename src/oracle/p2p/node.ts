@@ -142,6 +142,7 @@ export class Node {
       const node: any = this.node;
 
       const peer = this._getRandomPeer();
+
       const peerId = peer.id.toString();
 
       await node.services.pubsub.publish(
@@ -155,35 +156,30 @@ export class Node {
 
   async startConsensus(): Promise<void> {
     try {
-      cron.schedule('0 * * * *', async () => {
-        const node: any = this.node;
-        const _root: string = this.db.root().toString('hex');
-        
-        this.consensus.reset();
+      const node: any = this.node;
+      const _root: string = this.db.root().toString('hex');
+      
+      this.consensus.reset();
 
-        await setTimeout(5000);
+      await node.services.pubsub.publish(
+        'checkpoint',
+        uint8ArrayFromString(_root),
+      );
 
-        await node.services.pubsub.publish(
-          'checkpoint',
-          uint8ArrayFromString(_root),
-        );
-
-        await setTimeout(5000);
-        
-        const { root, peers, votes } = this.consensus.checkConsensus(_root, 0);
-        if(root === null) {
-          console.log("Operators didn't reach 2/3 of consensus offline");
-        } else if(root === _root) {
-          console.log(`Consensus reached and node in sync with root: ${root}`); 
-          console.log(`Total votes: ${peers.length}/${votes.length}`);
-        } else {
-          console.log(`Consensus reached but node is not in sync with root: ${root}`); 
-          console.log(`Total votes: ${peers.length}/${votes.length}`);
-          console.log("Requesting peers to sync");
-          await this.requestSync();
-        } 
-
-      }, {timezone: "America/Los_Angeles"});
+      await setTimeout(10000);
+      
+      const { root, peers, votes } = this.consensus.checkConsensus(_root, 0);
+      if(root === null) {
+        console.log("Operators didn't reach 2/3 of consensus offline");
+      } else if(root === _root) {
+        console.log(`Consensus reached and node in sync with root: ${root}`); 
+        console.log(`Agreements: ${peers.length}/${votes.length}`);
+      } else {
+        console.log(`Consensus reached but node is not in sync with root: ${root}`); 
+        console.log(`Agreements: ${peers.length}/${votes.length}`);
+        console.log("Requesting peers to sync");
+        await this.requestSync();
+      } 
     } catch(err: any) {
       console.log(err);
     }

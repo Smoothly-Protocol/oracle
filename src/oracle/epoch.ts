@@ -106,7 +106,7 @@ export async function processEpoch(
             await validateExitRequest(args[0], args[1], oracle);
             break;
           case 'Epoch':
-            await simulateRebalance(args[3], log.blockNumber, oracle);
+            //await simulateRebalance(args[3], log.blockNumber, oracle);
             break;
         }  
       }
@@ -125,6 +125,9 @@ export async function processEpoch(
         await addMissedSlot(validator, db); 
     }
   }
+
+  // Check consensus with peers
+  await oracle.p2p.startConsensus();
 
   // Write new Head to Disk
   fs.writeFileSync(
