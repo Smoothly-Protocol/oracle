@@ -98,7 +98,6 @@ export class Node {
           if(data === 'sync') {
             const peer = this._findPeer(from);
             if(peer) {
-              console.log('sync hit')
               this.dialPeerSync(peer.address);
             }
           }
@@ -173,7 +172,6 @@ export class Node {
       await setTimeout(10000);
       
       const { root, peers, votes } = this.consensus.checkConsensus(0);
-      console.log(root,peers,votes);
       if(root === null) {
         console.log("Operators didn't reach 2/3 of consensus offline");
       } else if(root === _root) {
@@ -192,7 +190,6 @@ export class Node {
 
   // Dials Peer requesting syncing
   async dialPeerSync(peer: Multiaddr) {
-    try {
       const req = await fetch('http://localhost:4040/checkpoint');
       const res = await req.json();
       const stream = await this.node.dialProtocol(peer, ['/sync:peer'])
@@ -200,9 +197,6 @@ export class Node {
         [uint8ArrayFromString(JSON.stringify(res))],
         stream
       )
-    } catch(err: any) {
-      console.log(err);
-    } 
   }
 
   private _getRandomPeer(): Peer {
@@ -212,7 +206,7 @@ export class Node {
 
   private _findPeer(peer: PeerId): Peer | null {
     for(let p of this.peers) {
-      if(p.id === peer) {
+      if(p.id.toString() === peer.toString()) {
         return p;
       }
     }
