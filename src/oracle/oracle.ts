@@ -58,6 +58,7 @@ export class Oracle extends Config {
       await processEpoch(current, true, this);
       return this.fullSync(current + 1);
     } catch(err: any) {
+      console.log("full sync:",err);
       return 0;
     }
   }

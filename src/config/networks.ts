@@ -4,7 +4,7 @@ export const GOERLI: NetInfo = {
   rpc: "https://eth-goerli.alchemyapi.io/v2/zmsxPR7pKHtiLvAkZ1R61BYtCqnCg0yc",
   pool: "0x2bE68B8Fd9E7941378CA81dF120F2F7eBb7c0Cf6",
   governance: "0xCD98b998d6C3e5685dD46bc9F7f056A3E5dd8AF5",
-  beacon: "http://146.190.128.93",
+  beacon: "http://unstable.prater.beacon-api.nimbus.team",
   beaconchainApi: "https://goerli.beaconcha.in",
   relays: [
     "https://boost-relay-goerli.flashbots.net",

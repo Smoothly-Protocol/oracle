@@ -44,6 +44,7 @@ export async function processEpoch(
   syncing: boolean,
   oracle: Oracle,
 )  {
+  try {
   const beacon = oracle.network.beacon;
   const db = oracle.db;
   const contract = oracle.contract;
@@ -129,6 +130,10 @@ export async function processEpoch(
     path.resolve(homedir(), ".smoothly/head.json"), 
     JSON.stringify({root: db.root().toString('hex'), epoch: epoch})
   )
+  } catch(err: any) {
+    console.log(err.code);
+    await processEpoch(epoch, syncing, oracle);
+  }
 }
 
 async function voluntaryExits(data: any, db: DB) { 
