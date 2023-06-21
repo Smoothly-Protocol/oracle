@@ -131,8 +131,11 @@ export async function processEpoch(
     JSON.stringify({root: db.root().toString('hex'), epoch: epoch})
   )
   } catch(err: any) {
-    console.log(err.code);
-    await processEpoch(epoch, syncing, oracle);
+    if(err == 'Checkpoint reached') {
+	throw err;
+    } else {
+	await processEpoch(epoch, syncing, oracle);
+   }
   }
 }
 
