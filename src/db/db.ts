@@ -1,3 +1,6 @@
+import fs from "fs";
+import * as path from 'path';
+import { homedir } from 'os';
 import { Trie, MapDB } from '@ethereumjs/trie'
 import { RLP } from '@ethereumjs/rlp'
 import { Level } from 'level';
@@ -5,7 +8,6 @@ import { DEFAULTS } from '../config';
 import { LevelDB } from './level';
 import { Validator } from '../types';
 import { BigNumber } from "ethers";
-import { homedir } from 'os';
 
 export class DB {
   db: Trie;
@@ -55,39 +57,31 @@ export class DB {
     return await this.db.createReadStream();
   }
 
-  async getRootState(_root: string): Promise<any> {
+  async hasRoot(_root: string): Promise<boolean> {
     try {
-      await this.level.close();
+      return await this.db.checkRoot(Buffer.from(_root.slice(2), 'hex')); 
+    } catch(err: any) {
+      console.log(err);
+      return false;
+    }
+  }
 
-      const level = new Level(`${homedir}/${DEFAULTS.folder}/db`);
-      const trie = new Trie({
-        db: new LevelDB(level),
-        useKeyHashing: true,
-        root: Buffer.from(_root.slice(2), 'hex')
-      })
-
-      let validators: Validator[] = [];
-      const stream = await trie.createReadStream();
-      const root = await trie.root();
-
-      await new Promise((fulfilled) => { 
-        stream
-        .on('data', async (data: any) => {
-          validators.push(JSON.parse(data.value.toString()));
-        })
-        .on('end', fulfilled);
-      });
-
-      await level.close()
-      await this.level.open();
-
-      return {
-        root: root.toString('hex'),
-        data: validators
-      };
+  async revert(): Promise<void> {
+    try {
+      await this.db.revert();
     } catch(err: any) {
       console.log(err);
     }
+  }
+
+  checkpoint(epoch: number): void {
+    this.db.checkpoint();
+
+    // Write new Head to Disk
+    fs.writeFileSync(
+      path.resolve(homedir(), ".smoothly/head.json"), 
+      JSON.stringify({root: this.root().toString('hex'), epoch: epoch})
+    )
   }
 
   root(): Buffer {

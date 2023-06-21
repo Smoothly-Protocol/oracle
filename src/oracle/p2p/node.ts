@@ -117,12 +117,10 @@ export class Node {
             let str: string = '';
             for await (const msg of source) {
               str += uint8ArrayToString(msg.subarray())
-              console.log(str);
             }
 
             // Add data to db
             for(let validator of JSON.parse(str).data) {
-              console.log(validator);
               await db.insert(validator.index, validator);
             }
           }
@@ -155,10 +153,9 @@ export class Node {
     }
   }
 
-  async startConsensus(): Promise<void> {
+  async startConsensus(_root: string): Promise<any> {
     try {
       const node: any = this.node;
-      const _root: string = this.db.root().toString('hex');
       
       this.consensus.reset(node.peerId, _root);
 
@@ -171,18 +168,7 @@ export class Node {
 
       await setTimeout(10000);
       
-      const { root, peers, votes } = this.consensus.checkConsensus(0);
-      if(root === null) {
-        console.log("Operators didn't reach 2/3 of consensus offline");
-      } else if(root === _root) {
-        console.log(`Consensus reached and node in sync with root: ${root}`); 
-        console.log(`Agreements: ${peers.length}/${votes.length}`);
-      } else {
-        console.log(`Consensus reached but node is not in sync with root: ${root}`); 
-        console.log(`Agreements: ${peers.length}/${votes.length}`);
-        console.log("Requesting peers to sync");
-        await this.requestSync();
-      } 
+      return this.consensus.checkConsensus(0);
     } catch(err: any) {
       console.log(err);
     }

@@ -36,17 +36,15 @@ export class Oracle extends Config {
     await this.p2p.requestSync();
     
     // Sync state
-    /*
     const root = await this.getRoot();
-    const { data } = await this.db.getRootState(root);
+    const hasRoot = await this.db.hasRoot(root);
 
-    if(data.length > 0) {
+    if(hasRoot) {
       console.log("Syncing from last root known:", _root);
       await this.fullSync(epoch);
     } else {
       await this.p2p.requestSync();
     }
-   */
 
     // Network listeners
     EpochListener(this);

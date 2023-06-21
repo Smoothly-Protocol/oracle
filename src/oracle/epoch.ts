@@ -1,6 +1,3 @@
-import fs from "fs";
-import * as path from 'path';
-import { homedir } from 'os';
 import EventSource from "eventsource";
 import { Oracle } from './oracle';
 import { DB } from '../db';
@@ -127,13 +124,22 @@ export async function processEpoch(
   }
 
   // Check consensus with peers
-  await oracle.p2p.startConsensus();
+  const _root: string = db.root().toString('hex');
+  const { root, peers, votes } = await oracle.p2p.startConsensus(_root);
+  if(root === null) {
+    await db.revert();
+    console.log("Operators didn't reach 2/3 of consensus offline");
+  } else if(root === _root) {
+    db.checkpoint(epoch);
+    console.log(`Consensus reached and node in sync with root: ${root}`); 
+    console.log(`Agreements: ${peers.length}/${votes.length}`);
+  } else {
+    console.log(`Consensus reached but node is not in sync with root: ${root}`); 
+    console.log(`Agreements: ${peers.length}/${votes.length}`);
+    console.log("Requesting peers to sync");
+    await oracle.p2p.requestSync();
+  } 
 
-  // Write new Head to Disk
-  fs.writeFileSync(
-    path.resolve(homedir(), ".smoothly/head.json"), 
-    JSON.stringify({root: db.root().toString('hex'), epoch: epoch})
-  )
 }
 
 async function voluntaryExits(data: any, db: DB) { 
