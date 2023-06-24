@@ -42,104 +42,112 @@ export async function processEpoch(
   syncing: boolean,
   oracle: Oracle,
 )  {
-  const beacon = oracle.network.beacon;
-  const db = oracle.db;
-  const contract = oracle.contract;
-  const checkpoint = syncing ? await reqEpochCheckpoint(beacon) : 0;
-  const res = await reqEpochSlots(epoch, beacon);
+  try {
+    const beacon = oracle.network.beacon;
+    const db = oracle.db;
+    const contract = oracle.contract;
+    const checkpoint = syncing ? await reqEpochCheckpoint(beacon) : 0;
+    const res = await reqEpochSlots(epoch, beacon);
 
-  // Handle invalid epoch
-  if(res.code) {
-    throw `Code: ${res.code}, Message: ${res.message}`;
-  } else if(syncing && epoch > Number(checkpoint)) {
-    throw `Checkpoint reached`;
-  }
+    // Handle invalid epoch
+    if(res.code) {
+      throw `Code: ${res.code}, Message: ${res.message}`;
+    } else if(syncing && epoch > Number(checkpoint)) {
+      throw `Checkpoint reached`;
+    }
 
-  syncing ? console.log("Syncing epoch:", epoch) : 0;
+    syncing ? console.log("Syncing epoch:", epoch) : 0;
 
-  // Fetch slots in parallel
-  let promises: Promise<any>[] = [];
-  for(let _slot of res.data) {
-    const { slot, validator_index } = _slot;
-    promises.push(reqSlotInfo(slot, beacon).then(async (s: any) => {
-      if(s !== undefined) {
-        const { block_number } = s.body.execution_payload;
-        const logs = await Promise.all([filterLogs(block_number, contract)]);
-        s["logs"] = logs[0];
-        return s;
-      } else {
-        return {
-          slot: slot, 
-          proposer_index: validator_index,
-          logs: []
-        };
+    // Fetch slots in parallel
+    let promises: Promise<any>[] = [];
+    for(let _slot of res.data) {
+      const { slot, validator_index } = _slot;
+      promises.push(reqSlotInfo(slot, beacon).then(async (s: any) => {
+        if(s !== undefined) {
+          const { block_number } = s.body.execution_payload;
+          const logs = await Promise.all([filterLogs(block_number, contract)]);
+          s["logs"] = logs[0];
+          return s;
+        } else {
+          return {
+            slot: slot, 
+            proposer_index: validator_index,
+            logs: []
+          };
+        }
+      }))
+    }
+    const slots = await Promise.all(promises);
+
+    for(let _slot of slots) { 
+      const { proposer_index, body, logs } = _slot;
+
+      // Process eth1 logs
+      if(logs.length > 0 && syncing) {
+        for(let log of logs) {
+          const event = log.event;
+          const args = log.args;
+          switch(event) {
+            case 'Registered':
+              await verifyValidator(args[0], args[1], oracle);
+            break;
+            case 'RewardsWithdrawal':
+              await validateWithdrawalRewards(args[0], args[1], args[2], oracle);
+            break;
+            case 'StakeWithdrawal':
+              await validateWithdrawalStake(args[0], args[1], args[2], oracle);
+            break;
+            case 'StakeAdded':
+              await validateAddedStake(args[0], args[1], args[2], oracle);
+            break;
+            case 'ExitRequested':
+              await validateExitRequest(args[0], args[1], oracle);
+            break;
+            case 'Epoch':
+              //await simulateRebalance(args[3], log.blockNumber, oracle);
+              break;
+          }  
+        }
       }
-    }))
-  }
-  const slots = await Promise.all(promises);
 
-  for(let _slot of slots) { 
-    const { proposer_index, body, logs } = _slot;
-        
-    // Process eth1 logs
-    if(logs.length > 0 && syncing) {
-      for(let log of logs) {
-        const event = log.event;
-        const args = log.args;
-        switch(event) {
-          case 'Registered':
-            await verifyValidator(args[0], args[1], oracle);
-            break;
-          case 'RewardsWithdrawal':
-            await validateWithdrawalRewards(args[0], args[1], args[2], oracle);
-            break;
-          case 'StakeWithdrawal':
-            await validateWithdrawalStake(args[0], args[1], args[2], oracle);
-            break;
-          case 'StakeAdded':
-            await validateAddedStake(args[0], args[1], args[2], oracle);
-            break;
-          case 'ExitRequested':
-            await validateExitRequest(args[0], args[1], oracle);
-            break;
-          case 'Epoch':
-            //await simulateRebalance(args[3], log.blockNumber, oracle);
-            break;
-        }  
+      //Process voluntary_exit
+      if(body && body.voluntary_exits.length > 0) {
+        await voluntaryExits(body.voluntary_exits, db);
+      }
+
+      // Process beacon state
+      const validator = await db.get(proposer_index);
+      if(validator) {
+        body !== undefined ? 
+          await validateSlot(validator, body, contract, db) : 
+          await addMissedSlot(validator, db); 
       }
     }
 
-    //Process voluntary_exit
-    if(body && body.voluntary_exits.length > 0) {
-      await voluntaryExits(body.voluntary_exits, db);
-    }
-
-    // Process beacon state
-    const validator = await db.get(proposer_index);
-    if(validator) {
-      body !== undefined ? 
-        await validateSlot(validator, body, contract, db) : 
-        await addMissedSlot(validator, db); 
+    // Check consensus with peers
+    const _root: string = db.root().toString('hex');
+    const { root, peers, votes } = await oracle.p2p.startConsensus(_root);
+    if(root === null) {
+      await db.revert();
+      throw "Operators didn't reach 2/3 of consensus offline";
+    } else if(root === _root) {
+      db.checkpoint(epoch);
+      console.log(`Consensus reached and node in sync with root: ${root}`); 
+      console.log(`Agreements: ${peers.length}/${votes.length}`);
+    } else {
+      console.log(`Consensus reached but node is not in sync with root: ${root}`); 
+      console.log(`Agreements: ${peers.length}/${votes.length}`);
+      console.log("Requesting peers to sync");
+      await oracle.p2p.requestSync();
+    } 
+  } catch(err: any) {
+    if(err == 'Checkpoint reached') {
+      throw err;
+    } else {
+      console.log(err);
+      await processEpoch(epoch, syncing, oracle);
     }
   }
-
-  // Check consensus with peers
-  const _root: string = db.root().toString('hex');
-  const { root, peers, votes } = await oracle.p2p.startConsensus(_root);
-  if(root === null) {
-    await db.revert();
-    console.log("Operators didn't reach 2/3 of consensus offline");
-  } else if(root === _root) {
-    db.checkpoint(epoch);
-    console.log(`Consensus reached and node in sync with root: ${root}`); 
-    console.log(`Agreements: ${peers.length}/${votes.length}`);
-  } else {
-    console.log(`Consensus reached but node is not in sync with root: ${root}`); 
-    console.log(`Agreements: ${peers.length}/${votes.length}`);
-    console.log("Requesting peers to sync");
-    await oracle.p2p.requestSync();
-  } 
-
 }
 
 async function voluntaryExits(data: any, db: DB) { 
@@ -224,7 +232,6 @@ export async function reqEpochCheckpoint(beacon: string): Promise<any> {
       "Content-Type": "application/json",
     }
   };
-  console.log(url);
   const req = await fetch(url, headers);
   const res = await req.json();
   const epoch = res.data.finalized.epoch;

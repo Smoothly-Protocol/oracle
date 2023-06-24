@@ -1,5 +1,4 @@
 #!/usr/bin/node --experimental-specifier-resolution=node
-
 import fs from "fs";
 import * as path from 'path';
 import { homedir } from 'os';
