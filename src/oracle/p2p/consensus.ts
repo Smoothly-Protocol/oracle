@@ -43,9 +43,8 @@ export class Consensus {
     return this.checkConsensus(index + 1);  
   }
 
-  reset(from: PeerId, root: string): void {
+  reset(): void {
     this.votes = [];
-    this.addVote(from, root);
   }
 
   private _exists(peer: PeerId): boolean {

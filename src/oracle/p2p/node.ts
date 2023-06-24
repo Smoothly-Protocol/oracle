@@ -102,6 +102,7 @@ export class Node {
           }
         } else if(evt.detail.topic === 'checkpoint'){
           const root = Buffer.from(evt.detail.data).toString();
+          console.log('checkpoint:',from, root);
           this.consensus.addVote(from, root);
         }
       })
@@ -155,19 +156,18 @@ export class Node {
   async startConsensus(_root: string): Promise<any> {
     try {
       const node: any = this.node;
-      
-      this.consensus.reset(node.peerId, _root);
-
-      await setTimeout(10000);
+      this.consensus.addVote(node.peerId, _root);
 
       await node.services.pubsub.publish(
         'checkpoint',
         uint8ArrayFromString(_root),
       );
 
-      await setTimeout(10000);
+      await setTimeout(30000);
       
-      return this.consensus.checkConsensus(0);
+      const result = this.consensus.checkConsensus(0);
+      this.consensus.reset();
+      return result;
     } catch(err: any) {
       console.log(err);
     }
