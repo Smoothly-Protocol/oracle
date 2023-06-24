@@ -1,4 +1,3 @@
-import * as cron from "node-cron";
 import { createLibp2p } from 'libp2p';
 import { tcp } from '@libp2p/tcp'
 import { mplex } from '@libp2p/mplex'
@@ -135,17 +134,17 @@ export class Node {
     }
   }
 
-  async requestSync() {
+  async requestSync(peers?: PeerId[]) {
     try {
       await this._waitForPeers();
       const node: any = this.node;
 
-      const peer = this._getRandomPeer();
-
-      const peerId = peer.id.toString();
+      const peerId = peers
+        ? peers[Math.floor(Math.random() * peers.length)] 
+        : this._getRandomPeer().id;
 
       await node.services.pubsub.publish(
-        peerId, 
+        peerId.toString(), 
         uint8ArrayFromString('sync'),
       );
     } catch(err: any) {

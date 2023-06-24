@@ -137,8 +137,8 @@ export async function processEpoch(
     } else {
       console.log(`Consensus reached but node is not in sync with root: ${root}`); 
       console.log(`Agreements: ${peers.length}/${votes.length}`);
-      console.log("Requesting peers to sync");
-      await oracle.p2p.requestSync();
+      console.log("Requesting sync from valid peers...");
+      await oracle.p2p.requestSync(peers);
     } 
   } catch(err: any) {
     if(err == 'Checkpoint reached') {
