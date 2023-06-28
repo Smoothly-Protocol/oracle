@@ -125,7 +125,7 @@ export async function processEpoch(
     }
 
     // Check consensus with peers
-    const _root: string = db.root().toString('hex');
+    const _root: string = await db.root().toString('hex');
     const { root, peers, votes } = await oracle.p2p.startConsensus(_root);
     if(root === null) {
       await db.revert();

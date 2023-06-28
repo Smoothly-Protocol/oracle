@@ -163,7 +163,7 @@ export class Node {
         uint8ArrayFromString(_root),
       );
 
-      await setTimeout(30000);
+      await setTimeout(240000);
       
       const result = this.consensus.checkConsensus(0);
       this.consensus.reset();
