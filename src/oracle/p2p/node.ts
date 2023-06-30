@@ -46,7 +46,7 @@ export class Node {
           })
         ],
         streamMuxers: [
-          yamux(),mplex()
+          mplex()
         ],
         connectionEncryption: [
           noise()
@@ -113,14 +113,13 @@ export class Node {
         pipe(
           stream,
           async function (source) {
-            // Concatenate stream
+            // Add data
             for await (const msg of source) {
-              let validator = JSON.parse(uint8ArrayToString(msg.subarray()))
+              let validator = JSON.parse(uint8ArrayToString(msg.subarray()));
               await db.insert(validator.index, validator);
             }
           }
         )
-        console.log('Synced from peer to:', db.root().toString('hex'));
       })
 
       await node.start();
@@ -174,9 +173,19 @@ export class Node {
       const res = await req.json();
       const stream = await this.node.dialProtocol(peer, ['/sync:peer'])
       await pipe(
-        res.data.map((v:any) => {uint8ArrayFromString(JSON.stringify(v))}),
+        res.data.map((v: any) => {return uint8ArrayFromString(JSON.stringify(v))}),
         stream
       )
+      /*
+      const chunkSize = 200;
+      for (let i = 0; i < res.data.length; i += chunkSize) {
+        const stream = await this.node.dialProtocol(peer, ['/sync:peer'])
+        const chunk = res.data.slice(i, i + chunkSize);
+        await pipe(
+          chunk.map((v: any) => {return uint8ArrayFromString(JSON.stringify(v))}),
+          stream
+        )
+      }*/
   }
 
   private _getRandomPeer(): Peer {
