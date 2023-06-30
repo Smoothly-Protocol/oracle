@@ -110,19 +110,19 @@ export class Node {
       // Handle stream muxing from peer:sync 
       node.handle('/sync:peer', async ({ stream }) => {
         let db: DB = this.db;
-        await pipe(
+        pipe(
           stream,
           async function (source) {
             // Concatenate stream
-            let str: string = '';
             for await (const msg of source) {
-              str += uint8ArrayToString(msg.subarray())
+              let validator = JSON.parse(uint8ArrayToString(msg.subarray()))
+              console.log(validator);
             }
 
             // Add data to db
-            for(let validator of JSON.parse(str).data) {
+            /*for(let validator of JSON.parse(str).data) {
               await db.insert(validator.index, validator);
-            }
+            }*/
           }
         )
         console.log('Synced from peer to:', db.root().toString('hex'));
@@ -179,7 +179,7 @@ export class Node {
       const res = await req.json();
       const stream = await this.node.dialProtocol(peer, ['/sync:peer'])
       await pipe(
-        [uint8ArrayFromString(JSON.stringify(res))],
+        res.data.map((v:any) => {uint8ArrayFromString(JSON.stringify(v))}),
         stream
       )
   }
