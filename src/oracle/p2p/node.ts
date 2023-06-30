@@ -116,13 +116,8 @@ export class Node {
             // Concatenate stream
             for await (const msg of source) {
               let validator = JSON.parse(uint8ArrayToString(msg.subarray()))
-              console.log(validator);
-            }
-
-            // Add data to db
-            /*for(let validator of JSON.parse(str).data) {
               await db.insert(validator.index, validator);
-            }*/
+            }
           }
         )
         console.log('Synced from peer to:', db.root().toString('hex'));
