@@ -125,8 +125,6 @@ export async function processEpoch(
     }
 
     // Check consensus with peers
-    oracle.p2p.consensus.reset();
-
     const _root: string = await db.root().toString('hex');
     const { root, peers, votes } = await oracle.p2p.startConsensus(_root);
 
@@ -143,6 +141,8 @@ export async function processEpoch(
       console.log("Requesting sync from valid peers...");
       await oracle.p2p.requestSync(peers);
     } 
+
+    oracle.p2p.consensus.reset();
   } catch(err: any) {
     if(err == 'Checkpoint reached') {
       throw err;
