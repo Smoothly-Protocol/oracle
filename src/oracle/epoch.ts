@@ -125,8 +125,11 @@ export async function processEpoch(
     }
 
     // Check consensus with peers
+    oracle.p2p.consensus.reset();
+
     const _root: string = await db.root().toString('hex');
     const { root, peers, votes } = await oracle.p2p.startConsensus(_root);
+
     if(root === null) {
       await db.revert();
       throw "Operators didn't reach 2/3 of consensus offline";

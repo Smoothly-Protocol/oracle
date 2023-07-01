@@ -159,9 +159,7 @@ export class Node {
 
       await setTimeout(240000);
       
-      const result = this.consensus.checkConsensus(0);
-      this.consensus.reset();
-      return result;
+      return this.consensus.checkConsensus(0);
     } catch(err: any) {
       console.log(err);
     }
