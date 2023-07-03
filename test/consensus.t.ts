@@ -1,7 +1,7 @@
 import { assert } from "chai";
 import { Consensus } from "../src/oracle/p2p/consensus";
 import type { PeerId } from '@libp2p/interface-peer-id'
-import { createFromJSON } from '@libp2p/peer-id-factory';
+import { createEd25519PeerId } from '@libp2p/peer-id-factory';
 import { peer1, peer2, peer3 } from './mock/peerIds';
 
 //disable logs
@@ -15,10 +15,17 @@ describe("Consensus", () => {
 
   beforeEach(async () => {
 		consensus = new Consensus();;
-		p1 = await createFromJSON(peer1);	
-		p2 = await createFromJSON(peer2);	
-		p3 = await createFromJSON(peer3);	
+		p1 = await createEd25519PeerId();	
+		p2 = await createEd25519PeerId();	
+		p3 = await createEd25519PeerId();	
   })
+
+  it("no votes provided", async () => {
+		const result = consensus.checkConsensus(0);
+		assert.equal(result.root, undefined);
+		assert.equal(result.peers, undefined);
+		assert.equal(result.votes, undefined);
+  });
 
   it("reaches consensus 3/3", async () => {
 		let votes = [
@@ -36,7 +43,7 @@ describe("Consensus", () => {
 			}
 		]
 
-    await consensus.reset(votes[0].id, votes[0].root)
+    await consensus.addVote(votes[0].id, votes[0].root); 
     await consensus.addVote(votes[1].id, votes[1].root); 
     await consensus.addVote(votes[2].id, votes[2].root); 
 
@@ -62,7 +69,7 @@ describe("Consensus", () => {
 			}
 		]
 
-    await consensus.reset(votes[0].id, votes[0].root)
+    await consensus.addVote(votes[0].id, votes[0].root); 
     await consensus.addVote(votes[1].id, votes[1].root); 
     await consensus.addVote(votes[2].id, votes[2].root); 
 
@@ -88,7 +95,7 @@ describe("Consensus", () => {
 			}
 		]
 
-    await consensus.reset(votes[0].id, votes[0].root)
+    await consensus.addVote(votes[0].id, votes[0].root); 
     await consensus.addVote(votes[1].id, votes[1].root); 
     await consensus.addVote(votes[2].id, votes[2].root); 
 
@@ -114,7 +121,7 @@ describe("Consensus", () => {
 			}
 		]
 
-    await consensus.reset(votes[0].id, votes[0].root)
+    await consensus.addVote(votes[0].id, votes[0].root); 
     await consensus.addVote(votes[1].id, votes[1].root); 
     await consensus.addVote(votes[2].id, votes[2].root); 
 
