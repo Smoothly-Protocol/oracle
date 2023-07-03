@@ -128,7 +128,9 @@ export async function processEpoch(
     const _root: string = await db.root().toString('hex');
     const { root, peers, votes } = await oracle.p2p.startConsensus(_root);
 
-    if(root === null) {
+    if(root === undefined) {
+      console.log("Warning: no votes provided on checkpoint"); 
+    } else if(root === null) {
       await db.revert();
       throw "Operators didn't reach 2/3 of consensus offline";
     } else if(root === _root) {

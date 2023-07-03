@@ -174,16 +174,7 @@ export class Node {
         res.data.map((v: any) => {return uint8ArrayFromString(JSON.stringify(v))}),
         stream
       )
-      /*
-      const chunkSize = 200;
-      for (let i = 0; i < res.data.length; i += chunkSize) {
-        const stream = await this.node.dialProtocol(peer, ['/sync:peer'])
-        const chunk = res.data.slice(i, i + chunkSize);
-        await pipe(
-          chunk.map((v: any) => {return uint8ArrayFromString(JSON.stringify(v))}),
-          stream
-        )
-      }*/
+      stream.close();
   }
 
   private _getRandomPeer(): Peer {

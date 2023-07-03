@@ -21,26 +21,40 @@ export class Consensus {
 
   // Find most agreeable root hash
   checkConsensus(index: number): any {
-    let count: number = 0;
-    let iterator: number = 0;
-    let root: string = this.votes[index].root;
-    let peers: PeerId[] = [];
+    try {
+      let count: number = 0;
+      let iterator: number = 0;
+      let peers: PeerId[] = [];
+      let root: string = '';
 
-    for(let peer of this.votes) {
-      if(root === peer.root) {
-        count ++;
-        peers.push(peer.id);
+      if(this.votes.length > 0) {
+        root = this.votes[index].root 
+      } else {
+        throw 'Warn: no votes provided to consensus';
+      }
+
+      for(let peer of this.votes) {
+        if(root === peer.root) {
+          count ++;
+          peers.push(peer.id);
+        }  
+        iterator++;
+      }
+
+      if(this._computeAgreements(count) >= VOTING_RATIO) {
+        return { root: root, peers: peers, votes: this.votes};
+      } else if((iterator - 1) === index) {
+        return { root: null, peers: peers, votes: this.votes};
       }  
-      iterator++;
+
+      return this.checkConsensus(index + 1);  
+    } catch(err:any) {
+      if(err == 'Warn: no votes provided to consensus') {
+        return { root: undefined, peers: undefined, votes: undefined };
+      } else {
+        console.log(err);
+      }
     }
-
-    if(this._computeAgreements(count) >= VOTING_RATIO) {
-      return { root: root, peers: peers, votes: this.votes};
-    } else if((iterator - 1) === index) {
-      return { root: null, peers: peers, votes: this.votes};
-    }  
-
-    return this.checkConsensus(index + 1);  
   }
 
   reset(): void {
@@ -48,7 +62,7 @@ export class Consensus {
   }
 
   private _exists(peer: PeerId): boolean {
-    let found = this.votes.find((p: any) => p.id === peer);    
+    let found = this.votes.find((p: any) => p.id.toString() === peer.toString());    
     return found ? true : false;
   }
 
