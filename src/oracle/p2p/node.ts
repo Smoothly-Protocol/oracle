@@ -174,7 +174,6 @@ export class Node {
         res.data.map((v: any) => {return uint8ArrayFromString(JSON.stringify(v))}),
         stream
       )
-      stream.close();
   }
 
   private _getRandomPeer(): Peer {
