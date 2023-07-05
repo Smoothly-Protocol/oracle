@@ -131,7 +131,7 @@ export async function processEpoch(
     if(root === undefined) {
       console.log("Warning: no votes provided on checkpoint"); 
     } else if(root === null) {
-      await db.revert();
+      //await db.revert();
       throw "Operators didn't reach 2/3 of consensus offline";
     } else if(root === _root) {
       db.checkpoint(epoch);

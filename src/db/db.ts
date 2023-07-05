@@ -75,7 +75,7 @@ export class DB {
   }
 
   checkpoint(epoch: number): void {
-    this.db.checkpoint();
+    //this.db.checkpoint();
 
     // Write new Head to Disk
     fs.writeFileSync(

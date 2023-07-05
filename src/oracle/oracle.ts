@@ -30,7 +30,7 @@ export class Oracle extends Config {
     this.p2p = new Node(this.network.bootstrapers, this.db);
   }
 
-  async start(epoch: number, _root: string): Promise<void> {
+  async start(epoch: number, _root: string, checkpoint?: string): Promise<void> {
     // Init libp2p node
     await this.p2p.createNode();
     
@@ -38,7 +38,11 @@ export class Oracle extends Config {
     const root = await this.getRoot();
     const hasRoot = await this.db.hasRoot(root);
 
-    if(hasRoot) {
+    // Sync from checkpoint if provided
+    if(checkpoint) {
+      console.log("Syncing from checkpoint node...");
+      await this.sync(checkpoint);
+    } else if(hasRoot) {
       console.log("Syncing from last root known:", _root);
       await this.fullSync(epoch);
     } else {

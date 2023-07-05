@@ -28,7 +28,7 @@ const opts = program.opts();
 
 async function main(): Promise<void> {
   try {
-    const checkpoint = opts.sync || undefined;
+    const checkpoint = opts.sync;
     const port = Number(opts.httpApi);
 
     let root = EMPTY_ROOT;
@@ -44,18 +44,7 @@ async function main(): Promise<void> {
     const oracle = new Oracle(opts, root);
     const api =  new API(oracle, port as number);
 
-    /*
-    // Sync from checkpoint if provided
-    if(checkpoint) {
-      console.log("Syncing from checkpoint node...");
-      await oracle.sync(checkpoint);
-    } else {
-      console.log("Syncing from last root known:", root);
-      await oracle.fullSync(epoch);
-    }
-   */
-
-    await oracle.start(epoch, root);
+    await oracle.start(epoch, root, checkpoint);
   } catch(err: any) {
     if(err.message === 'Sync failed, make sure checkpoint is active') {
       throw err;
