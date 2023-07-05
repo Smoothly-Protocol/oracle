@@ -124,27 +124,29 @@ export async function processEpoch(
       }
     }
 
-    // Check consensus with peers
-    const _root: string = await db.root().toString('hex');
-    const { root, peers, votes } = await oracle.p2p.startConsensus(_root);
+    if(!syncing) {
+      // Check consensus with peers
+      const _root: string = await db.root().toString('hex');
+      const { root, peers, votes } = await oracle.p2p.startConsensus(_root);
 
-    if(root === undefined) {
-      console.log("Warning: no votes provided on checkpoint"); 
-    } else if(root === null) {
-      //await db.revert();
-      throw "Operators didn't reach 2/3 of consensus offline";
-    } else if(root === _root) {
-      db.checkpoint(epoch);
-      console.log(`Consensus reached and node in sync with root: ${root}`); 
-      console.log(`Agreements: ${peers.length}/${votes.length}`);
-    } else {
-      console.log(`Consensus reached but node is not in sync with root: ${root}`); 
-      console.log(`Agreements: ${peers.length}/${votes.length}`);
-      console.log("Requesting sync from valid peers...");
-      await oracle.p2p.requestSync(peers);
-    } 
+      if(root === undefined) {
+        console.log("Warning: no votes provided on checkpoint"); 
+      } else if(root === null) {
+        //await db.revert();
+        throw "Operators didn't reach 2/3 of consensus offline";
+      } else if(root === _root) {
+        db.checkpoint(epoch);
+        console.log(`Consensus reached and node in sync with root: ${root}`); 
+        console.log(`Agreements: ${peers.length}/${votes.length}`);
+      } else {
+        console.log(`Consensus reached but node is not in sync with root: ${root}`); 
+        console.log(`Agreements: ${peers.length}/${votes.length}`);
+        console.log("Requesting sync from valid peers...");
+        await oracle.p2p.requestSync(peers);
+      } 
 
-    oracle.p2p.consensus.reset();
+      oracle.p2p.consensus.reset();
+    }
   } catch(err: any) {
     if(err == 'Checkpoint reached') {
       throw err;
