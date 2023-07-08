@@ -6,7 +6,7 @@ export interface Peer {
   id: PeerId;
 }
 
-export interface Votes {
+export interface Vote {
   id: PeerId;
   root: string;
 } 

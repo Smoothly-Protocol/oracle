@@ -21,6 +21,7 @@ import { setTimeout } from "timers/promises";
 import { Validator } from '../../types';
 import { DB } from "../../db";
 import { Consensus } from "./consensus";
+import { pushable } from 'it-pushable';
 
 export class Node {
   bootstrapers: string[];
@@ -46,7 +47,9 @@ export class Node {
           })
         ],
         streamMuxers: [
-          mplex()
+          yamux({
+            maxMessageSize: 1 << 20
+          })
         ],
         connectionEncryption: [
           noise()
@@ -80,7 +83,7 @@ export class Node {
             address: addresses[0].multiaddr,
             id: id
           };
-          
+
           // Exists peer?
           if(this._findPeer(peer.id) === null) {
             this.peers.push(peer);
@@ -101,16 +104,16 @@ export class Node {
             }
           }
         } else if(evt.detail.topic === 'checkpoint'){
-          const root = Buffer.from(evt.detail.data).toString();
-          console.log('checkpoint:',from, root);
-          this.consensus.addVote(from, root);
+          const { root, epoch } = JSON.parse(uint8ArrayToString(evt.detail.data));
+          console.log('checkpoint:', from, root, epoch);
+          this.consensus.addVote(from, root, epoch);
         }
       })
 
       // Handle stream muxing from peer:sync 
       node.handle('/sync:peer', async ({ stream }) => {
         let db: DB = this.db;
-        pipe(
+        await pipe(
           stream,
           async function (source) {
             // Add data
@@ -120,6 +123,7 @@ export class Node {
             }
           }
         )
+        stream.close();
       })
 
       await node.start();
@@ -138,28 +142,31 @@ export class Node {
         ? peers[Math.floor(Math.random() * peers.length)] 
         : this._getRandomPeer().id;
 
-      await node.services.pubsub.publish(
-        peerId.toString(), 
-        uint8ArrayFromString('sync'),
-      );
+        await node.services.pubsub.publish(
+          peerId.toString(), 
+          uint8ArrayFromString('sync'),
+        );
     } catch(err: any) {
       console.log(err);
     }
   }
 
-  async startConsensus(_root: string): Promise<any> {
+  async startConsensus(_root: string, epoch: number): Promise<any> {
     try {
       const node: any = this.node;
-      this.consensus.addVote(node.peerId, _root);
+      this.consensus.addVote(node.peerId, _root, epoch);
 
       await node.services.pubsub.publish(
         'checkpoint',
-        uint8ArrayFromString(_root),
+        uint8ArrayFromString(JSON.stringify({
+          root: _root,
+          epoch: epoch
+        })),
       );
 
       await setTimeout(240000);
-      
-      return this.consensus.checkConsensus(0);
+
+      return this.consensus.checkConsensus(epoch, 0);
     } catch(err: any) {
       console.log(err);
     }
@@ -167,13 +174,22 @@ export class Node {
 
   // Dials Peer requesting syncing
   async dialPeerSync(peer: Multiaddr) {
+    try {
       const req = await fetch('http://localhost:4040/checkpoint');
       const res = await req.json();
+
+      // Send data
       const stream = await this.node.dialProtocol(peer, ['/sync:peer'])
       await pipe(
         res.data.map((v: any) => {return uint8ArrayFromString(JSON.stringify(v))}),
         stream
       )
+
+      // Gracefull close
+      stream.close()
+    } catch(err: any) {
+      console.log(err);
+    }
   }
 
   private _getRandomPeer(): Peer {

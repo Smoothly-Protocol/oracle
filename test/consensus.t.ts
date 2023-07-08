@@ -21,7 +21,7 @@ describe("Consensus", () => {
   })
 
   it("no votes provided", async () => {
-		const result = consensus.checkConsensus(0);
+		const result = consensus.checkConsensus(12,0);
 		assert.equal(result.root, undefined);
 		assert.equal(result.peers, undefined);
 		assert.equal(result.votes, undefined);
@@ -43,11 +43,11 @@ describe("Consensus", () => {
 			}
 		]
 
-    await consensus.addVote(votes[0].id, votes[0].root); 
-    await consensus.addVote(votes[1].id, votes[1].root); 
-    await consensus.addVote(votes[2].id, votes[2].root); 
+    await consensus.addVote(votes[0].id, votes[0].root, 12); 
+    await consensus.addVote(votes[1].id, votes[1].root, 12); 
+    await consensus.addVote(votes[2].id, votes[2].root, 12); 
 
-		const result = consensus.checkConsensus(0);
+		const result = consensus.checkConsensus(12, 0);
 		assert.equal(result.root, votes[0].root);
 		assert.equal(result.peers.length, 3);
 		assert.equal(result.votes.length, 3);
@@ -69,11 +69,11 @@ describe("Consensus", () => {
 			}
 		]
 
-    await consensus.addVote(votes[0].id, votes[0].root); 
-    await consensus.addVote(votes[1].id, votes[1].root); 
-    await consensus.addVote(votes[2].id, votes[2].root); 
+    await consensus.addVote(votes[0].id, votes[0].root, 12); 
+    await consensus.addVote(votes[1].id, votes[1].root, 12); 
+    await consensus.addVote(votes[2].id, votes[2].root, 12); 
 
-		const result = consensus.checkConsensus(0);
+		const result = consensus.checkConsensus(12, 0);
 		assert.equal(result.root, votes[1].root);
 		assert.equal(result.peers.length, 2);
 		assert.equal(result.votes.length, 3);
@@ -95,11 +95,11 @@ describe("Consensus", () => {
 			}
 		]
 
-    await consensus.addVote(votes[0].id, votes[0].root); 
-    await consensus.addVote(votes[1].id, votes[1].root); 
-    await consensus.addVote(votes[2].id, votes[2].root); 
+    await consensus.addVote(votes[0].id, votes[0].root, 12); 
+    await consensus.addVote(votes[1].id, votes[1].root, 12); 
+    await consensus.addVote(votes[2].id, votes[2].root, 12); 
 
-		const result = consensus.checkConsensus(0);
+		const result = consensus.checkConsensus(12, 0);
 		assert.equal(result.root, null);
 		assert.equal(result.peers.length, 1);
 		assert.equal(result.votes.length, 3);
@@ -121,11 +121,11 @@ describe("Consensus", () => {
 			}
 		]
 
-    await consensus.addVote(votes[0].id, votes[0].root); 
-    await consensus.addVote(votes[1].id, votes[1].root); 
-    await consensus.addVote(votes[2].id, votes[2].root); 
+    await consensus.addVote(votes[0].id, votes[0].root, 12); 
+    await consensus.addVote(votes[1].id, votes[1].root, 12); 
+    await consensus.addVote(votes[2].id, votes[2].root, 12); 
 
-		const result = consensus.checkConsensus(0);
+		const result = consensus.checkConsensus(12, 0);
 		assert.equal(result.root, null);
 		assert.equal(result.peers.length, 1);
 		assert.equal(result.votes.length, 2);
