@@ -56,7 +56,7 @@ cd oracle
 ```
 Move into the \oracle folder
 ```
-git checkout p2p_implementation
+git checkout -b p2p_implementation
 ```
 change from master branch to new p2p branch
 ```
