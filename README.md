@@ -80,9 +80,9 @@ npm link
 ```
 Link npm to smoothly cli
 ```
-smoothly_cli -pk <your private key> -s https://node-goerli.smoothly.money -n goerli
+smoothly_cli -pk <your private key> -n goerli -b <your beacon client>
 ```
-Run the smoothly cli and enter the private key associated with the whitelisted address used to vote in the governance contract. Initially, you'll need -s to checkpoint sync with our existing node. After client is synced (processing epochs), you will have a local db and can remove -s https://node-goerli.smoothly.money in future restarts. 
+Run the smoothly cli and enter the private key associated with the whitelisted address used to vote in the governance contract. the -n flag defines the network (goerli for now) the OPTIONAL -b flag identifies which beacon node api to connect to (ex. -b http://localhost:3500) by defautl we're using a public nimbus api,
 
 ## Update the smoothly cli
 ```
@@ -104,10 +104,10 @@ Link
 ```
 smoothly_cli -pk <your private key> -n goerli
 ```
-Start smoothly_cli with checkpoint sync removed
+Start smoothly_cli
 
 ## Usage 
-`smoothly_cli -pk <YOUR_PRIVATE_KEY> -s <CHECKPOINT_NODE_SYNC> -n <goerli defaults>` 
+`smoothly_cli -pk <YOUR_PRIVATE_KEY> -n <goerli defaults>` 
 
 ## Tests 
 
