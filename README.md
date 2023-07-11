@@ -56,17 +56,25 @@ cd oracle
 ```
 Move into the \oracle folder
 ```
+git checkout p2p_implementation
+```
+change from master branch to new p2p branch
+```
+git pull origin p2p_implementation
+```
+make sure that branch is up to date
+```
+npm install
+``` 
+Insall any updates of npm
+```
+npm install typescript
+```
+Intstall typescript if prompted
+```
 npm run build
 ```
 Build using npm
-```
-npm install typescript
-``` 
-Install typescript if needed
-```
-npm run build
-```
-Rebuild
 ```
 npm link
 ```
@@ -82,7 +90,7 @@ cd oracle
 ```
 Move into the oracle directory
 ```
-git pull
+git pull origin p2p_implementation
 ```
 Pull new changes 
 ```
