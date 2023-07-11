@@ -1,12 +1,9 @@
 #!/usr/bin/node --experimental-specifier-resolution=node
-import fs from "fs";
-import * as path from 'path';
-import { homedir } from 'os';
+
 import { Oracle } from './oracle';
 import { API } from './api';
 import { Command } from 'commander';
-import { EMPTY_ROOT } from './utils';
-import { Head } from './types';
+import { EMPTY_ROOT, existsHead } from './utils';
 
 const program = new Command();
 
@@ -50,20 +47,6 @@ async function main(): Promise<void> {
       throw err;
     }
     console.error(err);
-  }
-}
-
-function existsHead(): Head | null {  
-  try {
-    const data: Head = JSON.parse(
-      fs.readFileSync(
-        path.resolve(homedir(), `.smoothly/head.json`),
-        'utf8'
-      )
-    );
-    return data; 
-  } catch {
-    return null;
   }
 }
 

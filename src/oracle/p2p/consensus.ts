@@ -63,10 +63,6 @@ export class Consensus {
     }
   }
 
-  reset(): void {
-    //this.votes[epoch] = []; 
-  }
-
   private _exists(peer: PeerId, epoch: number): boolean {
     let found = this.votes[epoch].find((p: any) => p.id.toString() === peer.toString());    
     return found ? true : false;

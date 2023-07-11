@@ -3,7 +3,7 @@ import { Oracle } from './oracle';
 import { DB } from '../db';
 import { Validator } from '../types';
 import { Contract, utils } from 'ethers';
-import { filterLogs } from "../utils";
+import { filterLogs, existsHead } from "../utils";
 import { 
   verifyValidator, 
   validateExitRequest,
@@ -132,9 +132,9 @@ export async function processEpoch(
       if(root === undefined) {
         console.log("Warning: no votes provided on checkpoint"); 
       } else if(root === null) {
-        //await db.revert();
-        //throw "Operators didn't reach 2/3 of consensus offline";
         console.log("Operators didn't reach 2/3 of consensus offline");
+        const data = existsHead()
+        data ? await oracle.fullSync(data.epoch) : 0;
       } else if(root === _root) {
         db.checkpoint(epoch);
         console.log(`Consensus reached and node in sync with root: ${root}`); 
@@ -145,9 +145,10 @@ export async function processEpoch(
         console.log("Requesting sync from valid peers...");
         await oracle.p2p.requestSync(peers);
       } 
-
-      oracle.p2p.consensus.reset();
+    } else {
+      db.checkpoint(epoch);
     }
+
   } catch(err: any) {
     if(err == 'Checkpoint reached') {
       throw err;

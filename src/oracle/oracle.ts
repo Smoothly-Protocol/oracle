@@ -94,6 +94,8 @@ export class Oracle extends Config {
     const { timestamp } = await this.governance.provider.getBlock("latest");
     const timeLock = Number(lastEpoch) + Number(epochInterval);
 
+    // TODO: move this to Rebalancer(), as it needs to execute rebalance 
+    // even though it's not submitting tx to contract
     // Schedule rebalance
     if(timeLock < timestamp) {
       Rebalancer(this); 
