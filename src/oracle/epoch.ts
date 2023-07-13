@@ -1,4 +1,5 @@
 import EventSource from "eventsource";
+import { setTimeout } from "timers/promises";
 import { Oracle } from './oracle';
 import { DB } from '../db';
 import { Validator } from '../types';
@@ -134,7 +135,7 @@ export async function processEpoch(
       } else if(root === null) {
         console.log("Operators didn't reach 2/3 of consensus offline");
         const data = existsHead()
-        data ? await oracle.fullSync(data.epoch) : 0;
+        data ? await oracle.fullSync(Number(data.epoch) + 1) : 0;
       } else if(root === _root) {
         db.checkpoint(epoch);
         console.log(`Consensus reached and node in sync with root: ${root}`); 
@@ -154,6 +155,7 @@ export async function processEpoch(
       throw err;
     } else {
       console.log(err);
+      await setTimeout(5000);
       await processEpoch(epoch, syncing, oracle);
     }
   }
