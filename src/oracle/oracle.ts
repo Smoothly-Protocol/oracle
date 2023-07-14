@@ -60,7 +60,7 @@ export class Oracle extends Config {
     // Rebalancer schedule
     cron.schedule('0 17 * * *', async () => {
       await MonitorRelays(this);
-      this.rebalance()
+      Rebalancer(this); 
     }, {timezone: "America/Los_Angeles"});
   }
 
@@ -85,24 +85,6 @@ export class Oracle extends Config {
     } catch(err: any) {
       console.log(err);
       return 0;
-    }
-  }
-
-  async rebalance(): Promise<void> {
-    const lastEpoch = await this.governance.lastEpoch();
-    const epochInterval = await this.governance.epochInterval();
-    const { timestamp } = await this.governance.provider.getBlock("latest");
-    const timeLock = Number(lastEpoch) + Number(epochInterval);
-
-    // TODO: move this to Rebalancer(), as it needs to execute rebalance 
-    // even though it's not submitting tx to contract
-    // Schedule rebalance
-    if(timeLock < timestamp) {
-      Rebalancer(this); 
-    } else {
-      const postponedTime = (timeLock - timestamp) * 1000;
-      setTimeout(async () => {Rebalancer(this)}, postponedTime);
-      console.log("Next rebalance processing at:", timeLock, "UTC");
     }
   }
 

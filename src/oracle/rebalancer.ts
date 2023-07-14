@@ -39,15 +39,30 @@ export async function Rebalancer (oracle: Oracle) {
 async function proposeEpoch(epochData: any, oracle: Oracle): Promise<void> {
   try {
     const contract = oracle.governance;
-    const tx = await contract.connect(oracle.signer).proposeEpoch(epochData);
-    await tx.wait();
+    const lastEpoch = await contract.lastEpoch();
+    const epochInterval = await contract.epochInterval();
+    const { timestamp } = await contract.provider.getBlock("latest");
+    const timeLock = Number(lastEpoch) + Number(epochInterval);
+
+    // Check contract timelock
+    if(timeLock < timestamp) {
+      const tx = await contract.connect(oracle.signer).proposeEpoch(epochData);
+      await tx.wait();
+    } else {
+      const postponedTime = (timeLock - timestamp) * 1000;
+      setTimeout(async () => {Rebalancer(oracle)}, postponedTime);
+      console.log("Next rebalance processing at:", timeLock, "UTC");
+    }
   } catch(err: any) {
     // EpochTimelockNotReached() selector error
     if(err.toString().includes('0xa6339a86')) {
       console.log("Transaction reverted: Other nodes already reached consensus");
+    } else if(err.toString().includes('0x82b42900')){
+      // Unauthorized() selector error
+      console.log("Warning: Unauthorized address to propose vote");
     } else {
       console.log("Error: proposing epoch, trying again in 1 min")
-      console.log("Warning: make sure your address is funded and registered as operator")
+      console.log("Warning: make sure your address is funded")
       setTimeout(async () => {await proposeEpoch(epochData, oracle)}, 60000);
     }
   }
