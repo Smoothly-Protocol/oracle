@@ -57,10 +57,9 @@ export class Oracle extends Config {
     StakeWithdrawal(this);
     RewardsWithdrawal(this);
 
-    // Rebalancer schedule
-    cron.schedule('0 17 * * *', async () => {
+    // Routine jobs
+    cron.schedule('0 0 * * *', async () => {
       await MonitorRelays(this);
-      Rebalancer(this); 
     }, {timezone: "America/Los_Angeles"});
   }
 

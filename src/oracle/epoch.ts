@@ -13,6 +13,7 @@ import {
   validateAddedStake,
   simulateRebalance
 } from "./events";
+import { Rebalancer } from "./rebalancer";
 
 export async function EpochListener(oracle: Oracle) {
   const eth2 = new EventSource(`${oracle.network.beacon}/eth/v1/events?topics=finalized_checkpoint`);
@@ -31,8 +32,20 @@ export async function EpochListener(oracle: Oracle) {
     }
 
     console.log("Processing epoch:", Number(epoch));
-    processEpoch(epoch, false, oracle);
+    await processEpoch(epoch, false, oracle);
     prevEpoch = Number(epoch);
+
+    // Check if rebalance is needed
+    const contract = oracle.governance;
+    const lastEpoch = await contract.lastEpoch();
+    const epochInterval = await contract.epochInterval();
+    const { timestamp } = await contract.provider.getBlock("latest");
+    const timeLock = Number(lastEpoch) + Number(epochInterval);
+
+    // Check contract timelock
+    if(timeLock < timestamp) {
+      Rebalancer(oracle);
+    } 
   });
 
   console.log("Listening for new finalized_checkpoints");
