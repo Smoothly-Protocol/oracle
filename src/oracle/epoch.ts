@@ -20,32 +20,43 @@ export async function EpochListener(oracle: Oracle) {
   let prevEpoch: number = 0;
 
   eth2.addEventListener('finalized_checkpoint', async (e)  => {
-    let { epoch } = JSON.parse(e.data);	
+    try {
+      let { epoch } = JSON.parse(e.data);	
 
-    // Check for skipped epochs
-    if(prevEpoch === 0) {
-      epoch = Number(epoch);
-    } else if((prevEpoch + 1) !== Number(epoch)) {
-      const skipped = Number(prevEpoch + 1); 
-      console.log("Processing epoch:", skipped);
-      await processEpoch(skipped, false, oracle);
+      // Check for skipped epochs
+      if(prevEpoch === 0) {
+        epoch = Number(epoch);
+      } else if((prevEpoch + 1) !== Number(epoch)) {
+        const skipped = Number(prevEpoch + 1); 
+        console.log("Processing epoch:", skipped);
+        await processEpoch(skipped, false, oracle);
+      }
+
+      console.log("Processing epoch:", Number(epoch));
+      await processEpoch(epoch, false, oracle);
+      prevEpoch = Number(epoch);
+
+      // Check if rebalance is needed
+      const contract = oracle.governance;
+      const lastEpoch = await contract.lastEpoch();
+      const epochInterval = await contract.epochInterval();
+      const { timestamp } = await contract.provider.getBlock("latest");
+      const timeLock = Number(lastEpoch) + Number(epochInterval);
+
+      // Check contract timelock
+      if(timeLock < timestamp) {
+        const epochNumber = await contract.epochNumber();
+        const voter = await oracle.signer.getAddress();
+        const vote = await contract.votes(epochNumber, voter);
+
+        // Process rebalance on empty vote
+        if(vote[0] == 0) {
+          Rebalancer(oracle);
+        } 
+      } 
+    } catch(err: any) {
+      console.log(err);
     }
-
-    console.log("Processing epoch:", Number(epoch));
-    await processEpoch(epoch, false, oracle);
-    prevEpoch = Number(epoch);
-
-    // Check if rebalance is needed
-    const contract = oracle.governance;
-    const lastEpoch = await contract.lastEpoch();
-    const epochInterval = await contract.epochInterval();
-    const { timestamp } = await contract.provider.getBlock("latest");
-    const timeLock = Number(lastEpoch) + Number(epochInterval);
-
-    // Check contract timelock
-    if(timeLock < timestamp) {
-      Rebalancer(oracle);
-    } 
   });
 
   console.log("Listening for new finalized_checkpoints");
