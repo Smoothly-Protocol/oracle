@@ -28,13 +28,13 @@ export async function EpochListener(oracle: Oracle) {
         epoch = Number(epoch);
       } else if((prevEpoch + 1) !== Number(epoch)) {
         const skipped = Number(prevEpoch + 1); 
-        console.log("Processing epoch:", skipped);
+        console.log("Processing skipped epoch:", skipped);
         await processEpoch(skipped, false, oracle);
       }
 
       console.log("Processing epoch:", Number(epoch));
-      await processEpoch(epoch, false, oracle);
       prevEpoch = Number(epoch);
+      await processEpoch(epoch, false, oracle);
 
       // Check if rebalance is needed
       const contract = oracle.governance;
