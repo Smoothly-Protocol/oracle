@@ -46,7 +46,6 @@ export async function EpochListener(oracle: Oracle) {
       const epochInterval = await contract.epochInterval();
       const { timestamp } = await contract.provider.getBlock("latest");
       const timeLock = Number(lastEpoch) + Number(epochInterval);
-      const operators = await contract.getOperators();
 
       // Check contract timelock
       if(timeLock < timestamp) {

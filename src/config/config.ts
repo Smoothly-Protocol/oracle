@@ -12,6 +12,7 @@ import {
   LOCAL
 } from './networks';
 import { pool, governance } from '../artifacts';
+import { reqEpochCheckpoint } from '../oracle/epoch';
 
 export class Config {
   contract: Contract;
@@ -34,7 +35,9 @@ export class Config {
       throw new Error("Unknown or not supported network.");
     } 
 
+    // Beacon node connectivity
     opts.beacon ? this.network.beacon = opts.beacon : 0;
+    this._isBeaconAlive(this.network.beacon);
 
     // Signer
     this.signer = this.validateWallet(_pk);
@@ -73,6 +76,14 @@ export class Config {
       return wallet;
     } catch {
       throw new Error("Invalid private key");
+    }
+  }
+
+  private async _isBeaconAlive(beacon: string): Promise<void> {
+    try {
+      await reqEpochCheckpoint(beacon); 
+    } catch {
+      throw new Error("Beacon node is not responding");
     }
   }
 }
