@@ -22,19 +22,23 @@ export async function EpochListener(oracle: Oracle) {
   eth2.addEventListener('finalized_checkpoint', async (e)  => {
     try {
       let { epoch } = JSON.parse(e.data);	
+      epoch = Number(epoch);
 
-      // Check for skipped epochs
-      if(prevEpoch === 0) {
-        epoch = Number(epoch);
-      } else if((prevEpoch + 1) !== Number(epoch)) {
-        const skipped = Number(prevEpoch + 1); 
-        console.log("Processing skipped epoch:", skipped);
-        await processEpoch(skipped, false, oracle);
+      // Process epochs including skipped ones
+      while(prevEpoch < epoch) {
+        let _epoch: number;  
+
+        if(prevEpoch === 0 || (prevEpoch + 1) === epoch) {
+          prevEpoch = epoch;
+          _epoch = epoch;
+        } else {
+          _epoch = prevEpoch + 1;
+          prevEpoch++;
+        }
+
+        console.log("Processing epoch:", _epoch);
+        await processEpoch(_epoch, false, oracle);
       }
-
-      console.log("Processing epoch:", Number(epoch));
-      prevEpoch = Number(epoch);
-      await processEpoch(epoch, false, oracle);
 
       // Check if rebalance is needed
       const contract = oracle.governance;
@@ -42,6 +46,7 @@ export async function EpochListener(oracle: Oracle) {
       const epochInterval = await contract.epochInterval();
       const { timestamp } = await contract.provider.getBlock("latest");
       const timeLock = Number(lastEpoch) + Number(epochInterval);
+      const operators = await contract.getOperators();
 
       // Check contract timelock
       if(timeLock < timestamp) {
@@ -49,10 +54,10 @@ export async function EpochListener(oracle: Oracle) {
         const voter = await oracle.signer.getAddress();
         const vote = await contract.votes(epochNumber, voter);
 
-        // Process rebalance on empty vote
+        // Process rebalance 
         if(vote[0] == 0) {
           Rebalancer(oracle);
-        } 
+        }
       } 
     } catch(err: any) {
       console.log(err);
