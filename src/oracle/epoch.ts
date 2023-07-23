@@ -182,7 +182,7 @@ export async function processEpoch(
     if(err == 'Checkpoint reached') {
       throw err;
     } else {
-      console.log(err);
+      console.log("Network connection error: retrying epoch", epoch);
       await setTimeout(5000);
       await processEpoch(epoch, syncing, oracle);
     }
