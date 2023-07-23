@@ -35,8 +35,9 @@ export class Config {
       throw new Error("Unknown or not supported network.");
     } 
 
-    // Beacon node connectivity
     opts.beacon ? this.network.beacon = opts.beacon : 0;
+    opts.eth1 ? this.network.rpc = opts.eth1 : 0;
+    
     this._isBeaconAlive(this.network.beacon);
 
     // Signer
@@ -48,6 +49,9 @@ export class Config {
       pool["abi"],
       this.signer
     );
+
+    // Eth1 Connectivity check
+    this.getRoot();
     
     // Governance 
     this.governance = new Contract(
@@ -61,7 +65,7 @@ export class Config {
     try {
       return await this.contract.stateRoot();
     } catch(err: any) {
-      throw new Error("Network configuration error");
+      throw new Error("Eth1 endpoint not responding");
     }
   }
 

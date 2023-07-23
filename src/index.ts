@@ -17,6 +17,7 @@ program
 .option('-s, --sync <value>', 'Select checkpoint to sync from')
 .option('-p, --http-api <port>', 'Port for http api [default: 4040]', '4040')
 .option('-b, --beacon <value>', 'Add custom beacon node')
+.option('-eth1, --eth1 <value>', 'Add custom eth1 rpc endpoint')
 .option('-f, --max-base-fee <value>', 'Specify max base fee allowed to pay for gas')
 .requiredOption('-pk, --private-key <value>', 'Add eth1 validator account private key.')
 .parse(process.argv);
