@@ -33,3 +33,18 @@ export function existsHead(): Head | null {
     return null;
   }
 }
+
+export function getFile(file: string): any | null {  
+  try {
+    const data = JSON.parse(
+      fs.readFileSync(
+        path.resolve(homedir(), `.smoothly/${file}.json`),
+        'utf8'
+      )
+    );
+    return data; 
+  } catch {
+    return null;
+  }
+}
+

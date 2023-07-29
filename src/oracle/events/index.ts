@@ -7,4 +7,5 @@ export {
   StakeWithdrawal,
   RewardsWithdrawal
 } from "./withdrawals";
-export { simulateRebalance } from "./epoch";
+export { Rebalance } from "./epoch";
+

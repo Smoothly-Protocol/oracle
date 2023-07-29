@@ -1,7 +1,7 @@
 import { NetInfo } from "../types";
 
 export const GOERLI: NetInfo = {
-  rpc: "https://eth-goerli.alchemyapi.io/v2/zmsxPR7pKHtiLvAkZ1R61BYtCqnCg0yc",
+  rpc: "https://eth-goerli.g.alchemy.com/v2/V_A06Ohwm0CcD11zULvNA1-rCY8xnHT8",
   pool: "0x2bE68B8Fd9E7941378CA81dF120F2F7eBb7c0Cf6",
   governance: "0xCD98b998d6C3e5685dD46bc9F7f056A3E5dd8AF5",
   beacon: "http://unstable.prater.beacon-api.nimbus.team",

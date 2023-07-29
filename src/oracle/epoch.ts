@@ -11,7 +11,6 @@ import {
   validateWithdrawalRewards,
   validateWithdrawalStake,
   validateAddedStake,
-  simulateRebalance
 } from "./events";
 import { Rebalancer } from "./rebalancer";
 

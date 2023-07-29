@@ -143,7 +143,7 @@ async function slashValidator(validator: Validator, db: DB): Promise<Validator> 
   return validator;
 }
 
-async function generateTrees(db: DB): Promise<string[]> {
+export async function generateTrees(db: DB): Promise<string[]> {
   let withdrawals: Array<[string, number, BigNumber]> = [];
   let exits: Array<[string, number, BigNumber]> = [];
   try { 

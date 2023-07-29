@@ -1,21 +1,19 @@
 import * as cron from "node-cron";
 import { Config } from "../config";
 import { DB } from "../db";
-import { EMPTY_ROOT } from "../utils";
 import { Contract, utils } from "ethers"; 
 import { 
   processEpoch,
-  reqEpochCheckpoint,
   EpochListener
 } from "./epoch";
-import { Rebalancer } from "./rebalancer";
 import { MonitorRelays } from "./relays";
 import { 
   Registered,
   ExitRequested,
   StakeAdded,
   StakeWithdrawal,
-  RewardsWithdrawal
+  RewardsWithdrawal,
+  Rebalance 
 } from './events';
 import { Node } from './p2p';
 import type { Libp2p } from 'libp2p';
@@ -56,6 +54,10 @@ export class Oracle extends Config {
     StakeAdded(this);
     StakeWithdrawal(this);
     RewardsWithdrawal(this);
+    if(this.pinata) {
+      // Contract Event to push state to ipfs
+      Rebalance(this)
+    }
 
     // Routine jobs
     cron.schedule('0 0 * * *', async () => {
