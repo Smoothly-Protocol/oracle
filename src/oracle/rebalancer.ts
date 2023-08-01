@@ -48,7 +48,7 @@ async function proposeEpoch(epochData: any, oracle: Oracle): Promise<void> {
     const tx = await contract.connect(oracle.signer).proposeEpoch(epochData);
     await tx.wait();
 
-    console.log("Vote proposed with root:", epochData[2]);
+    console.log("Vote proposed with root:", epochData[2].toString('hex'));
   } catch(err: any) {
     // EpochTimelockNotReached() selector error
     if(err.toString().includes('0xa6339a86')) {
