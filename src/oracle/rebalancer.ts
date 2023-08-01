@@ -8,6 +8,7 @@ import { MISS_FEE, SLASH_FEE, FEE, STAKE_FEE } from "../utils";
 import { DEFAULTS } from '../config';
 import { Oracle } from "./oracle";
 import { DB } from "../db";
+import { setTimeout } from "timers/promises";
 
 export async function Rebalancer (oracle: Oracle) {
   try {
@@ -21,9 +22,6 @@ export async function Rebalancer (oracle: Oracle) {
     } = await processRebalance(db);
 
     const total = (await oracle.getBalance()).sub(tRewards.add(tStake));
-    console.log("total:",total)
-    console.log("tRewards:", tRewards);
-    console.log("tStake:", tStake);
     const fee = await fundUsers(includedValidators, total, db);
 
     const [withdrawalsRoot, exitsRoot] = await generateTrees(db);
@@ -33,7 +31,7 @@ export async function Rebalancer (oracle: Oracle) {
 
     // Propose Epoch to governance contract  
     const epochData = [withdrawalsRoot, exitsRoot, db.root(), fee];
-    await proposeEpoch(epochData, oracle);
+    proposeEpoch(epochData, oracle);
   } catch(err) {
     console.log(err);
   }
@@ -41,9 +39,16 @@ export async function Rebalancer (oracle: Oracle) {
 
 async function proposeEpoch(epochData: any, oracle: Oracle): Promise<void> {
   try {
+    // Random priority to avoid failed tx
+    const rand = Math.floor(Math.random() * 20);
+    await setTimeout((rand * 12) * 1000);
+
+    // Submit vote 
     const contract = oracle.governance;
     const tx = await contract.connect(oracle.signer).proposeEpoch(epochData);
     await tx.wait();
+
+    console.log("Vote proposed with root:", epochData[2]);
   } catch(err: any) {
     // EpochTimelockNotReached() selector error
     if(err.toString().includes('0xa6339a86')) {
@@ -52,9 +57,9 @@ async function proposeEpoch(epochData: any, oracle: Oracle): Promise<void> {
       // Unauthorized() selector error
       console.log("Warning: Unauthorized address to propose vote");
     } else {
-      console.log("Error: proposing epoch, trying again in 1 min")
+      console.log("Error: proposing epoch, trying again...")
       console.log("Warning: make sure your address is funded")
-      setTimeout(async () => {await proposeEpoch(epochData, oracle)}, 60000);
+      proposeEpoch(epochData, oracle);
     }
   }
 }

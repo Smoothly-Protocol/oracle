@@ -134,8 +134,8 @@ export async function processEpoch(
             break;
             case 'Epoch':
               if(oracle.pinata) {
-              await uploadStateIPFS(oracle, Number(args[0]), args[3]);
-            }
+                await uploadStateIPFS(oracle, Number(args[0]), args[3]);
+              }
             break;
           }  
         }
@@ -186,7 +186,7 @@ export async function processEpoch(
     } else {
       console.log("Network connection error: retrying epoch", epoch);
       await setTimeout(1000);
-      await processEpoch(epoch, syncing, oracle);
+      processEpoch(epoch, syncing, oracle);
     }
   }
 }
