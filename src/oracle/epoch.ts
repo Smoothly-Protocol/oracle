@@ -13,6 +13,7 @@ import {
   validateAddedStake,
 } from "./events";
 import { Rebalancer } from "./rebalancer";
+import { uploadStateIPFS } from "./events/epoch";
 
 export async function EpochListener(oracle: Oracle) {
   const eth2 = new EventSource(`${oracle.network.beacon}/eth/v1/events?topics=finalized_checkpoint`);
@@ -111,7 +112,7 @@ export async function processEpoch(
       const { proposer_index, body, logs } = _slot;
 
       // Process eth1 logs
-      if(logs.length > 0 && syncing) {
+      if(logs.length > 0 /*&& syncing*/) {
         for(let log of logs) {
           const event = log.event;
           const args = log.args;
@@ -132,8 +133,10 @@ export async function processEpoch(
               await validateExitRequest(args[0], args[1], oracle);
             break;
             case 'Epoch':
-              //await simulateRebalance(args[3], log.blockNumber, oracle);
-              break;
+              if(oracle.pinata) {
+              await uploadStateIPFS(oracle, Number(args[0]), args[3]);
+            }
+            break;
           }  
         }
       }
@@ -152,8 +155,8 @@ export async function processEpoch(
       }
     }
 
-    if(!syncing) {
-      // Check consensus with peers
+    // Check consensus with peers every hour or 10th epoch
+    if(!syncing && (epoch % 10) === 0) {
       const _root: string = await db.root().toString('hex');
       const { root, peers, votes } = await oracle.p2p.startConsensus(_root, epoch);
 
@@ -173,7 +176,7 @@ export async function processEpoch(
         console.log("Requesting sync from valid peers...");
         await oracle.p2p.requestSync(peers);
       } 
-    } else {
+    } else if(syncing) {
       db.checkpoint(epoch);
     }
 
@@ -182,7 +185,7 @@ export async function processEpoch(
       throw err;
     } else {
       console.log("Network connection error: retrying epoch", epoch);
-      await setTimeout(5000);
+      await setTimeout(1000);
       await processEpoch(epoch, syncing, oracle);
     }
   }

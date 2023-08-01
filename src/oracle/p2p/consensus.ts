@@ -15,7 +15,7 @@ export class Consensus {
     if(!this.votes[epoch]) {
       this.votes[epoch] = [];
     }
-    
+
     // Add data
     if(!this._exists(from, epoch)) {
       this.votes[epoch].push({
@@ -61,6 +61,10 @@ export class Consensus {
         console.log(err);
       }
     }
+  }
+
+  delete(epoch: number) : void {
+    delete this.votes[epoch];
   }
 
   private _exists(peer: PeerId, epoch: number): boolean {

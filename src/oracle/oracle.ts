@@ -25,13 +25,13 @@ export class Oracle extends Config {
   constructor(opts: any, _root: string) {
     super(opts);
     this.db = new DB(_root, opts.network === "local");
-    this.p2p = new Node(this.network.bootstrapers, this.db);
+    this.p2p = new Node(this.network.bootstrapers, this.db, opts.httpApi);
   }
 
   async start(epoch: number, _root: string, checkpoint?: string): Promise<void> {
     // Init libp2p node
     await this.p2p.createNode();
-    
+
     // Sync state
     const root = await this.getRoot();
     const hasRoot = await this.db.hasRoot(root);
@@ -49,18 +49,20 @@ export class Oracle extends Config {
 
     // Network listeners
     EpochListener(this);
-    Registered(this);
-    ExitRequested(this);
-    StakeAdded(this);
-    StakeWithdrawal(this);
-    RewardsWithdrawal(this);
-    if(this.pinata) {
-      // Contract Event to push state to ipfs
-      Rebalance(this)
-    }
+    //Registered(this);
+    //ExitRequested(this);
+    //StakeAdded(this);
+    //StakeWithdrawal(this);
+    //RewardsWithdrawal(this);
+
+    // Contract Event to push state to ipfs
+    //     if(this.pinata) {
+    //       Rebalance(this)
+    //     }
+
 
     // Routine jobs
-    cron.schedule('0 0 * * *', async () => {
+    cron.schedule('30 0 * * *', async () => {
       await MonitorRelays(this);
     }, {timezone: "America/Los_Angeles"});
   }

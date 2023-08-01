@@ -10,30 +10,33 @@ import { Oracle } from "./oracle";
 import { DB } from "../db";
 
 export async function Rebalancer (oracle: Oracle) {
-    try {
-      const contract = oracle.governance;
-      const db = oracle.db;
+  try {
+    const contract = oracle.governance;
+    const db = oracle.db;
 
-      const { 
-        includedValidators, 
-        tRewards, 
-        tStake 
-      } = await processRebalance(db);
-      
-      const total = (await oracle.getBalance()).sub(tRewards.add(tStake));
-      const fee = await fundUsers(includedValidators, total, db);
+    const { 
+      includedValidators, 
+      tRewards, 
+      tStake 
+    } = await processRebalance(db);
 
-      const [withdrawalsRoot, exitsRoot] = await generateTrees(db);
+    const total = (await oracle.getBalance()).sub(tRewards.add(tStake));
+    console.log("total:",total)
+    console.log("tRewards:", tRewards);
+    console.log("tStake:", tStake);
+    const fee = await fundUsers(includedValidators, total, db);
 
-      console.log("Total Rewards:", utils.formatEther(total));
-      console.log("Operator Fee:", utils.formatEther(fee));
+    const [withdrawalsRoot, exitsRoot] = await generateTrees(db);
 
-      // Propose Epoch to governance contract  
-      const epochData = [withdrawalsRoot, exitsRoot, db.root(), fee];
-      await proposeEpoch(epochData, oracle);
-    } catch(err) {
-      console.log(err);
-    }
+    console.log("Total Rewards:", utils.formatEther(total));
+    console.log("Operator Fee:", utils.formatEther(fee));
+
+    // Propose Epoch to governance contract  
+    const epochData = [withdrawalsRoot, exitsRoot, db.root(), fee];
+    await proposeEpoch(epochData, oracle);
+  } catch(err) {
+    console.log(err);
+  }
 }
 
 async function proposeEpoch(epochData: any, oracle: Oracle): Promise<void> {
@@ -75,7 +78,7 @@ export async function processRebalance(db: DB): Promise<TrieRebalance> {
             includedValidators.push(validator);
           }
         }
-        
+
         if(validator.excludeRebalance) {
           console.log(`Validator ${validator.index} excluded`);
         }
@@ -108,12 +111,12 @@ async function slashValidator(validator: Validator, db: DB): Promise<Validator> 
       missedSlots = validator.slashMiss !== 0 
         ? validator.slashMiss - 1 
         : validator.slashMiss;
-      if(missedSlots > 0 || validator.slashFee > 0) {
-        isSlashed = true;
-      }
-      if(validator.slashMiss > 0) {
-        validator.firstMissedSlot = true;	
-      }
+        if(missedSlots > 0 || validator.slashFee > 0) {
+          isSlashed = true;
+        }
+        if(validator.slashMiss > 0) {
+          validator.firstMissedSlot = true;	
+        }
     }
   }
 
@@ -123,7 +126,7 @@ async function slashValidator(validator: Validator, db: DB): Promise<Validator> 
     const feeSlashes = SLASH_FEE.mul(BigNumber.from(`${validator.slashFee}`));
 
     let tFees = missedSlashes.add(feeSlashes); 
-    
+
     // Make sure user has enough stake
     validator.stake = BigNumber.from(validator.stake);
     if(validator.stake.lte(tFees)) {
@@ -134,7 +137,7 @@ async function slashValidator(validator: Validator, db: DB): Promise<Validator> 
     validator.stake = validator.stake.sub(tFees);
     console.log(`Validator ${validator.index} slashed: ${utils.formatEther(tFees)}`);
   }
-  
+
   // Update db
   validator.slashFee = 0;
   validator.slashMiss = 0;
@@ -218,7 +221,7 @@ function packValidators(
   if(validators.length === 0) {
     // Sorting indexes to avoid different tree hashes
     for(let i = 0; i < result.length; i++) {
-     result[i][1] = result[i][1].sort((a, b) => { return a - b});
+      result[i][1] = result[i][1].sort((a, b) => { return a - b});
     }
     return result;
   }

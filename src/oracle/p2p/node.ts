@@ -29,12 +29,14 @@ export class Node {
   node!: Libp2p;
   db: DB;
   consensus: Consensus;
+  httpPort: number;
 
-  constructor(_bootstrapers: string[], _db: DB) {
+  constructor(_bootstrapers: string[], _db: DB, _httpPort: number) {
     this.consensus = new Consensus();
     this.bootstrapers = _bootstrapers;
     this.peers = [];
     this.db = _db;
+    this.httpPort = _httpPort;
   }
 
   async createNode(): Promise<void> {
@@ -166,7 +168,9 @@ export class Node {
 
       await setTimeout(240000);
 
-      return this.consensus.checkConsensus(epoch, 0);
+      const obj = this.consensus.checkConsensus(epoch, 0);
+      this.consensus.delete(epoch);
+      return obj;
     } catch(err: any) {
       console.log(err);
     }
@@ -175,7 +179,7 @@ export class Node {
   // Dials Peer requesting syncing
   async dialPeerSync(peer: Multiaddr) {
     try {
-      const req = await fetch('http://localhost:4040/checkpoint');
+      const req = await fetch(`http://localhost:${this.httpPort}/checkpoint`);
       const res = await req.json();
 
       // Send data
@@ -185,7 +189,7 @@ export class Node {
         stream
       )
 
-      // Gracefull close
+      // Graceful close
       stream.close()
     } catch(err: any) {
       console.log(err);
