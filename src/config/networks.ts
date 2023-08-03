@@ -12,7 +12,7 @@ export const GOERLI: NetInfo = {
     "https://goerli.aestus.live"
   ],
   bootstrapers: [
-      '/dns4/auto-relay.smoothly.money/tcp/443/wss/p2p/QmRLoXS3E73psYaUsma1VSbboTa2J8Z9kso1tpiGLk9WQ4',
+      '/dns4/relay.smoothly.money/tcp/443/wss/p2p/QmRLoXS3E73psYaUsma1VSbboTa2J8Z9kso1tpiGLk9WQ4',
 //      '/ip4/127.0.0.1/tcp/37465/ws/p2p/QmRLoXS3E73psYaUsma1VSbboTa2J8Z9kso1tpiGLk9WQ4',
   ],
   deploymentEpoch: 169060 
