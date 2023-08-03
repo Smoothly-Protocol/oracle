@@ -166,7 +166,7 @@ export class Node {
         })),
       );
 
-      await setTimeout(240000);
+      await this._waitForVotes(epoch);;
 
       const obj = this.consensus.checkConsensus(epoch, 0);
       this.consensus.delete(epoch);
@@ -208,6 +208,15 @@ export class Node {
       }
     }
     return null;
+  }
+
+  private async _waitForVotes(epoch: number): Promise<void> {
+    const maxTimeout = 240000;
+    let count = 0;
+    while(this.consensus.votes[epoch].length < 4 || count >= maxTimeout) {
+      await setTimeout(10000);
+      count += 10000;
+    } 
   }
 
   private async _waitForPeers(): Promise<void> {
