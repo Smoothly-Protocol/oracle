@@ -45,7 +45,7 @@ export class Node {
         transports: [
           webSockets(),
           circuitRelayTransport({
-            discoverRelays: 2
+            discoverRelays: 1
           })
         ],
         streamMuxers: [
