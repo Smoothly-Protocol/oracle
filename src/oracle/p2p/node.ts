@@ -1,9 +1,6 @@
 import { createLibp2p } from 'libp2p';
-import { tcp } from '@libp2p/tcp'
-import { mplex } from '@libp2p/mplex'
 import { yamux } from '@chainsafe/libp2p-yamux'
 import { noise } from '@chainsafe/libp2p-noise'
-import { floodsub } from '@libp2p/floodsub'
 import { bootstrap } from '@libp2p/bootstrap'
 import { gossipsub } from '@chainsafe/libp2p-gossipsub'
 import { pubsubPeerDiscovery } from '@libp2p/pubsub-peer-discovery'
@@ -57,7 +54,7 @@ export class Node {
           noise()
         ],
         services: {
-          pubsub: floodsub(),
+          pubsub: gossipsub({ allowPublishToZeroPeers: true }),
           identify: identifyService()
         },
         peerDiscovery: [

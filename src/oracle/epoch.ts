@@ -179,7 +179,6 @@ export async function processEpoch(
     } else if(syncing) {
       db.checkpoint(epoch);
     }
-
   } catch(err: any) {
     if(err == 'Checkpoint reached') {
       throw err;
