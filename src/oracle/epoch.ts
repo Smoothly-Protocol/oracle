@@ -55,6 +55,7 @@ export async function EpochListener(oracle: Oracle) {
 
         // Process rebalance 
         if(vote[0] == 0) {
+          // TODO: Check if rebalance is ongoing
           Rebalancer(oracle);
         }
       } 

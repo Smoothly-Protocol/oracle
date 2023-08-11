@@ -25,7 +25,12 @@ export class Oracle extends Config {
   constructor(opts: any, _root: string) {
     super(opts);
     this.db = new DB(_root, opts.network === "local");
-    this.p2p = new Node(this.network.bootstrapers, this.db, opts.httpApi);
+    this.p2p = new Node(
+      this.network.bootstrapers, 
+      this.db, 
+      opts.httpApi, 
+      opts.privateKey
+    );
   }
 
   async start(epoch: number, _root: string, checkpoint?: string): Promise<void> {
@@ -49,17 +54,6 @@ export class Oracle extends Config {
 
     // Network listeners
     EpochListener(this);
-    //Registered(this);
-    //ExitRequested(this);
-    //StakeAdded(this);
-    //StakeWithdrawal(this);
-    //RewardsWithdrawal(this);
-
-    // Contract Event to push state to ipfs
-    //     if(this.pinata) {
-    //       Rebalance(this)
-    //     }
-
 
     // Routine jobs
     cron.schedule('30 0 * * *', async () => {

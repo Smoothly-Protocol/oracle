@@ -1,17 +1,23 @@
 import { createLibp2p } from 'libp2p';
 import { yamux } from '@chainsafe/libp2p-yamux'
+import { keys } from '@libp2p/crypto';
 import { noise } from '@chainsafe/libp2p-noise'
 import { bootstrap } from '@libp2p/bootstrap'
 import { gossipsub } from '@chainsafe/libp2p-gossipsub'
 import { pubsubPeerDiscovery } from '@libp2p/pubsub-peer-discovery'
 import { circuitRelayTransport } from 'libp2p/circuit-relay'
+import { kadDHT } from '@libp2p/kad-dht'
 import { identifyService } from 'libp2p/identify'
 import { webSockets } from '@libp2p/websockets'
+import { tcp } from '@libp2p/tcp'
+import { autoNATService } from 'libp2p/autonat'
 import { multiaddr, Multiaddr } from '@multiformats/multiaddr'
+import { createFromPrivKey } from '@libp2p/peer-id-factory'
 import { pipe } from 'it-pipe'
 import { fromString as uint8ArrayFromString } from 'uint8arrays/from-string'
 import { toString as uint8ArrayToString } from 'uint8arrays/to-string'
-import type { Peer } from './types';
+//import type { Peer } from './types';
+import { Peer } from "@libp2p/interface/peer-store/index";
 import type { PeerId } from '@libp2p/interface-peer-id'
 import type { Libp2p } from 'libp2p';
 import { setTimeout } from "timers/promises";
@@ -22,28 +28,30 @@ import { pushable } from 'it-pushable';
 
 export class Node {
   bootstrapers: string[];
-  peers: Peer[];
   node!: Libp2p;
   db: DB;
   consensus: Consensus;
   httpPort: number;
+  keyPair: any;
 
-  constructor(_bootstrapers: string[], _db: DB, _httpPort: number) {
+  constructor(_bootstrapers: string[], _db: DB, _httpPort: number, _pk: string) {
     this.consensus = new Consensus();
     this.bootstrapers = _bootstrapers;
-    this.peers = [];
-    this.db = _db;
     this.httpPort = _httpPort;
+    this.keyPair = this._generatePair(_pk);
+    this.db = _db;
   }
 
   async createNode(): Promise<void> {
     try {
       const node = await createLibp2p({
+        peerId: await createFromPrivKey(this.keyPair),
+        addresses: {
+          listen: ['/ip4/0.0.0.0/tcp/0/ws'],
+          //announce: ['/ip4/0.0.0.0/tcp/0/ws']
+        },
         transports: [
-          webSockets(),
-          circuitRelayTransport({
-            discoverRelays: 1
-          })
+          webSockets()
         ],
         streamMuxers: [
           yamux({
@@ -55,14 +63,18 @@ export class Node {
         ],
         services: {
           pubsub: gossipsub({ allowPublishToZeroPeers: true }),
-          identify: identifyService()
+          identify: identifyService(),
+          dht: kadDHT(),
+          nat: autoNATService({
+            protocolPrefix: 'my-node', // this should be left as the default value to ensure maximum compatibility
+            timeout: 30000, // the remote must complete the AutoNAT protocol within this timeout
+            maxInboundStreams: 1, // how many concurrent inbound AutoNAT protocols streams to allow on each connection
+            maxOutboundStreams: 1 // how many concurrent outbound AutoNAT protocols streams to allow on each connection
+          })
         },
         peerDiscovery: [
           bootstrap({
             list: this.bootstrapers
-          }),
-          pubsubPeerDiscovery({
-            interval: 1000,
           })
         ],
       });
@@ -71,41 +83,29 @@ export class Node {
       node.services.pubsub.subscribe(`${node.peerId.toString()}`)
       // Checkpoint check
       node.services.pubsub.subscribe('checkpoint')
-
-      // Track peers
-      node.addEventListener('peer:discovery', async (evt) => {
-        const { addresses, id } = evt.detail as any;
-
-        // Avoids relay nodes
-        if(addresses.length > 0) {
-          const peer: Peer = {
-            address: addresses[0].multiaddr,
-            id: id
-          };
-
-          // Exists peer?
-          if(this._findPeer(peer.id) === null) {
-            this.peers.push(peer);
-            console.log("Discovered Peer:", id.toString(), "total:", this.peers.length);
-          }
-        }
+      // Log established peer connections
+      node.addEventListener('peer:connect', async (evt) => {
+        console.log(
+          "Connection established to:", 
+          evt.detail.toString(), 
+          "total:", (await this.node.peerStore.all()).length
+        );
       })
-
       // Handle pubsub messages
       node.services.pubsub.addEventListener('message', (evt) => {
         const { from } = evt.detail as any;
         if(evt.detail.topic === `${node.peerId.toString()}`) {
           const data = Buffer.from(evt.detail.data).toString();
           if(data === 'sync') {
-            const peer = this._findPeer(from);
-            if(peer) {
-              this.dialPeerSync(peer.address);
-            }
+            console.log(`Received sync request from: ${from}`);
+            this.dialPeerSync(from);
           }
         } else if(evt.detail.topic === 'checkpoint'){
           const { root, epoch } = JSON.parse(uint8ArrayToString(evt.detail.data));
           console.log('checkpoint:', from, root, epoch);
           this.consensus.addVote(from, root, epoch);
+        } else if(evt.detail.topic === 'lol') {
+          console.log("lolal olalsal")
         }
       })
 
@@ -126,6 +126,13 @@ export class Node {
       })
 
       await node.start();
+
+      await setTimeout(10000);
+
+      node.getMultiaddrs().forEach((ma) => {
+        console.log('P2P listening on:', ma.toString())
+      })
+
       this.node = node;
     } catch(err: any) {
       console.log(err);
@@ -139,7 +146,9 @@ export class Node {
 
       const peerId = peers
         ? peers[Math.floor(Math.random() * peers.length)] 
-        : this._getRandomPeer().id;
+        : await this._getRandomPeer();
+
+        console.log(`Requesting sync to: ${peerId.toString()}`)
 
         await node.services.pubsub.publish(
           peerId.toString(), 
@@ -163,7 +172,7 @@ export class Node {
         })),
       );
 
-      await this._waitForVotes(epoch);;
+      await this._waitForVotes(epoch);
 
       const obj = this.consensus.checkConsensus(epoch, 0);
       this.consensus.delete(epoch);
@@ -174,16 +183,16 @@ export class Node {
   }
 
   // Dials Peer requesting syncing
-  async dialPeerSync(peer: Multiaddr) {
+  async dialPeerSync(peer: PeerId) {
     try {
       const req = await fetch(`http://localhost:${this.httpPort}/checkpoint`);
-      const res = await req.json();
+        const res = await req.json();
 
       // Send data
       const stream = await this.node.dialProtocol(peer, ['/sync:peer'])
       await pipe(
         res.data.map((v: any) => {return uint8ArrayFromString(JSON.stringify(v))}),
-        stream
+          stream
       )
 
       // Graceful close
@@ -193,34 +202,43 @@ export class Node {
     }
   }
 
-  private _getRandomPeer(): Peer {
-    const rando = Math.floor(Math.random() * this.peers.length);
-    return this.peers[rando];
+  private _generatePair(_pk: string): any {
+    const pk = Uint8Array.from(Buffer.from(_pk, 'hex'));
+    return keys.supportedKeys.secp256k1.unmarshalSecp256k1PrivateKey(pk)
   }
 
-  private _findPeer(peer: PeerId): Peer | null {
-    for(let p of this.peers) {
-      if(p.id.toString() === peer.toString()) {
-        return p;
-      }
-    }
-    return null;
+  private async _getRandomPeer(): Promise<PeerId> {
+    const peers = await this.node.peerStore.all();
+    const rando = Math.floor(Math.random() * peers.length);
+    return peers[rando].id;
   }
 
   private async _waitForVotes(epoch: number): Promise<void> {
     const maxTimeout = 240000;
     let count = 0;
-    while(this.consensus.votes[epoch].length < 4 && count < maxTimeout) {
+    const peers = await this.node.peerStore.all();
+
+    while(this.consensus.votes[epoch].length < peers.length && count < maxTimeout) {
       await setTimeout(10000);
       count += 10000;
     } 
   }
 
   private async _waitForPeers(): Promise<void> {
+    const maxTimeout = 30000;
+    let count = 0;
+
     console.log("Waiting for peers...");
-    while(this.peers.length === 0) {
+
+    const peers = await this.node.peerStore.all();
+    while(peers.length === 0 && count < maxTimeout) {
       await setTimeout(10000);
+      count+=10000;
     } 
+
+    if(maxTimeout === count) {
+      throw "No peers found to sync from";
+    }
   }
 }
 
