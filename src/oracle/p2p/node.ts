@@ -107,6 +107,12 @@ export class Node {
         const conn = await node.dial(evt.detail)
         await node.services.identify.identify(conn);
       })
+
+      // Manually delete peer to restore pubsub on restart 
+      node.addEventListener('peer:disconnect', async (evt) => {
+        await node.peerStore.delete(evt.detail);
+      })
+
       // Handle pubsub messages
       node.services.pubsub.addEventListener('message', (evt) => {
         const { from } = evt.detail as any;

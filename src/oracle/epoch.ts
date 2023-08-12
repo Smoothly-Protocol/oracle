@@ -56,7 +56,7 @@ export async function EpochListener(oracle: Oracle) {
         // Process rebalance 
         if(vote[0] == 0) {
           // TODO: Check if rebalance is ongoing
-          //Rebalancer(oracle);
+          Rebalancer(oracle);
         }
       } 
     } catch(err: any) {
@@ -157,7 +157,7 @@ export async function processEpoch(
     }
 
     // Check consensus with peers every hour or 10th epoch
-    if(!syncing /*&& (epoch % 10) === 0*/) {
+    if(!syncing && (epoch % 10) === 0) {
       const _root: string = await db.root().toString('hex');
       const { root, peers, votes } = await oracle.p2p.startConsensus(_root, epoch);
 
