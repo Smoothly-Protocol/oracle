@@ -19,7 +19,7 @@ program
 .option('-b, --beacon <url>', 'Add custom beacon node')
 .option('-eth1, --eth1 <url>', 'Add custom eth1 rpc endpoint')
 .option('-pinata, --pinataJWT <JWT-token>', 'Pinata JWT token to push state files to ipfs')
-.option('-f, --max-base-fee <value>', 'Specify max base fee allowed to pay for gas')
+.option('-nat, --autoNAT', 'Specify if NAT Traversal is needed [default: activated]', true)
 .requiredOption('-pk, --private-key <value>', 'Add eth1 validator account private key.')
 .parse(process.argv);
 

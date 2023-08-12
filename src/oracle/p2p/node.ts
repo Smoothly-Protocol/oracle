@@ -33,22 +33,30 @@ export class Node {
   consensus: Consensus;
   httpPort: number;
   keyPair: any;
+  nat: boolean;
 
-  constructor(_bootstrapers: string[], _db: DB, _httpPort: number, _pk: string) {
+  constructor(
+    _bootstrapers: string[], 
+    _db: DB, 
+    _httpPort: number, 
+    _pk: string,
+    _nat: boolean
+  ) {
     this.consensus = new Consensus();
     this.bootstrapers = _bootstrapers;
     this.httpPort = _httpPort;
     this.keyPair = this._generatePair(_pk);
     this.db = _db;
+    this.nat = _nat;
   }
 
   async createNode(): Promise<void> {
     try {
-      const node = await createLibp2p({
+      let config = {
         peerId: await createFromPrivKey(this.keyPair),
         addresses: {
-          listen: ['/ip4/0.0.0.0/tcp/0/ws'],
-          //announce: ['/ip4/0.0.0.0/tcp/0/ws']
+          listen: ['/ip4/0.0.0.0/tcp/0/wss'],
+          //announce: ['/ip4/0.0.0.0/tcp/0/wss']
         },
         transports: [
           webSockets()
@@ -61,6 +69,9 @@ export class Node {
         connectionEncryption: [
           noise()
         ],
+        connectionManager: {
+          minConnections: 3
+        },
         services: {
           pubsub: gossipsub({ allowPublishToZeroPeers: true }),
           identify: identifyService(),
@@ -77,7 +88,9 @@ export class Node {
             list: this.bootstrapers
           })
         ],
-      });
+      };
+
+      const node = await createLibp2p(config);
 
       // Personal_id channel
       node.services.pubsub.subscribe(`${node.peerId.toString()}`)
@@ -86,10 +99,10 @@ export class Node {
       // Log established peer connections
       node.addEventListener('peer:connect', async (evt) => {
         console.log(
-          "Connection established to:", 
+          "Peer Discovered:", 
           evt.detail.toString(), 
-          "total:", (await this.node.peerStore.all()).length
         );
+        await node.dial(evt.detail)
       })
       // Handle pubsub messages
       node.services.pubsub.addEventListener('message', (evt) => {
@@ -104,8 +117,6 @@ export class Node {
           const { root, epoch } = JSON.parse(uint8ArrayToString(evt.detail.data));
           console.log('checkpoint:', from, root, epoch);
           this.consensus.addVote(from, root, epoch);
-        } else if(evt.detail.topic === 'lol') {
-          console.log("lolal olalsal")
         }
       })
 

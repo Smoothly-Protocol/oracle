@@ -29,7 +29,8 @@ export class Oracle extends Config {
       this.network.bootstrapers, 
       this.db, 
       opts.httpApi, 
-      opts.privateKey
+      opts.privateKey,
+      opts.autoNAT
     );
   }
 
