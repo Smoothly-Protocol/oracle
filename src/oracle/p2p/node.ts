@@ -4,6 +4,7 @@ import { keys } from '@libp2p/crypto';
 import { noise } from '@chainsafe/libp2p-noise'
 import { bootstrap } from '@libp2p/bootstrap'
 import { gossipsub } from '@chainsafe/libp2p-gossipsub'
+import { floodsub } from "@libp2p/floodsub"
 import { pubsubPeerDiscovery } from '@libp2p/pubsub-peer-discovery'
 import { circuitRelayTransport } from 'libp2p/circuit-relay'
 import { kadDHT } from '@libp2p/kad-dht'
