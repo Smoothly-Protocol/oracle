@@ -11,6 +11,7 @@ import { kadDHT } from '@libp2p/kad-dht'
 import { identifyService } from 'libp2p/identify'
 import { webSockets } from '@libp2p/websockets'
 import { tcp } from '@libp2p/tcp'
+import { uPnPNATService } from 'libp2p/upnp-nat'
 import { autoNATService } from 'libp2p/autonat'
 import { multiaddr, Multiaddr } from '@multiformats/multiaddr'
 import { createFromPrivKey } from '@libp2p/peer-id-factory'
@@ -57,7 +58,6 @@ export class Node {
         peerId: await createFromPrivKey(this.keyPair),
         addresses: {
           listen: ['/ip4/0.0.0.0/tcp/0/wss'],
-          //announce: ['/ip4/0.0.0.0/tcp/0/wss']
         },
         transports: [
           webSockets()
@@ -71,24 +71,25 @@ export class Node {
           noise()
         ],
         connectionManager: {
-          minConnections: 3
+          minConnections: 1
         },
         services: {
           pubsub: gossipsub({ allowPublishToZeroPeers: true }),
-          identify: identifyService(),
+          identify: identifyService({ runOnConnectionOpen: false }),
           dht: kadDHT(),
-          nat: autoNATService({
-            protocolPrefix: 'my-node', // this should be left as the default value to ensure maximum compatibility
-            timeout: 30000, // the remote must complete the AutoNAT protocol within this timeout
-            maxInboundStreams: 1, // how many concurrent inbound AutoNAT protocols streams to allow on each connection
-            maxOutboundStreams: 1 // how many concurrent outbound AutoNAT protocols streams to allow on each connection
-          })
-        },
-        peerDiscovery: [
-          bootstrap({
-            list: this.bootstrapers
-          })
-        ],
+          nat: uPnPNATService({
+            //description: 'my-node', // set as the port mapping description on the router, defaults the current libp2p version and your peer id
+            //gateway: '192.168.1.1', // leave unset to auto-discover
+            //externalIp: '80.1.1.1', // leave unset to auto-discover
+            //localAddress: '129.168.1.123', // leave unset to auto-discover
+            ttl: 7200, // TTL for port mappings (min 20 minutes)
+            keepAlive: true, // Refresh port mapping after TTL expires
+          })        },
+          peerDiscovery: [
+            bootstrap({
+              list: this.bootstrapers
+            })
+          ],
       };
 
       const node = await createLibp2p(config);
@@ -103,7 +104,8 @@ export class Node {
           "Peer Discovered:", 
           evt.detail.toString(), 
         );
-        await node.dial(evt.detail)
+        const conn = await node.dial(evt.detail)
+        await node.services.identify.identify(conn);
       })
       // Handle pubsub messages
       node.services.pubsub.addEventListener('message', (evt) => {
@@ -230,7 +232,7 @@ export class Node {
     let count = 0;
     const peers = await this.node.peerStore.all();
 
-    while(this.consensus.votes[epoch].length < peers.length && count < maxTimeout) {
+    while(this.consensus.votes[epoch].length < (peers.length + 1) && count < maxTimeout) {
       await setTimeout(10000);
       count += 10000;
     } 
