@@ -45,7 +45,7 @@ async function proposeEpoch(epochData: any, oracle: Oracle): Promise<void> {
 
     // Submit vote 
     const contract = oracle.governance;
-    const tx = await contract.connect(oracle.signer).proposeEpoch(epochData);
+    const tx = await contract.connect(oracle.signer).proposeEpoch(epochData, {gasLimit: 300000});
     await tx.wait();
 
     console.log("Vote proposed with root:", epochData[2].toString('hex'));

@@ -12,7 +12,7 @@ import { identifyService } from 'libp2p/identify'
 import { webSockets } from '@libp2p/websockets'
 import { tcp } from '@libp2p/tcp'
 import { uPnPNATService } from 'libp2p/upnp-nat'
-import { autoNATService } from 'libp2p/autonat'
+import { mdns } from '@libp2p/mdns'
 import { multiaddr, Multiaddr } from '@multiformats/multiaddr'
 import { createFromPrivKey } from '@libp2p/peer-id-factory'
 import { pipe } from 'it-pipe'
@@ -36,13 +36,17 @@ export class Node {
   httpPort: number;
   keyPair: any;
   nat: boolean;
+  p2pPort: string;
+  announceIp!: string;
 
   constructor(
     _bootstrapers: string[], 
     _db: DB, 
     _httpPort: number, 
     _pk: string,
-    _nat: boolean
+    _nat: boolean,
+    _announceIp: string,
+    _p2pPort: string 
   ) {
     this.consensus = new Consensus();
     this.bootstrapers = _bootstrapers;
@@ -50,6 +54,8 @@ export class Node {
     this.keyPair = this._generatePair(_pk);
     this.db = _db;
     this.nat = _nat;
+    this.p2pPort = _p2pPort;
+    this.announceIp = _announceIp;
   }
 
   async createNode(): Promise<void> {
@@ -57,7 +63,7 @@ export class Node {
       let config = {
         peerId: await createFromPrivKey(this.keyPair),
         addresses: {
-          listen: ['/ip4/0.0.0.0/tcp/0/wss'],
+          listen: [`/ip4/0.0.0.0/tcp/${this.p2pPort}/wss`],
         },
         transports: [
           webSockets()
@@ -80,7 +86,7 @@ export class Node {
           nat: uPnPNATService({
             //description: 'my-node', // set as the port mapping description on the router, defaults the current libp2p version and your peer id
             //gateway: '192.168.1.1', // leave unset to auto-discover
-            //externalIp: '80.1.1.1', // leave unset to auto-discover
+            externalAddress: this.announceIp, // leave unset to auto-discover
             //localAddress: '129.168.1.123', // leave unset to auto-discover
             ttl: 7200, // TTL for port mappings (min 20 minutes)
             keepAlive: true, // Refresh port mapping after TTL expires
@@ -88,7 +94,7 @@ export class Node {
           peerDiscovery: [
             bootstrap({
               list: this.bootstrapers
-            })
+            }),
           ],
       };
 
@@ -101,13 +107,23 @@ export class Node {
       // Log established peer connections
       node.addEventListener('peer:connect', async (evt) => {
         console.log(
-          "Peer Discovered:", 
+          "Established connection with peer:", 
           evt.detail.toString(), 
+          "Total peers:", (await node.peerStore.all()).length
         );
         const conn = await node.dial(evt.detail)
         await node.services.identify.identify(conn);
       })
-
+      // Establish connections on peer discovery 
+      node.addEventListener('peer:discovery', async (evt) => {
+        if(evt.detail.multiaddrs.length > 0) {
+          console.log(
+            "Discovered:",
+            evt.detail.id.toString(),
+            "Total peers:", (await node.peerStore.all()).length
+          );
+        }
+      })
       // Manually delete peer to restore pubsub on restart 
       node.addEventListener('peer:disconnect', async (evt) => {
         await node.peerStore.delete(evt.detail);
@@ -123,6 +139,7 @@ export class Node {
             this.dialPeerSync(from);
           }
         } else if(evt.detail.topic === 'checkpoint'){
+          console.log(evt.detail);
           const { root, epoch } = JSON.parse(uint8ArrayToString(evt.detail.data));
           console.log('checkpoint:', from, root, epoch);
           this.consensus.addVote(from, root, epoch);

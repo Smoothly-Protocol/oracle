@@ -30,7 +30,9 @@ export class Oracle extends Config {
       this.db, 
       opts.httpApi, 
       opts.privateKey,
-      opts.autoNAT
+      opts.autoNAT,
+      opts.announceIp,
+      opts.p2pPort
     );
   }
 
