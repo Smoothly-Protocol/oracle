@@ -4,6 +4,7 @@ import { validators } from "./mock";
 import { utils, Wallet, BigNumber, providers } from "ethers";
 import { Validator } from "../src/types";
 import { Oracle } from "../src/oracle";
+import { Rebalancer } from "../src/oracle/rebalancer";
 import { RewardsWithdrawal } from "../src/oracle/events";
 import { STAKE_FEE, FEE, MISS_FEE } from "../src/utils";
 import { StandardMerkleTree } from "@openzeppelin/merkle-tree";
@@ -43,7 +44,7 @@ describe("Rebalancer", () => {
 
     it("funds all validators evenly with fee", async () => {
       const fee = utils.parseEther("0.1").mul(FEE).div(1000);
-      await oracle.rebalance();
+      await Rebalancer(oracle);
       await delay(5000);
       for(let v of validators) {
         const finalValidator: Validator | undefined = await oracle.db.get(v.index);
@@ -71,7 +72,7 @@ describe("Rebalancer", () => {
       if(startValidator) {
         startValidator.slashFee = 1;
         await oracle.db.insert(100, startValidator); 
-        await oracle.rebalance();
+        await Rebalancer(oracle);
         await delay(5000);
       }
       const finalValidator: Validator | undefined = await oracle.db.get(100);
@@ -87,7 +88,7 @@ describe("Rebalancer", () => {
       if(startValidator) {
         startValidator.slashMiss = 1;
         await oracle.db.insert(100, startValidator); 
-        await oracle.rebalance();
+        await Rebalancer(oracle);
         await delay(5000);
       }
       const finalValidator: Validator | undefined = await oracle.db.get(100);
@@ -116,7 +117,7 @@ describe("Rebalancer", () => {
         startValidator.firstBlockProposed = true;
         await oracle.db.insert(100, startValidator); 
       }
-      await oracle.rebalance();
+      await Rebalancer(oracle);
       await delay(5000);
       const finalValidator: Validator | undefined = await oracle.db.get(100);
       if(finalValidator) {
@@ -135,7 +136,7 @@ describe("Rebalancer", () => {
         startValidator.firstBlockProposed = true;
         await oracle.db.insert(200, startValidator); 
       }
-      await oracle.rebalance();
+      await Rebalancer(oracle);
       await delay(5000);
       const finalValidator: Validator | undefined = await oracle.db.get(200);
       if(finalValidator) {
@@ -151,7 +152,7 @@ describe("Rebalancer", () => {
         startValidator.slashMiss = 1;
         await oracle.db.insert(200, startValidator); 
       }
-      await oracle.rebalance();
+      await Rebalancer(oracle);
       await delay(5000);
       const finalValidator: Validator | undefined = await oracle.db.get(200);
       if(finalValidator) {
@@ -162,7 +163,7 @@ describe("Rebalancer", () => {
 
     it("doesn't issue rewards to slashed validators", async () => {
       const startValidator: Validator | undefined = await oracle.db.get(200);
-      await oracle.rebalance();
+      await Rebalancer(oracle);
       await delay(5000);
       const finalValidator: Validator | undefined = await oracle.db.get(200);
       if(finalValidator && startValidator) {
@@ -179,7 +180,7 @@ describe("Rebalancer", () => {
         startValidator.slashMiss = 5;
         await oracle.db.insert(200, startValidator); 
       }
-      await oracle.rebalance();
+      await Rebalancer(oracle);
       await delay(5000);
       const finalValidator: Validator | undefined = await oracle.db.get(200);
       if(finalValidator) {

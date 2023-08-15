@@ -1,6 +1,7 @@
 import { BigNumber } from "ethers";
 import { Oracle } from '../oracle';
 import { Validator } from "../../types";
+import { STAKE_FEE } from "../../utils/constants";
 
 export function StakeAdded(oracle: Oracle) {
   const contract = oracle.contract;
@@ -22,7 +23,12 @@ export async function validateAddedStake(
   const validator: Validator | undefined = await oracle.db.get(index);
   // Validate caller as owner
   if(validator && (validator.eth1 === sender) && !validator.deactivated) {
-    validator.stake = BigNumber.from(validator.stake).add(value);
+    const updateStake = BigNumber.from(validator.stake).add(value); 
+    if(updateStake.gt(STAKE_FEE)) {
+      validator.stake = STAKE_FEE;
+    } else {
+      validator.stake = updateStake;
+    }
     await oracle.db.insert(index, validator); 
   } 
 }
