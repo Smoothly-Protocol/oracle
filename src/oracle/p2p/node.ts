@@ -156,7 +156,6 @@ export class Node {
             this.dialPeerSync(from);
           }
         } else if(evt.detail.topic === 'checkpoint'){
-          console.log(evt.detail);
           const { root, epoch } = JSON.parse(uint8ArrayToString(evt.detail.data));
           console.log('checkpoint:', from, root, epoch);
           this.consensus.addVote(from, root, epoch);
