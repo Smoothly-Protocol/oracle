@@ -32,7 +32,9 @@ export class Oracle extends Config {
       opts.privateKey,
       opts.autoNAT,
       opts.announceIp,
-      opts.p2pPort
+      opts.announceDns,
+      opts.p2pPort,
+      opts.DHTServer
     );
   }
 

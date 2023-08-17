@@ -38,6 +38,8 @@ export class Node {
   nat: boolean;
   p2pPort: string;
   announceIp!: string;
+  announceDns!: string;
+  DHTServer: boolean;
 
   constructor(
     _bootstrapers: string[], 
@@ -46,7 +48,9 @@ export class Node {
     _pk: string,
     _nat: boolean,
     _announceIp: string,
-    _p2pPort: string 
+    _announceDns: string,
+    _p2pPort: string,
+    _dhtServer: boolean
   ) {
     this.consensus = new Consensus();
     this.bootstrapers = _bootstrapers;
@@ -56,15 +60,23 @@ export class Node {
     this.nat = _nat;
     this.p2pPort = _p2pPort;
     this.announceIp = _announceIp;
+    this.announceDns = _announceDns;
+    this.DHTServer = _dhtServer;
   }
 
   async createNode(): Promise<void> {
     try {
+      const a = {
+          listen: [`/ip4/127.0.0.1/tcp/${this.p2pPort}/ws`],
+          announce: [`/dns4/${this.announceDns}/tcp/443/wss/`]
+      }
+      const b = {
+            listen: [`/ip4/0.0.0.0/tcp/${this.p2pPort}/ws`],
+      }
+
       let config = {
         peerId: await createFromPrivKey(this.keyPair),
-        addresses: {
-          listen: [`/ip4/0.0.0.0/tcp/${this.p2pPort}/wss`],
-        },
+        addresses: this.announceDns ? a : b,
         transports: [
           webSockets()
         ],
@@ -82,7 +94,7 @@ export class Node {
         services: {
           pubsub: gossipsub({ allowPublishToZeroPeers: true }),
           identify: identifyService({ runOnConnectionOpen: false }),
-          dht: kadDHT(),
+          dht: kadDHT({ clientMode: !this.DHTServer }),
           nat: uPnPNATService({
             //description: 'my-node', // set as the port mapping description on the router, defaults the current libp2p version and your peer id
             //gateway: '192.168.1.1', // leave unset to auto-discover
@@ -90,7 +102,8 @@ export class Node {
             //localAddress: '129.168.1.123', // leave unset to auto-discover
             ttl: 7200, // TTL for port mappings (min 20 minutes)
             keepAlive: true, // Refresh port mapping after TTL expires
-          })        },
+          })    
+        },
           peerDiscovery: [
             bootstrap({
               list: this.bootstrapers
@@ -99,6 +112,10 @@ export class Node {
       };
 
       const node = await createLibp2p(config);
+
+      if(!this.nat) {
+        await node.services.nat.stop();
+      }
 
       // Personal_id channel
       node.services.pubsub.subscribe(`${node.peerId.toString()}`)
@@ -254,6 +271,14 @@ export class Node {
     const maxTimeout = 240000;
     let count = 0;
     const peers = await this.node.peerStore.all();
+
+    if(peers.length === 0) {
+      try {
+        await this.node.dial(multiaddr(this.bootstrapers[0]));
+      } catch {
+        console.log("Warning: Bootsraper node not reachable");
+      }
+    }
 
     while(this.consensus.votes[epoch].length < (peers.length + 1) && count < maxTimeout) {
       await setTimeout(10000);

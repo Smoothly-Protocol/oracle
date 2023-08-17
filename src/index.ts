@@ -20,7 +20,9 @@ program
 .option('-eth1, --eth1 <url>', 'Add custom eth1 rpc endpoint')
 .option('-pinata, --pinataJWT <JWT-token>', 'Pinata JWT token to push state files to ipfs')
 .option('-nat, --autoNAT', 'Specify if NAT Traversal is needed [default: activated]', true)
+.option('-server, --DHTServer', 'Use with Bootsraper node DHT Server config [default: deactivated]', false)
 .option('-ip, --announceIp <ip>', 'Specify ip to announce to other peers')
+.option('-dns, --announceDns <dns>', 'Specify dns to announce to other peers')
 .option('-p2pPort, --p2pPort <port>', 'Specify port to listen to p2p connections [default: 5040]', '5040')
 .requiredOption('-pk, --private-key <value>', 'Add eth1 validator account private key.')
 .parse(process.argv);
