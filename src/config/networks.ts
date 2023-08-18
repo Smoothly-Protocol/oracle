@@ -13,7 +13,7 @@ export const GOERLI: NetInfo = {
   ],
   bootstrapers: [
 //      '/dns4/relay.smoothly.money/tcp/443/wss/p2p/QmRLoXS3E73psYaUsma1VSbboTa2J8Z9kso1tpiGLk9WQ4',
-      //'/ip4/127.0.0.1/tcp/42739/p2p/16Uiu2HAkvcxKccdS6sD26u7TkjLopgBAau25rkRfSwonnS6z5bJi',
+      //'/ip4/127.0.0.1/tcp/5040/ws/p2p/16Uiu2HAmA252NhbTLbwog6TY8ahyehHPFAdfWiwp2DsaL6uZqGki',
       '/dns4/auto-relay.smoothly.money/tcp/443/wss/p2p/16Uiu2HAmTAKstCuxMozUFcmXoTJHpUrcM3YJxV4uNVntYBPNBZjo'
   ],
   deploymentEpoch: 169060 

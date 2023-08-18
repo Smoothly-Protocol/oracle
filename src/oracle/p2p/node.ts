@@ -15,6 +15,7 @@ import { uPnPNATService } from 'libp2p/upnp-nat'
 import { mdns } from '@libp2p/mdns'
 import { multiaddr, Multiaddr } from '@multiformats/multiaddr'
 import { createFromPrivKey } from '@libp2p/peer-id-factory'
+import { peerIdFromString } from '@libp2p/peer-id'
 import { pipe } from 'it-pipe'
 import { fromString as uint8ArrayFromString } from 'uint8arrays/from-string'
 import { toString as uint8ArrayToString } from 'uint8arrays/to-string'
@@ -113,11 +114,11 @@ export class Node {
 
       const node = await createLibp2p(config);
 
-
       // Personal_id channel
       node.services.pubsub.subscribe(`${node.peerId.toString()}`)
       // Checkpoint check
       node.services.pubsub.subscribe('checkpoint')
+      node.services.pubsub.subscribe('lola')
       // Log established peer connections
       node.addEventListener('peer:connect', async (evt) => {
         console.log(
@@ -127,7 +128,6 @@ export class Node {
         );
         const conn = await node.dial(evt.detail)
         await node.services.identify.identify(conn);
-        node.services.pubsub.subscribe(`${evt.detail.toString()}`)
       })
       // Establish connections on peer discovery 
       node.addEventListener('peer:discovery', async (evt) => {
@@ -275,7 +275,12 @@ export class Node {
 
     if(peers.length === 0) {
       try {
-        await this.node.dial(multiaddr(this.bootstrapers[0]));
+        const peerId = peerIdFromString(this.bootstrapers[0].split("p2p/")[1]); 
+        await this.node.peerStore.patch(
+          peerId, 
+          { multiaddrs: [multiaddr(this.bootstrapers[0])] }
+        );
+        await this.node.dial(peerId);
       } catch {
         console.log("Warning: Bootsraper node not reachable");
       }
