@@ -36,7 +36,7 @@
     "@libp2p/interface": "^0.1.1",
     "@libp2p/interface-peer-id": "^2.0.2",
     "@libp2p/kad-dht": "^10.0.0",
-    "@libp2p/mdns": "^9.0.3",
+    "@libp2p/mdns": "^9.0.4",
     "@libp2p/mplex": "^8.0.3",
     "@libp2p/peer-id-factory": "^3.0.2",
     "@libp2p/pubsub-peer-discovery": "^8.0.4",

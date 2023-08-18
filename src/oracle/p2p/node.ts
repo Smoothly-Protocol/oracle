@@ -104,18 +104,15 @@ export class Node {
             keepAlive: true, // Refresh port mapping after TTL expires
           })    
         },
-          peerDiscovery: [
-            bootstrap({
-              list: this.bootstrapers
-            }),
-          ],
+        peerDiscovery: [
+          bootstrap({
+            list: this.bootstrapers
+          }),
+        ],
       };
 
       const node = await createLibp2p(config);
 
-      if(!this.nat) {
-        await node.services.nat.stop();
-      }
 
       // Personal_id channel
       node.services.pubsub.subscribe(`${node.peerId.toString()}`)
@@ -130,6 +127,7 @@ export class Node {
         );
         const conn = await node.dial(evt.detail)
         await node.services.identify.identify(conn);
+        node.services.pubsub.subscribe(`${evt.detail.toString()}`)
       })
       // Establish connections on peer discovery 
       node.addEventListener('peer:discovery', async (evt) => {
@@ -180,6 +178,10 @@ export class Node {
 
       await node.start();
 
+      if(!this.nat) {
+        await node.services.nat.stop();
+      }
+
       await setTimeout(10000);
 
       node.getMultiaddrs().forEach((ma) => {
@@ -201,12 +203,12 @@ export class Node {
         ? peers[Math.floor(Math.random() * peers.length)] 
         : await this._getRandomPeer();
 
-        console.log(`Requesting sync to: ${peerId.toString()}`)
+      console.log(`Requesting sync to: ${peerId.toString()}`)
 
-        await node.services.pubsub.publish(
-          peerId.toString(), 
-          uint8ArrayFromString('sync'),
-        );
+      await node.services.pubsub.publish(
+        peerId.toString(), 
+        uint8ArrayFromString('sync'),
+      );
     } catch(err: any) {
       console.log(err);
     }
@@ -263,6 +265,10 @@ export class Node {
   private async _getRandomPeer(): Promise<PeerId> {
     const peers = await this.node.peerStore.all();
     const rando = Math.floor(Math.random() * peers.length);
+    for await (const p of peers) {
+        const e = await this.node.peerRouting.findPeer(p.id);
+        console.info(e)
+    }
     return peers[rando].id;
   }
 
