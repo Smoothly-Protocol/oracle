@@ -45,6 +45,7 @@ async function proposeEpoch(epochData: any, oracle: Oracle): Promise<void> {
 
     // Submit vote 
     const contract = oracle.governance;
+    await contract.connect(oracle.signer).estimateGas.proposeEpoch(epochData);
     const tx = await contract.connect(oracle.signer).proposeEpoch(epochData, {gasLimit: 300000});
     await tx.wait();
 

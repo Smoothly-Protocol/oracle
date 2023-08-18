@@ -265,10 +265,6 @@ export class Node {
   private async _getRandomPeer(): Promise<PeerId> {
     const peers = await this.node.peerStore.all();
     const rando = Math.floor(Math.random() * peers.length);
-    for await (const p of peers) {
-        const e = await this.node.peerRouting.findPeer(p.id);
-        console.info(e)
-    }
     return peers[rando].id;
   }
 
