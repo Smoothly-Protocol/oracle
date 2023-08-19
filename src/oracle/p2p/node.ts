@@ -273,7 +273,12 @@ export class Node {
     let count = 0;
     const peers = await this.node.peerStore.all();
 
-    if(peers.length === 0) {
+    while(this.consensus.votes[epoch].length < (peers.length + 1) && count < maxTimeout) {
+      await setTimeout(10000);
+      count += 10000;
+    } 
+
+    if(this.consensus.votes[epoch].length === 1) {
       try {
         const peerId = peerIdFromString(this.bootstrapers[0].split("p2p/")[1]); 
         await this.node.peerStore.patch(
@@ -285,11 +290,6 @@ export class Node {
         console.log("Warning: Bootsraper node not reachable");
       }
     }
-
-    while(this.consensus.votes[epoch].length < (peers.length + 1) && count < maxTimeout) {
-      await setTimeout(10000);
-      count += 10000;
-    } 
   }
 
   private async _waitForPeers(): Promise<void> {
