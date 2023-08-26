@@ -26,6 +26,8 @@ export async function Rebalancer (oracle: Oracle) {
 
     const [withdrawalsRoot, exitsRoot] = await generateTrees(db);
 
+    console.log("tRewards:", utils.formatEther(tRewards));
+    console.log("tStake:", utils.formatEther(tStake));
     console.log("Total Rewards:", utils.formatEther(total));
     console.log("Operator Fee:", utils.formatEther(fee));
 
