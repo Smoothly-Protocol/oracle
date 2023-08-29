@@ -39,7 +39,6 @@ export async function EpochListener(oracle: Oracle) {
 
         console.log("Processing epoch:", _epoch);
         lastSlot = await processEpoch(_epoch, false, oracle);
-        console.log(lastSlot);
       }
 
       // Check if rebalance is needed
