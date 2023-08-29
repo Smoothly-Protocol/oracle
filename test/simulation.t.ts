@@ -12,7 +12,7 @@ import { BigNumber, utils } from "ethers";
 import { Validator, TrieRebalance } from "../src/types";
 
 //disable logs
-console.log = function () {};
+//console.log = function () {};
 
 describe("Simulation Test", () => {
   let oracle: Oracle;
