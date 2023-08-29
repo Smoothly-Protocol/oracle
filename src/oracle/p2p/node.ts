@@ -136,8 +136,6 @@ export class Node {
             evt.detail.id.toString(),
             "Total peers:", (await node.peerStore.all()).length
           );
-          const conn = await node.dial(evt.detail.id);
-          await node.services.identify.identify(conn);
         }
       })
       // Manually delete peer to restore pubsub on restart 
