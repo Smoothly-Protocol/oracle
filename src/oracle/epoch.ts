@@ -39,6 +39,7 @@ export async function EpochListener(oracle: Oracle) {
 
         console.log("Processing epoch:", _epoch);
         lastSlot = await processEpoch(_epoch, false, oracle);
+        console.log(lastSlot);
       }
 
       // Check if rebalance is needed
@@ -191,7 +192,7 @@ export async function processEpoch(
       db.checkpoint(epoch);
     }
 
-    return slots[slots.length - 1];
+    return findLastSlot(slots)
   } catch(err: any) {
     if(err == 'Checkpoint reached') {
       throw err;
@@ -201,6 +202,12 @@ export async function processEpoch(
       processEpoch(epoch, syncing, oracle);
     }
   }
+}
+
+function findLastSlot(slots: any): any {
+  return slots[slots.length -1].body 
+    ? slots[slots.length - 1]
+    : findLastSlot(slots.pop());
 }
 
 async function voluntaryExits(data: any, db: DB) { 
