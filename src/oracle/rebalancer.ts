@@ -10,7 +10,7 @@ import { Oracle } from "./oracle";
 import { DB } from "../db";
 import { setTimeout } from "timers/promises";
 
-export async function Rebalancer (oracle: Oracle) {
+export async function Rebalancer (oracle: Oracle, data: any) {
   try {
     const contract = oracle.governance;
     const db = oracle.db;
@@ -21,29 +21,29 @@ export async function Rebalancer (oracle: Oracle) {
       tStake 
     } = await processRebalance(db);
 
-    const total = (await oracle.getBalance()).sub(tRewards.add(tStake));
+    const total = (await oracle.getBalance(data.block_number)).sub(tRewards.add(tStake));
     const fee = await fundUsers(includedValidators, total, db);
 
     const [withdrawalsRoot, exitsRoot] = await generateTrees(db);
 
     console.log("tRewards:", utils.formatEther(tRewards));
     console.log("tStake:", utils.formatEther(tStake));
-    console.log("Total Rewards:", utils.formatEther(total));
+    console.log("Included Validators:", includedValidators.length);
+    console.log("Rewards distributed this period:", utils.formatEther(total));
     console.log("Operator Fee:", utils.formatEther(fee));
 
     // Propose Epoch to governance contract  
     const epochData = [withdrawalsRoot, exitsRoot, db.root(), fee];
-    proposeEpoch(epochData, oracle);
+    proposeEpoch(epochData, oracle, data.priority);
   } catch(err) {
     console.log(err);
   }
 }
 
-async function proposeEpoch(epochData: any, oracle: Oracle): Promise<void> {
+export async function proposeEpoch(epochData: any, oracle: Oracle, priority: number): Promise<void> {
   try {
     // Random priority to avoid failed tx
-    const rand = Math.floor(Math.random() * 20);
-    await setTimeout((rand * 12) * 1000);
+    await setTimeout((priority * 30) * 1000);
 
     // Submit vote 
     const contract = oracle.governance;
@@ -62,7 +62,7 @@ async function proposeEpoch(epochData: any, oracle: Oracle): Promise<void> {
     } else {
       console.log("Error: proposing epoch, trying again...")
       console.log("Warning: make sure your address is funded")
-      proposeEpoch(epochData, oracle);
+      proposeEpoch(epochData, oracle, priority);
     }
   }
 }

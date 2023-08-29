@@ -79,6 +79,18 @@ export class Oracle extends Config {
     }
   }
 
+  async syncJson(checkpoint: any): Promise<void> {
+    try { 
+      for(let validator of checkpoint.data) {
+        await this.db.insert(validator.index, validator);
+      }
+    } catch (err: any) {
+      console.log(err);
+      throw new Error("Sync failed, make sure checkpoint is active");
+    }
+  }
+
+  
   async fullSync(current: number): Promise<any> {
     current === 0 ? current = this.network.deploymentEpoch : 0;
     try {

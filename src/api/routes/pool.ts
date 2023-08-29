@@ -41,7 +41,7 @@ export async function PoolRoutes(app: Application, oracle: Oracle) {
         total_stake: tStake,
         total_value: tValue, 
         total_withdrawals: tWithdrawals,
-        total_value_period: (await oracle.getBalance()).sub(tRewards.add(tStake)),
+        total_value_period: (await oracle.getBalance("latest")).sub(tRewards.add(tStake)),
         average_value: 0,
         total_miss: tMiss,
         total_fee: tFee  
