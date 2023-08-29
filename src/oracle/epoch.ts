@@ -198,7 +198,7 @@ export async function processEpoch(
     } else {
       console.log("Network connection error: retrying epoch", epoch);
       await setTimeout(1000);
-      processEpoch(epoch, syncing, oracle);
+      await processEpoch(epoch, syncing, oracle);
     }
   }
 }

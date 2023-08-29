@@ -12,7 +12,7 @@ import { BigNumber, utils } from "ethers";
 import { Validator, TrieRebalance } from "../src/types";
 
 //disable logs
-//console.log = function () {};
+console.log = function () {};
 
 describe("Simulation Test", () => {
   let oracle: Oracle;
@@ -29,7 +29,9 @@ describe("Simulation Test", () => {
         console.warn("Overdrawn rewards balance for:", validator.index); 
       } else if(BigNumber.from(validator.rewards).lt(0)) {
         console.warn("Overdrawn stake balance for:", validator.index); 
-      } 
+      } else if(BigNumber.from(validator.stake).gt(utils.parseEther("0.065"))) {
+        console.warn("stake balance too big for:", validator.index); 
+      }
       initRewards = initRewards.add(BigNumber.from(validator.rewards));
       initStake = initStake.add(BigNumber.from(validator.stake));
     }
@@ -72,6 +74,48 @@ describe("Simulation Test", () => {
 
   });
   
+  describe("Simulation with live data on rebalance", () => {
+
+    before(async () => {
+      // Missed proposal: validator with index 432307
+      // Missed proposal: validator with index 432278
+      // Missed proposal: validator with index 432269
+      // Missed proposal: validator with index 432215
+      // Missed proposal: validator with index 472362
+      const indexes = [432307, 432278, 432269, 432215, 472362];
+      for(let i of indexes) {
+        const validator = await oracle.db.get(i) as Validator;
+        validator.slashMiss = 1;
+        await oracle.db.insert(i, validator);
+      }
+    });
+
+    it("computes correct root", () => {
+      const root = oracle.db.root().toString('hex');
+      assert.equal(root, '8e84c7cf404ef4beacfd6aa6da60f7eb0cab4a8a155f6d1a8ee69da70393ebad');
+    })
+
+    it("No Slashes no money coming in should throw No funds to rebalance", async () => {
+      try {
+        const db = oracle.db;
+        const { includedValidators, tRewards, tStake } = await processRebalance(db);
+        const total = (await oracle.getBalance("latest")).sub(tRewards.add(tStake));
+
+        assert.deepEqual(total, "0x00");
+
+        const fee = await fundUsers(includedValidators, total, db);
+        const [withdrawalsRoot, exitsRoot] = await generateTrees(db);
+        const epochData = [withdrawalsRoot, exitsRoot, db.root(), fee];
+
+        await time1Day(oracle.contract.provider);
+        await proposeEpoch(epochData, oracle, 0);
+      } catch(err: any) {
+        assert.equal(err, "No funds to rebalance on this period");
+      }
+    })
+
+  });
+
   describe("0.1 ETH to rebalance", () => {
 
     before(async () => {
