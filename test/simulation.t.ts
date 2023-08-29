@@ -101,7 +101,9 @@ describe("Simulation Test", () => {
         const { includedValidators, tRewards, tStake } = await processRebalance(db);
         const total = (await oracle.getBalance("latest")).sub(tRewards.add(tStake));
 
-        assert.deepEqual(total, "0x00");
+        assert.deepEqual(total, BigNumber.from("0"));
+        assert.deepEqual(tRewards, initRewards);
+        assert.deepEqual(tStake, initStake);
 
         const fee = await fundUsers(includedValidators, total, db);
         const [withdrawalsRoot, exitsRoot] = await generateTrees(db);

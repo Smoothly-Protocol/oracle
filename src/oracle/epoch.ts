@@ -18,6 +18,7 @@ import { uploadStateIPFS } from "./events/epoch";
 export async function EpochListener(oracle: Oracle) {
   const eth2 = new EventSource(`${oracle.network.beacon}/eth/v1/events?topics=finalized_checkpoint`);
   let prevEpoch: number = 0;
+  let lastRebalanceTimestamp: number = 0;
 
   eth2.addEventListener('finalized_checkpoint', async (e)  => {
     try {
@@ -56,8 +57,10 @@ export async function EpochListener(oracle: Oracle) {
         const vote = await contract.votes(epochNumber, voter);
 
         // Process rebalance 
-        if(vote[0] == 0) {
-          // TODO: Check if rebalance is ongoing
+        if(
+          vote[0] == 0 && 
+          Number(timestamp) > (lastRebalanceTimestamp + 3600) 
+        ) {
           const random = Math.floor(
             ((Number(prev_randao) % 100) / 100) * operators.length
           );
@@ -67,6 +70,8 @@ export async function EpochListener(oracle: Oracle) {
           priority !== -1 
             ? Rebalancer(oracle, { block_number, priority })
             : 0;
+
+          lastRebalanceTimestamp = Number(timestamp);
         }
       } 
     } catch(err: any) {
