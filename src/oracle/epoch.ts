@@ -21,6 +21,7 @@ export async function EpochListener(oracle: Oracle) {
 
   eth2.addEventListener('finalized_checkpoint', async (e)  => {
     try {
+      let lastSlot;
       let { epoch } = JSON.parse(e.data);	
       epoch = Number(epoch);
 
@@ -37,14 +38,15 @@ export async function EpochListener(oracle: Oracle) {
         }
 
         console.log("Processing epoch:", _epoch);
-        await processEpoch(_epoch, false, oracle);
+        lastSlot = await processEpoch(_epoch, false, oracle);
       }
 
       // Check if rebalance is needed
+      const { timestamp, prev_randao, block_number} = lastSlot.body.execution_payload;
       const contract = oracle.governance;
       const lastEpoch = await contract.lastEpoch();
       const epochInterval = await contract.epochInterval();
-      const { timestamp } = await contract.provider.getBlock("latest");
+      const operators = await contract.getOperators();
       const timeLock = Number(lastEpoch) + Number(epochInterval);
 
       // Check contract timelock
@@ -56,7 +58,15 @@ export async function EpochListener(oracle: Oracle) {
         // Process rebalance 
         if(vote[0] == 0) {
           // TODO: Check if rebalance is ongoing
-          Rebalancer(oracle);
+          const random = Math.floor(
+            ((Number(prev_randao) % 100) / 100) * operators.length
+          );
+          const shuffle = operators.slice(random -1).concat(operators.slice(0, random -1));
+          const priority = shuffle.indexOf(voter);
+
+          priority !== -1 
+            ? Rebalancer(oracle, { block_number, priority })
+            : 0;
         }
       } 
     } catch(err: any) {
@@ -180,6 +190,8 @@ export async function processEpoch(
     } else if(syncing) {
       db.checkpoint(epoch);
     }
+
+    return slots[slots.length - 1];
   } catch(err: any) {
     if(err == 'Checkpoint reached') {
       throw err;

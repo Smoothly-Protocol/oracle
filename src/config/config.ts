@@ -79,8 +79,8 @@ export class Config {
     }
   }
 
-  async getBalance(): Promise<BigNumber> {
-    return await this.contract.provider.getBalance(this.contract.address)
+  async getBalance(blockNumber: string): Promise<BigNumber> {
+    return await this.contract.provider.getBalance(this.contract.address, blockNumber)
   }
 
   validateWallet(pk: string): Wallet {

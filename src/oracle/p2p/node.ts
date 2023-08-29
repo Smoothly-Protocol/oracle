@@ -118,7 +118,6 @@ export class Node {
       node.services.pubsub.subscribe(`${node.peerId.toString()}`)
       // Checkpoint check
       node.services.pubsub.subscribe('checkpoint')
-      node.services.pubsub.subscribe('lola')
       // Log established peer connections
       node.addEventListener('peer:connect', async (evt) => {
         console.log(
@@ -137,6 +136,8 @@ export class Node {
             evt.detail.id.toString(),
             "Total peers:", (await node.peerStore.all()).length
           );
+          const conn = await node.dial(evt.detail.id);
+          await node.services.identify.identify(conn);
         }
       })
       // Manually delete peer to restore pubsub on restart 

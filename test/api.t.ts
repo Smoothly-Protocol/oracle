@@ -55,7 +55,7 @@ describe("API", () => {
       await sendEtherPool("0.4");
       await oracle.db.insert(validator1.index, validator1);
       await oracle.db.insert(validator2.index, validator2);
-      await Rebalancer(oracle);;
+      await Rebalancer(oracle, { block_number: 0, priority: 0});
       const stats = await getPoolStats(await oracle.getRoot()); 
       assert.equal(stats.awaiting_activation, 3);
       assert.equal(stats.activated, 2);
