@@ -70,6 +70,7 @@ export async function proposeEpoch(epochData: any, oracle: Oracle, priority: num
 export async function processRebalance(db: DB): Promise<TrieRebalance> {
   let tRewards: BigNumber = BigNumber.from("0");
   let tStake: BigNumber = BigNumber.from("0");
+  let validators: Validator[] = [];
   let includedValidators: Validator[] = [];
 
   try { 
@@ -77,25 +78,29 @@ export async function processRebalance(db: DB): Promise<TrieRebalance> {
     await new Promise((fulfilled) => { 
       stream
       .on('data', async (data: any) => {
-        let validator = JSON.parse(data.value.toString());
-        if(validator.slashFee !== 0 || validator.slashMiss !== 0) {
-          validator = await slashValidator(validator, db);
-          console.log(`Validator ${validator.index} excluded`);
-        } else if(validator.active && !validator.excludeRebalance) {
-          if(BigNumber.from(validator.stake).eq(SLASH_FEE)) {
-            includedValidators.push(validator);
-          }
-        }
-
-        if(validator.excludeRebalance) {
-          console.log(`Validator ${validator.index} excluded`);
-        }
-
-        tRewards = tRewards.add(validator.rewards);
-        tStake = tStake.add(validator.stake);
+        validators.push(JSON.parse(data.value.toString()));
       })
       .on('end', fulfilled);
     });
+
+    for(let validator of validators) {
+      if(validator.slashFee !== 0 || validator.slashMiss !== 0) {
+        validator = await slashValidator(validator, db);
+        console.log(`Validator ${validator.index} excluded`);
+      } else if(validator.active && !validator.excludeRebalance) {
+        if(BigNumber.from(validator.stake).eq(SLASH_FEE)) {
+          includedValidators.push(validator);
+        }
+      }
+
+      if(validator.excludeRebalance) {
+        console.log(`Validator ${validator.index} excluded`);
+      }
+
+      tRewards = tRewards.add(validator.rewards);
+      tStake = tStake.add(validator.stake);
+    }
+
     return { includedValidators, tRewards, tStake };
   } catch(err: any) {
     throw new Error(`Rebalance failed on iterator with: ${err}`);
@@ -105,6 +110,7 @@ export async function processRebalance(db: DB): Promise<TrieRebalance> {
 async function slashValidator(validator: Validator, db: DB): Promise<Validator> {
   let isSlashed: boolean = false;
   let missedSlots: number = 0;
+  console.log("validator start:", validator);
 
   if(!validator.firstBlockProposed) {
     // Zero out validator
@@ -151,6 +157,7 @@ async function slashValidator(validator: Validator, db: DB): Promise<Validator> 
   validator.slashMiss = 0;
   await db.insert(validator.index, validator);
 
+  console.log("validator end:", validator);
   return validator;
 }
 
