@@ -110,7 +110,6 @@ export async function processRebalance(db: DB): Promise<TrieRebalance> {
 async function slashValidator(validator: Validator, db: DB): Promise<Validator> {
   let isSlashed: boolean = false;
   let missedSlots: number = 0;
-  console.log("validator start:", validator);
 
   if(!validator.firstBlockProposed) {
     // Zero out validator
@@ -157,7 +156,6 @@ async function slashValidator(validator: Validator, db: DB): Promise<Validator> 
   validator.slashMiss = 0;
   await db.insert(validator.index, validator);
 
-  console.log("validator end:", validator);
   return validator;
 }
 
