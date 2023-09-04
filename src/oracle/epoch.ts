@@ -40,40 +40,42 @@ export async function EpochListener(oracle: Oracle) {
 
         console.log("Processing epoch:", _epoch);
         lastSlot = await processEpoch(_epoch, false, oracle);
+        
+        if(!lastSlot) throw "Couldn't find lastSlot";
+
+        // Check if rebalance is needed
+        const { timestamp, prev_randao, block_number} = lastSlot.body.execution_payload;
+        const contract = oracle.governance;
+        const lastEpoch = await contract.lastEpoch();
+        const epochInterval = await contract.epochInterval();
+        const operators = await contract.getOperators();
+        const timeLock = Number(lastEpoch) + Number(epochInterval);
+
+        // Check contract timelock
+        if(timeLock < timestamp) {
+          const epochNumber = await contract.epochNumber();
+          const voter = await oracle.signer.getAddress();
+          const vote = await contract.votes(epochNumber, voter);
+
+          // Process rebalance 
+          if(
+            vote[0] == 0 && 
+            Number(timestamp) > (lastRebalanceTimestamp + 3600) 
+          ) {
+            const random = Math.floor(
+              ((Number(prev_randao) % 100) / 100) * operators.length
+            );
+            const shuffle = operators.slice(random -1).concat(operators.slice(0, random -1));
+            const priority = shuffle.indexOf(voter);
+
+            priority !== -1 
+              ? Rebalancer(oracle, { block_number, priority })
+              : 0;
+
+            lastRebalanceTimestamp = Number(timestamp);
+          }
+        } 
       }
-
-      // Check if rebalance is needed
-      const { timestamp, prev_randao, block_number} = lastSlot.body.execution_payload;
-      const contract = oracle.governance;
-      const lastEpoch = await contract.lastEpoch();
-      const epochInterval = await contract.epochInterval();
-      const operators = await contract.getOperators();
-      const timeLock = Number(lastEpoch) + Number(epochInterval);
-
-      // Check contract timelock
-      if(timeLock < timestamp) {
-        const epochNumber = await contract.epochNumber();
-        const voter = await oracle.signer.getAddress();
-        const vote = await contract.votes(epochNumber, voter);
-
-        // Process rebalance 
-        if(
-          vote[0] == 0 && 
-          Number(timestamp) > (lastRebalanceTimestamp + 3600) 
-        ) {
-          const random = Math.floor(
-            ((Number(prev_randao) % 100) / 100) * operators.length
-          );
-          const shuffle = operators.slice(random -1).concat(operators.slice(0, random -1));
-          const priority = shuffle.indexOf(voter);
-
-          priority !== -1 
-            ? Rebalancer(oracle, { block_number, priority })
-            : 0;
-
-          lastRebalanceTimestamp = Number(timestamp);
-        }
-      } 
     } catch(err: any) {
       console.log(err);
     }
@@ -203,7 +205,7 @@ export async function processEpoch(
     } else {
       console.log("Network connection error: retrying epoch", epoch);
       await setTimeout(1000);
-      await processEpoch(epoch, syncing, oracle);
+      return await processEpoch(epoch, syncing, oracle);
     }
   }
 }
