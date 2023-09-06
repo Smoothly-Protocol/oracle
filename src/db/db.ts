@@ -1,3 +1,6 @@
+import fs from "fs";
+import * as path from 'path';
+import { homedir } from 'os';
 import { Trie, MapDB } from '@ethereumjs/trie'
 import { RLP } from '@ethereumjs/rlp'
 import { Level } from 'level';
@@ -5,16 +8,16 @@ import { DEFAULTS } from '../config';
 import { LevelDB } from './level';
 import { Validator } from '../types';
 import { BigNumber } from "ethers";
-import { homedir } from 'os';
 
 export class DB {
   db: Trie;
+  level: Level;
 
   constructor(_root: string, _testing: boolean) {
     try {
-      const level = new Level(`${homedir}/${DEFAULTS.folder}/db`);
+      this.level = new Level(`${homedir}/${DEFAULTS.folder}/db`);
       this.db = new Trie({
-        db: _testing ? new MapDB() : new LevelDB(level),
+        db: _testing ? new MapDB() : new LevelDB(this.level),
         useKeyHashing: true,
         root: Buffer.from(_root, 'hex')
       })
@@ -52,6 +55,33 @@ export class DB {
 
   async getStream(): Promise<any> {
     return await this.db.createReadStream();
+  }
+
+  async hasRoot(_root: string): Promise<boolean> {
+    try {
+      return await this.db.checkRoot(Buffer.from(_root.slice(2), 'hex')); 
+    } catch(err: any) {
+      console.log(err);
+      return false;
+    }
+  }
+
+  async revert(): Promise<void> {
+    try {
+      await this.db.revert();
+    } catch(err: any) {
+      console.log(err);
+    }
+  }
+
+  checkpoint(epoch: number): void {
+    //this.db.checkpoint();
+
+    // Write new Head to Disk
+    fs.writeFileSync(
+      path.resolve(homedir(), ".smoothly/head.json"), 
+      JSON.stringify({root: this.root().toString('hex'), epoch: epoch})
+    )
   }
 
   root(): Buffer {

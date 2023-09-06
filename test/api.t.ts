@@ -4,7 +4,8 @@ import { setup, pks, time1Day } from "./setup";
 import { EMPTY_ROOT, STAKE_FEE } from "../src/utils";
 import { validators } from "./mock";
 import { Oracle } from "../src/oracle";
-import { RewardsWithdrawal  } from "../src/oracle/events";
+import { RewardsWithdrawal } from "../src/oracle/events";
+import { Rebalancer } from "../src/oracle/rebalancer";
 import { API } from "../src/api";
 import { Validator } from "../src/types";
 import { StandardMerkleTree } from "@openzeppelin/merkle-tree";
@@ -54,7 +55,7 @@ describe("API", () => {
       await sendEtherPool("0.4");
       await oracle.db.insert(validator1.index, validator1);
       await oracle.db.insert(validator2.index, validator2);
-      await oracle.rebalance();
+      await Rebalancer(oracle, { block_number: 0, priority: 0});
       const stats = await getPoolStats(await oracle.getRoot()); 
       assert.equal(stats.awaiting_activation, 3);
       assert.equal(stats.activated, 2);
@@ -122,7 +123,7 @@ describe("API", () => {
 
   describe("Checkpoint", () => {
     it("syncs node2 to active nodes state", async () => {
-      const oracle2 = new Oracle("local", pks[1], EMPTY_ROOT);
+      const oracle2 = new Oracle({network:"local", privateKey:pks[0]}, EMPTY_ROOT);
       await oracle2.sync("http://localhost:4000");
       console.log(await oracle.getRoot())
       assert.equal(

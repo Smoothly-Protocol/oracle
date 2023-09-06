@@ -4,6 +4,7 @@ import { Validator } from '../types';
 
 const ENCODING_OPTS = { keyEncoding: 'buffer', valueEncoding: 'buffer' };
 
+
 export class LevelDB implements DB {
   _leveldb: Level<string, any>
 

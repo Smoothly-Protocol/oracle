@@ -1,6 +1,10 @@
+import fs from "fs";
+import * as path from 'path';
+import { homedir } from 'os';
 import { Oracle } from "../oracle";
 import { Validator } from "../types";
 import { Contract, utils } from "ethers";
+import { Head } from '../types';
 
 export async function filterLogs(
   blockNumber: number,
@@ -14,5 +18,33 @@ export async function filterLogs(
   filters[4] = contract.filters.ExitRequested();
   filters[5] = contract.filters.Epoch();
   return contract.queryFilter(filters,Number(blockNumber), Number(blockNumber))
+}
+ 
+export function existsHead(): Head | null {  
+  try {
+    const data: Head = JSON.parse(
+      fs.readFileSync(
+        path.resolve(homedir(), `.smoothly/head.json`),
+        'utf8'
+      )
+    );
+    return data; 
+  } catch {
+    return null;
+  }
+}
+
+export function getFile(file: string): any | null {  
+  try {
+    const data = JSON.parse(
+      fs.readFileSync(
+        path.resolve(homedir(), `.smoothly/${file}.json`),
+        'utf8'
+      )
+    );
+    return data; 
+  } catch {
+    return null;
+  }
 }
 

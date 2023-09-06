@@ -5,4 +5,4 @@ export {
   MISS_FEE,
   EMPTY_ROOT
 } from "./constants";
-export { filterLogs } from "./helpers";
+export { filterLogs, existsHead, getFile } from "./helpers";
