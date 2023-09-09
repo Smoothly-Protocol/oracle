@@ -56,11 +56,7 @@ cd oracle
 ```
 Move into the \oracle folder
 ```
-git checkout -b p2p_implementation
-```
-change from master branch to new p2p branch
-```
-git pull origin p2p_implementation
+git pull
 ```
 make sure that branch is up to date
 ```
@@ -80,9 +76,34 @@ npm link
 ```
 Link npm to smoothly cli
 ```
-smoothly_cli -pk <your private key> -n goerli -b <your beacon client>
+smoothly_cli -pk <your private key> -n goerli -b <your beacon client> -eth1 <your EL client>
 ```
-Run the smoothly cli and enter the private key associated with the whitelisted address used to vote in the governance contract. the -n flag defines the network (goerli for now) the OPTIONAL -b flag identifies which beacon node api to connect to (ex. -b http://localhost:3500) by defautl we're using a public nimbus api,
+Run the smoothly cli and enter the private key associated with the whitelisted address used to vote in the governance contract. 
+-n flag defines the network (goerli for now) 
+-b flag identifies which beacon node api to connect to (ex. for prysm -b http://localhost:3500) by default we're using a public nimbus api
+-eth1 flag identifies which eth1 api to connet to (ex. for geth -eth1 http://localhost:8545) by default we're using an alchemy endpoint
+
+## Create a Systemd Service File
+```
+sudo nano /etc/systemd/system/smoothly.service
+```
+Open a editable system file
+```
+[Unit]
+Description=Smoothly CLI
+After=network.target
+
+[Service]
+User=<YOUR USERNAME>
+Group=<YOUR GROUPNAME>
+WorkingDirectory=/home/<YOUR USERNAME>/oracle
+ExecStart=/home/<YOUR USERNAME>/.nvm/versions/node/v18.16.0/bin/smoothly_cli -pk YOUR_PRIVATE_KEY -n goerli
+Restart=always
+Environment=PATH=/home/<YOUR USERNAME>/.nvm/versions/node/v18.16.0/bin:/usr/bin:/usr/local/bin
+
+[Install]
+WantedBy=multi-user.target
+
 
 ## Update the smoothly cli
 ```
@@ -90,7 +111,7 @@ cd oracle
 ```
 Move into the oracle directory
 ```
-git pull origin p2p_implementation
+git pull
 ```
 Pull new changes 
 ```
