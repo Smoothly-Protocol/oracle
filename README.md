@@ -91,6 +91,22 @@ Environment=PATH=/home/<YOUR USERNAME>/.nvm/versions/node/v18.16.0/bin:/usr/bin:
 [Install]
 WantedBy=multi-user.target
 ```
+sudo systemctl daemon-reload
+```
+Reload service
+```
+sudo systemctl enable smoothly
+```
+Enable smoothly to autoboot on restart
+```
+sudo systemctl start smoothly
+```
+start service
+```
+sudo journalctl -fu smoothly
+```
+check logs to verify connections
+```
 
 ## Update the smoothly cli
 ```
