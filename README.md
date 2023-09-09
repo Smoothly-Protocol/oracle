@@ -108,9 +108,12 @@ start service
 sudo journalctl -fu smoothly
 ```
 check logs to verify connections
-```
-```
+
 ## Update the smoothly cli
+```
+sudo systemctl stop smoothly
+```
+Stop the service
 ```
 cd oracle
 ```
@@ -128,12 +131,12 @@ npm link
 ```
 Link 
 ```
-smoothly_cli -pk <your private key> -n goerli
+sudo systemctl start smoothly
 ```
-Start smoothly_cli
+Start smoothly service
 
 ## Usage 
-`smoothly_cli -pk <YOUR_PRIVATE_KEY> -n <goerli defaults>` 
+`smoothly_cli -pk <YOUR_PRIVATE_KEY> -n <goerli defaults>` -b <beacon api> -eth1 <your EL client>
 
 ## Tests 
 
