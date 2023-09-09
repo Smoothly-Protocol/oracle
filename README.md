@@ -91,7 +91,7 @@ Environment=PATH=/home/<YOUR USERNAME>/.nvm/versions/node/v18.16.0/bin:/usr/bin:
 [Install]
 WantedBy=multi-user.target
 ```
-Copy and paste the above into the system file, replace <YOUR USERNAME> and YOUR_PRIVATE_KEY
+Copy and paste the above into the system file, replace YOUR USERNAME and YOUR_PRIVATE_KEY
 ```
 sudo systemctl daemon-reload
 ```
