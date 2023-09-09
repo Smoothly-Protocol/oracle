@@ -109,7 +109,7 @@ sudo journalctl -fu smoothly
 ```
 check logs to verify connections
 ```
-
+```
 ## Update the smoothly cli
 ```
 cd oracle
