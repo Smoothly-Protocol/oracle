@@ -11,18 +11,7 @@
 - :gear: [NodeJS](https://nodejs.org/) (LTS)
 - :toolbox: [Yarn](https://yarnpkg.com/)/[npm](https://npmjs.com/)
 
-## Getting Started 
-
-To start git clone the repository and `cd` into it.
-
-### Docker
-
-```
-docker build -t smoothly .
-docker run -d -e "PK=APPROVED_OPERATOR_ETH1_PRIVATE_KEY" smoothly
-```
-
-### Source Build
+### Build from source
 
 ```
 sudo apt update
@@ -38,8 +27,6 @@ source ~/.bashrc
 ``` 
 Install NVM
 ```
-nvm --version
-nvm ls-remote
 nvm install v18.16.0
 ```
 Check version options and install v18.16.0
@@ -78,9 +65,9 @@ Link npm to smoothly cli
 ```
 smoothly_cli -pk <your private key> -n goerli -b <your beacon client> -eth1 <your EL client>
 ```
-Run the smoothly cli and enter the private key associated with the whitelisted address used to vote in the governance contract. 
--n flag defines the network (goerli for now) 
--b flag identifies which beacon node api to connect to (ex. for prysm -b http://localhost:3500) by default we're using a public nimbus api
+Run the smoothly cli and enter the private key associated with the whitelisted address used to vote in the governance contract  
+-n flag defines the network (goerli for now)  
+-b flag identifies which beacon node api to connect to (ex. for prysm -b http://localhost:3500) by default we're using a public nimbus api  
 -eth1 flag identifies which eth1 api to connet to (ex. for geth -eth1 http://localhost:8545) by default we're using an alchemy endpoint
 
 ## Create a Systemd Service File
@@ -103,7 +90,7 @@ Environment=PATH=/home/<YOUR USERNAME>/.nvm/versions/node/v18.16.0/bin:/usr/bin:
 
 [Install]
 WantedBy=multi-user.target
-
+```
 
 ## Update the smoothly cli
 ```
