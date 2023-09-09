@@ -136,7 +136,7 @@ sudo systemctl start smoothly
 Start smoothly service
 
 ## Usage 
-`smoothly_cli -pk <YOUR_PRIVATE_KEY> -n <goerli defaults>` -b <beacon api> -eth1 <your EL client>
+`smoothly_cli -pk <YOUR_PRIVATE_KEY> -n <goerli defaults> -b <beacon api> -eth1 <your EL client> `
 
 ## Tests 
 
