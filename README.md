@@ -91,6 +91,7 @@ Environment=PATH=/home/<YOUR USERNAME>/.nvm/versions/node/v18.16.0/bin:/usr/bin:
 [Install]
 WantedBy=multi-user.target
 ```
+```
 sudo systemctl daemon-reload
 ```
 Reload service
