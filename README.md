@@ -1,4 +1,4 @@
-<p align="center"><a href="https://0xsmoothly.notion.site/"><img width="300" title="Smoothly" src='assets/web_logo.png' /></a></p>
+<p align="center"><a href="https://docs.smoothly.money/"><img width="200" title="Smoothly" src='assets/web_logo.png' /></a></p>
 
 # Smoothly Pool Operator Node
 
@@ -87,8 +87,11 @@ These commands use npm to build  the Smoothly client
 smoothly_cli -pk <your private key> -n goerli 
 ```
 ---
+Start Smoothly, the expected response is below  
 
-Start Smoothly, the expected response is belowRun the smoothly cli and enter the private key associated with the whitelisted address used to vote in the governance contract  
+<p align="center"><img width="200" title="response" src='assets/expected_response.jpg' /></a></p>
+
+Run the smoothly cli and enter the private key associated with the whitelisted address used to vote in the governance contract  
 -n flag defines the network (goerli for now)  
 -b flag identifies which beacon node api to connect to (ex. for prysm -b http://localhost:3500) by default we're using a public nimbus api  
 -eth1 flag identifies which eth1 api to connet to (ex. for geth -eth1 http://localhost:8545) by default we're using an alchemy endpoint
