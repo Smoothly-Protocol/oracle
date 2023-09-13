@@ -93,8 +93,8 @@ Start Smoothly, the expected response is below
 
 ---
 At this point, you're running the operator node! There are additional flags that you can test:   
--b flag identifies which beacon node api to connect to (ex. for prysm -b http://localhost:3500) by default we're using a public nimbus api  
--eth1 flag identifies which eth1 api to connet to (ex. for geth -eth1 http://localhost:8545) by default we're using an alchemy endpoint
+-b identifies which beacon node api to connect to (ex. for prysm -b http://localhost:3500) by default we're using a public nimbus api  
+-eth1 identifies which eth1 api to connect to (ex. for geth -eth1 http://localhost:8545) by default we're using an alchemy endpoint
 
 ## Create a Systemd Service File
 ```
