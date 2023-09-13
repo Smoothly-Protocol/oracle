@@ -89,7 +89,7 @@ smoothly_cli -pk <your private key> -n goerli
 ---
 Start Smoothly, the expected response is below  
 
-<p align="center"><img width="200" title="response" src='assets/expected_response.jpg' /></a></p>
+<p align="center"><img width="1000" title="response" src='assets/expected_response.jpg' /></a></p>
 
 Run the smoothly cli and enter the private key associated with the whitelisted address used to vote in the governance contract  
 -n flag defines the network (goerli for now)  
