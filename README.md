@@ -11,61 +11,84 @@
 - :gear: [NodeJS](https://nodejs.org/) (LTS)
 - :toolbox: [Yarn](https://yarnpkg.com/)/[npm](https://npmjs.com/)
 
-### Build from source
-
-```
+# Build Smoothly Oracle from source
+```sh
 sudo apt update
 ```
-Update your system
-```
+
+This command updates the list of available packages from the repositories.
+
+---
+### Step 1: Install Libraries
+```sh
 sudo apt install build-essential libssl-dev curl
 ```
-Install essential libraries
-```
+
+This command installs essential build tools and libraries required for building software from source.
+
+---
+### Step 2: Install (NVM) and Nodejs and git
+```sh
 curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.1/install.sh | bash
+
 source ~/.bashrc
-``` 
-Install NVM
 ```
+
+These commands install the Node Version Manager (NVM), which allows you to install and manage multiple versions of Node.js.
+
+---
+
+```sh
 nvm install v18.16.0
 ```
-Check version options and install v18.16.0
-```
+
+This command installs a specific version of Node.js using NVM.
+
+---
+
+```sh
 sudo apt install git
 ```
-Install git if needed
-```
+
+This command installs Git, a version control system used for tracking changes in source code during software development.
+
+---
+### Step 3: Clone the repository
+```sh
 git clone https://github.com/Smoothly-Protocol/oracle.git
-```
-Clone our repo
-```
+
 cd oracle
 ```
-Move into the \oracle folder
-```
+
+This command clones the specified repository to your local machine, then moves to that directory.
+
+---
+### Step 4: Build and start Smoothly
+
+```sh
 git pull
 ```
-make sure that branch is up to date
-```
+Makes sure your repo is up to date
+
+---
+```sh
 npm install
-``` 
-Insall any updates of npm
-```
+
 npm install typescript
-```
-Intstall typescript if prompted
-```
+
 npm run build
-```
-Build using npm
-```
+
 npm link
 ```
-Link npm to smoothly cli
+These commands use npm to build  the Smoothly client
+
+---
+```sh
+smoothly_cli -pk <your private key> -n goerli 
 ```
-smoothly_cli -pk <your private key> -n goerli -b <your beacon client> -eth1 <your EL client>
-```
-Run the smoothly cli and enter the private key associated with the whitelisted address used to vote in the governance contract  
+---
+
+Start Smoothly, the expected response is belowRun the smoothly cli and enter the private key associated with the whitelisted address used to vote in the governance contract  
 -n flag defines the network (goerli for now)  
 -b flag identifies which beacon node api to connect to (ex. for prysm -b http://localhost:3500) by default we're using a public nimbus api  
 -eth1 flag identifies which eth1 api to connet to (ex. for geth -eth1 http://localhost:8545) by default we're using an alchemy endpoint
