@@ -135,6 +135,45 @@ sudo systemctl start smoothly
 ```
 Start smoothly service
 
+### Smoothly Oracle Docker Installation Guide
+Step 1: Update Your System
+Update your system package list to ensure you have the latest repository information:
+```
+sudo apt update
+```
+Step 2: Install Docker and Docker Compose
+Download the Docker installation script and execute it to install Docker:
+```
+curl -fsSL https://get.docker.com -o get-docker.sh
+sudo sh get-docker.sh
+```
+Next, install Docker Compose by downloading the latest version and making it executable:
+```
+sudo curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+sudo chmod +x /usr/local/bin/docker-compose
+```
+To verify the installation of Docker and Docker Compose, use the following commands:
+```
+docker --version
+docker-compose --version
+```
+
+Step 3: Pull the Docker Image
+Pull the latest version of your Docker image from GitHub:
+```
+docker pull ghcr.io/smoothly-protocol/oracle:latest
+```
+Step 4: Run the Docker Container in Detached Mode
+Run the Docker container in detached mode with the name "smoothlyoracle". Replace <your private key>, <your beacon client>, and <your EL client> with the appropriate values for your setup:
+```
+docker run -d --name=smoothlyoracle ghcr.io/smoothly-protocol/oracle:latest smoothly_cli -pk <your private key> -n goerli -b <your beacon client> -eth1 <your EL client>
+```
+
+Step 5: View Logs
+To view the logs of the running container, use the docker logs command followed by the container name:
+```
+docker logs -f smoothlyoracle
+```
 ## Usage 
 `smoothly_cli -pk <YOUR_PRIVATE_KEY> -n <goerli defaults> -b <beacon api> -eth1 <your EL client> `
 
