@@ -91,8 +91,8 @@ Start Smoothly, the expected response is below
 
 <p align="center"><img width="1000" title="response" src='assets/expected_response.jpg' /></a></p>
 
-Run the smoothly cli and enter the private key associated with the whitelisted address used to vote in the governance contract  
--n flag defines the network (goerli for now)  
+---
+At this point, you're running the operator node! There are additional flags that you can test:   
 -b flag identifies which beacon node api to connect to (ex. for prysm -b http://localhost:3500) by default we're using a public nimbus api  
 -eth1 flag identifies which eth1 api to connet to (ex. for geth -eth1 http://localhost:8545) by default we're using an alchemy endpoint
 
