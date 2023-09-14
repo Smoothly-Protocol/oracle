@@ -95,10 +95,10 @@ export class Node {
         },
         connectionGater: {
           denyOutboundConnection: (peer: any) => {
-            return Peers.includes(peer.toString());
+            return !Peers.includes(peer.toString());
           },
           denyInboundConnection: (peer: any) => {
-            return Peers.includes(peer.toString());
+            return !Peers.includes(peer.toString());
           }
         },
         services: {
