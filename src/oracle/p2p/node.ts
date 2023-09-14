@@ -1,3 +1,4 @@
+//import { utils, Wallet } from 'ethers';
 import { createLibp2p } from 'libp2p';
 import { yamux } from '@chainsafe/libp2p-yamux'
 import { keys } from '@libp2p/crypto';
@@ -19,7 +20,7 @@ import { peerIdFromString } from '@libp2p/peer-id'
 import { pipe } from 'it-pipe'
 import { fromString as uint8ArrayFromString } from 'uint8arrays/from-string'
 import { toString as uint8ArrayToString } from 'uint8arrays/to-string'
-//import type { Peer } from './types';
+import { Peers } from '../../config';
 import { Peer } from "@libp2p/interface/peer-store/index";
 import type { PeerId } from '@libp2p/interface-peer-id'
 import type { Libp2p } from 'libp2p';
@@ -91,6 +92,14 @@ export class Node {
         ],
         connectionManager: {
           minConnections: 1
+        },
+        connectionGater: {
+          denyOutboundConnection: (peer: any) => {
+            return Peers.includes(peer.toString());
+          },
+          denyInboundConnection: (peer: any) => {
+            return Peers.includes(peer.toString());
+          }
         },
         services: {
           pubsub: gossipsub({ allowPublishToZeroPeers: true }),

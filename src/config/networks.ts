@@ -1,5 +1,12 @@
 import { NetInfo } from "../types";
 
+export const Peers = [
+  "16Uiu2HAmPh1zstkuEATAxZVR9hQLfvh6E9RgSuX1AnpJWQXyzfXu",
+  "16Uiu2HAkvyHWXj9caLxEPc2JbTWmapXqHpimTP4oqYZvSSoCAJtJ",
+  "16Uiu2HAmR7AXaAmkikrGo4W6iYJSNseC1PEdMJ3LEyw4cU57283c",
+  "16Uiu2HAmTAKstCuxMozUFcmXoTJHpUrcM3YJxV4uNVntYBPNBZjo"
+];
+
 export const GOERLI: NetInfo = {
   rpc: "https://eth-goerli.g.alchemy.com/v2/V_A06Ohwm0CcD11zULvNA1-rCY8xnHT8",
   pool: "0x2bE68B8Fd9E7941378CA81dF120F2F7eBb7c0Cf6",
