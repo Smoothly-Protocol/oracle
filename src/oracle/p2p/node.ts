@@ -94,12 +94,12 @@ export class Node {
           minConnections: 1
         },
         connectionGater: {
-          denyOutboundConnection: (peer: any) => {
-            return !Peers.includes(peer.toString());
+          denyOutboundConnection: (peerId: PeerId, maConn: any) => {
+		return !Peers.includes(peerId.toString());
           },
-          denyInboundConnection: (peer: any) => {
-            return !Peers.includes(peer.toString());
-          }
+	  denyInboundEncryptedConnection: (peerId: PeerId, maConn: any) => {
+		return !Peers.includes(peerId.toString());
+	  }
         },
         services: {
           pubsub: gossipsub({ allowPublishToZeroPeers: true }),
