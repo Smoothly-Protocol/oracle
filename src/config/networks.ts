@@ -5,7 +5,8 @@ export const Peers = [
   "16Uiu2HAkvyHWXj9caLxEPc2JbTWmapXqHpimTP4oqYZvSSoCAJtJ",
   "16Uiu2HAmR7AXaAmkikrGo4W6iYJSNseC1PEdMJ3LEyw4cU57283c",
   "16Uiu2HAmTAKstCuxMozUFcmXoTJHpUrcM3YJxV4uNVntYBPNBZjo",
-  "16Uiu2HAmAm1SD5s9tJpFwxj5uTEiSpbYG1QqCqFRH49q3xWFS1H6"
+  "16Uiu2HAmAm1SD5s9tJpFwxj5uTEiSpbYG1QqCqFRH49q3xWFS1H6",
+  "16Uiu2HAkvU861aiRsknGdppTv5PVqLjui4RYCGopMCn7corbJ75R"
 ];
 
 export const GOERLI: NetInfo = {
