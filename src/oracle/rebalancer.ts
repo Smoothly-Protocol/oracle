@@ -4,7 +4,7 @@ import { homedir } from 'os';
 import { Contract, utils, BigNumber } from "ethers";
 import { StandardMerkleTree } from "@openzeppelin/merkle-tree";
 import { Validator, TrieRebalance } from "../types";
-import { MISS_FEE, SLASH_FEE, FEE, STAKE_FEE } from "../utils";
+import { MISS_FEE, SLASH_FEE, FEE, STAKE_FEE, logger } from "../utils";
 import { DEFAULTS } from '../config';
 import { Oracle } from "./oracle";
 import { DB } from "../db";
@@ -26,17 +26,18 @@ export async function Rebalancer (oracle: Oracle, data: any) {
 
     const [withdrawalsRoot, exitsRoot] = await generateTrees(db);
 
-    console.log("tRewards:", utils.formatEther(tRewards));
-    console.log("tStake:", utils.formatEther(tStake));
-    console.log("Included Validators:", includedValidators.length);
-    console.log("Rewards distributed this period:", utils.formatEther(total));
-    console.log("Operator Fee:", utils.formatEther(fee));
+    logger.debug(`total_rewards=${utils.formatEther(tRewards)} - total_stake=${utils.formatEther(tStake)}`);
+    logger.info(`
+      rewards_distributed=${utils.formatEther(total)} - 
+      included_validators=${includedValidators.length} - 
+      operator_fee=${utils.formatEther(fee)}
+    `);
 
     // Propose Epoch to governance contract  
     const epochData = [withdrawalsRoot, exitsRoot, db.root(), fee];
     proposeEpoch(epochData, oracle, data.priority);
   } catch(err) {
-    console.log(err);
+    logger.error(err);
   }
 }
 
@@ -51,17 +52,17 @@ export async function proposeEpoch(epochData: any, oracle: Oracle, priority: num
     const tx = await contract.connect(oracle.signer).proposeEpoch(epochData, {gasLimit: 300000});
     await tx.wait();
 
-    console.log("Vote proposed with root:", epochData[2].toString('hex'));
+    logger.info(`Vote proposed - root=${epochData[2].toString('hex')}`);
   } catch(err: any) {
     // EpochTimelockNotReached() selector error
     if(err.toString().includes('0xa6339a86')) {
-      console.log("Transaction reverted: Other nodes already reached consensus");
+      logger.info("Transaction reverted: Other nodes already reached consensus");
     } else if(err.toString().includes('0x82b42900')){
       // Unauthorized() selector error
-      console.log("Warning: Unauthorized address to propose vote");
+      logger.warn("Unauthorized address to propose vote");
     } else {
-      console.log("Error: proposing epoch, trying again...")
-      console.log("Warning: make sure your address is funded")
+      logger.error("Proposing epoch, trying again...")
+      logger.warn("Please, make sure your address is funded")
       proposeEpoch(epochData, oracle, priority);
     }
   }
@@ -86,7 +87,7 @@ export async function processRebalance(db: DB): Promise<TrieRebalance> {
     for(let validator of validators) {
       if(validator.slashFee !== 0 || validator.slashMiss !== 0) {
         validator = await slashValidator(validator, db);
-        console.log(`Validator ${validator.index} excluded`);
+        logger.info(`Excluded - validator_index=${validator.index}`);
       } else if(validator.active && !validator.excludeRebalance) {
         if(BigNumber.from(validator.stake).eq(SLASH_FEE)) {
           includedValidators.push(validator);
@@ -94,7 +95,7 @@ export async function processRebalance(db: DB): Promise<TrieRebalance> {
       }
 
       if(validator.excludeRebalance) {
-        console.log(`Validator ${validator.index} excluded`);
+        logger.info(`Excluded - validator_index=${validator.index}`);
       }
 
       tRewards = tRewards.add(validator.rewards);
@@ -114,7 +115,7 @@ async function slashValidator(validator: Validator, db: DB): Promise<Validator> 
   if(!validator.firstBlockProposed) {
     // Zero out validator
     validator.rewards = BigNumber.from("0");
-    console.log(`Validator ${validator.index} zeroed out`);
+    logger.info(`Zero out - validator_index=${validator.index}`);
   } else {
     // Skip first missed proposal only for active users
     if(validator.firstMissedSlot) {
@@ -148,7 +149,7 @@ async function slashValidator(validator: Validator, db: DB): Promise<Validator> 
       validator.active = false;
     } 
     validator.stake = validator.stake.sub(tFees);
-    console.log(`Validator ${validator.index} slashed: ${utils.formatEther(tFees)}`);
+    logger.info(`Slashed - validator_index=${validator.index} - amount=${utils.formatEther(tFees)}`);
   }
 
   // Update db
@@ -217,7 +218,7 @@ export async function fundUsers(includedValidators: Validator[], total: BigNumbe
     for(let validator of includedValidators) {
       validator.rewards = BigNumber.from(validator.rewards).add(validatorShare);
       await db.insert(validator.index, validator);
-      console.log(`Funded ${validator.index} with ${utils.formatEther(validatorShare)}`); 
+      logger.info(`Funded - validator_index=${validator.index} - amount=${utils.formatEther(validatorShare)}`); 
     }
     return _fee;
   } catch (err: any) {

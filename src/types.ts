@@ -28,9 +28,11 @@ export interface Head {
 
 export interface NetInfo {
   rpc: string,
+  rpcBu: string[],
   pool: string, 
   governance: string, 
   beacon: string,
+  beaconBu: string[],
   beaconchainApi: string,
   relays: string[],
   bootstrapers: string[],

@@ -1,7 +1,7 @@
 import { BigNumber } from "ethers";
 import { Oracle } from '../oracle';
 import { Validator } from "../../types";
-import { STAKE_FEE } from "../../utils/constants";
+import { STAKE_FEE, logger } from "../../utils";
 
 export function StakeAdded(oracle: Oracle) {
   const contract = oracle.contract;
@@ -30,6 +30,9 @@ export async function validateAddedStake(
       validator.stake = updateStake;
     }
     await oracle.db.insert(index, validator); 
-  } 
+    logger.info(`Added stake - validator_index=${index} address=${sender}`);
+  } else {
+    logger.info(`Added stake not valid - validator_index=${index} address=${sender}`);
+  }
 }
 

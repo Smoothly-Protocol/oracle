@@ -1,7 +1,7 @@
 import { providers, Contract, utils, BigNumber } from "ethers";
 import { ValidatorInfo, Validator } from "../../types";
 import { Oracle } from '../oracle';
-import { STAKE_FEE } from "../../utils";
+import { STAKE_FEE, logger } from "../../utils";
 
 export function Registered(oracle: Oracle): void {
   const contract = oracle.contract;
@@ -50,26 +50,24 @@ export async function verifyValidator(
             deactivated: false
           };
           await oracle.db.insert(index, newUser);
-          console.log(`Successfully created user: with validator ${index} for ${eth1Addr}`)
+          logger.info(`Registration Successfull - validator_index=${index} address=${eth1Addr}`)
         } else if(validator.deactivated) {
-          console.log(`Validator Deactivated: with validator ${index} for ${eth1Addr}`)
+          logger.info(`Validator Deactivated - validator_index=${index} address=${eth1Addr}`)
         } else if(!validator.active) {
           validator.active = true;
           validator.stake = STAKE_FEE;
           validator.firstBlockProposed = false;
           await oracle.db.insert(index, validator);
-          console.log(`Welcome validator: with validator ${index} for ${eth1Addr}`)
+          logger.info(`Welcome back - validator_index=${index} address=${eth1Addr}`)
         } else if(validator.active) {
-          console.log(`Validator already registered: with validator ${index} for ${eth1Addr}`)
+          logger.info(`Validator already registered - validator_index=${index} address=${eth1Addr}`)
         }
       } else {
-        console.log(`Onowned User: with validator ${index} for ${eth1Addr}`);
+        logger.info(`Unowned User - validator_index=${index} address=${eth1Addr}`);
       }
   }
 	} else {
-		console.log("ERR: something went wrong on verifyValidator req call.");
-		console.log(" User:", eth1Addr);
-		console.log(" Response:", res);
+  logger.error(`Something went wrong on verifyValidator req call - address=${eth1Addr} res=${res}`);
 	}
 }
 

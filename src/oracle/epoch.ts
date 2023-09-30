@@ -14,13 +14,18 @@ import {
 } from "./events";
 import { Rebalancer } from "./rebalancer";
 import { uploadStateIPFS } from "./events/epoch";
+import { logger } from "../utils";
+
+const MAX_RETRYS = 5;
+let retries = 0;
+let eventEpoch: EventSource;
 
 export async function EpochListener(oracle: Oracle) {
-  const eth2 = new EventSource(`${oracle.network.beacon}/eth/v1/events?topics=finalized_checkpoint`);
+  eventEpoch = new EventSource(`${oracle.network.beacon}/eth/v1/events?topics=finalized_checkpoint`);
   let prevEpoch: number = 0;
   let lastRebalanceTimestamp: number = 0;
 
-  eth2.addEventListener('finalized_checkpoint', async (e)  => {
+  eventEpoch.addEventListener('finalized_checkpoint', async (e)  => {
     try {
       let lastSlot;
       let { epoch } = JSON.parse(e.data);	
@@ -38,7 +43,7 @@ export async function EpochListener(oracle: Oracle) {
           prevEpoch++;
         }
 
-        console.log("Processing epoch:", _epoch);
+        logger.info(`Processing epoch - epoch=${_epoch}`);
         lastSlot = await processEpoch(_epoch, false, oracle);
         
         if(!lastSlot) throw "Couldn't find lastSlot";
@@ -77,11 +82,11 @@ export async function EpochListener(oracle: Oracle) {
         } 
       }
     } catch(err: any) {
-      console.log(err);
+      logger.error(err);
     }
   });
 
-  console.log("Listening for new finalized_checkpoints");
+  logger.info("Listening for new finalized_checkpoints");
 }
 
 export async function processEpoch(
@@ -103,7 +108,7 @@ export async function processEpoch(
       throw `Checkpoint reached`;
     }
 
-    syncing ? console.log("Syncing epoch:", epoch) : 0;
+    syncing ? logger.info(`Syncing epoch - epoch=${epoch}`) : 0;
 
     // Fetch slots in parallel
     let promises: Promise<any>[] = [];
@@ -179,19 +184,17 @@ export async function processEpoch(
       const { root, peers, votes } = await oracle.p2p.startConsensus(_root, epoch);
 
       if(root === undefined) {
-        console.log("Warning: no votes provided on checkpoint"); 
+        logger.warn("no votes provided on checkpoint"); 
       } else if(root === null) {
-        console.log("Operators didn't reach 2/3 of consensus offline");
+        logger.warn("Operators didn't reach 2/3 of consensus offline");
         const data = existsHead()
         data ? await oracle.fullSync(Number(data.epoch) + 1) : 0;
       } else if(root === _root) {
         db.checkpoint(epoch);
-        console.log(`Consensus reached and node in sync with root: ${root}`); 
-        console.log(`Agreements: ${peers.length}/${votes.length}`);
+        logger.info(`Consensus reached and node in sync with root - root=${root} - agreements=${peers.length}/${votes.length}`); 
       } else {
-        console.log(`Consensus reached but node is not in sync with root: ${root}`); 
-        console.log(`Agreements: ${peers.length}/${votes.length}`);
-        console.log("Requesting sync from valid peers...");
+        logger.warn(`Consensus reached but node is not in sync with root - root=${root} - agreements: ${peers.length}/${votes.length}`); 
+        logger.info("Requesting sync from valid peers...");
         await oracle.p2p.requestSync(peers);
       } 
     } else if(syncing) {
@@ -203,8 +206,16 @@ export async function processEpoch(
     if(err == 'Checkpoint reached') {
       throw err;
     } else {
-      console.log("Network connection error: retrying epoch", epoch);
-      await setTimeout(1000);
+      if(retries >= MAX_RETRYS) {
+        retries = 0;
+        await oracle.switchToBackup();
+        eventEpoch.close();
+        EpochListener(oracle);
+      } else {
+        logger.error(`Network connection error - retrying epoch - epoch=${epoch}`);
+        await setTimeout(5000);
+        retries++;
+      }
       return await processEpoch(epoch, syncing, oracle);
     }
   }
@@ -227,7 +238,7 @@ async function voluntaryExits(data: any, db: DB) {
       validator.deactivated = true;
       validator.active = false;
       await db.insert(index, validator);
-      console.log("Voluntary exit: validator with index", index);
+      logger.info(`Voluntary exit - validator_index=${index}`);
     }
   }
 }
@@ -235,7 +246,7 @@ async function voluntaryExits(data: any, db: DB) {
 async function addMissedSlot(validator: Validator, db: DB) {
   validator.slashMiss += 1;
   await db.insert(validator.index, validator);
-  console.log(`Missed proposal: validator with index ${validator.index}`);
+  logger.info(`Missed proposal - validator_index=${validator.index}`);
 }
 
 async function validateSlot(
@@ -252,57 +263,69 @@ async function validateSlot(
      (block.transactions[block.transactions.length - 1].to.toLowerCase() != contract.address.toLowerCase())) 
     {
       validator.slashFee += 1;
-      console.log(`Proposed block with incorrect fee recipient: validator with index ${validator.index}`);
+      logger.info(`Proposed block with incorrect fee recipient - validator_index=${validator.index}`);
     } else { 
       // Activation
       if(!validator.firstBlockProposed) {
         validator.firstBlockProposed = true
-        console.log(`Activated: validator with index ${validator.index}`);
+        logger.info(`Activated - validator_index=${validator.index}`);
       } 
-      console.log(`Proposed block: validator with index ${validator.index}`);
+      logger.info(`Proposed block - validator_index=${validator.index}`);
     }
     await db.insert(validator.index, validator)
 }
 
 async function reqSlotInfo(slot: number, beacon: string): Promise<any> {
-  const url = `${beacon}/eth/v2/beacon/blocks/${slot}`;	
-  const headers = {
-    method: "GET",
-    headers: {
-      "Accept": "application/json",
-      "Content-Type": "application/json",
-    }
-  };
-  const req = await fetch(url, headers);
-  const res = await req.json();
-  return res.code === 404 ? undefined : res.data.message;
+  try {
+    const url = `${beacon}/eth/v2/beacon/blocks/${slot}`;	
+    const headers = {
+      method: "GET",
+      headers: {
+        "Accept": "application/json",
+        "Content-Type": "application/json",
+      }
+    };
+    const req = await fetch(url, headers);
+    const res = await req.json();
+    return res.code === 404 ? undefined : res.data.message;
+  } catch {
+    throw 'Beacon node not responding';
+  }
 }
 
-async function reqEpochSlots(epoch: number, beacon: string): Promise<any> {
-  const url = `${beacon}/eth/v1/validator/duties/proposer/${epoch}`;	
-  const headers = {
-    method: "GET",
-    headers: {
-      "Accept": "application/json",
-      "Content-Type": "application/json",
-    }
-  };
-  const req = await fetch(url, headers);
-  const res = await req.json();
-  return res;
+export async function reqEpochSlots(epoch: number, beacon: string): Promise<any> {
+  try {
+    const url = `${beacon}/eth/v1/validator/duties/proposer/${epoch}`;	
+    const headers = {
+      method: "GET",
+      headers: {
+        "Accept": "application/json",
+        "Content-Type": "application/json",
+      }
+    };
+    const req = await fetch(url, headers);
+    const res = await req.json();
+    return res;
+  } catch {
+    throw 'Beacon node not responding';
+  }
 }
 
 export async function reqEpochCheckpoint(beacon: string): Promise<any> {
-  const url = `${beacon}/eth/v1/beacon/states/head/finality_checkpoints`;	
-  const headers = {
-    method: "GET",
-    headers: {
-      "Accept": "application/json",
-      "Content-Type": "application/json",
-    }
-  };
-  const req = await fetch(url, headers);
-  const res = await req.json();
-  const epoch = res.data.finalized.epoch;
-  return epoch;
+  try {
+    const url = `${beacon}/eth/v1/beacon/states/head/finality_checkpoints`;	
+    const headers = {
+      method: "GET",
+      headers: {
+        "Accept": "application/json",
+        "Content-Type": "application/json",
+      }
+    };
+    const req = await fetch(url, headers);
+    const res = await req.json();
+    const epoch = res.data.finalized.epoch;
+    return epoch;
+  } catch {
+    throw 'Beacon node not responding';
+  }
 }

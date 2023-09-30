@@ -7,6 +7,7 @@ import {
   Checkpoint
 } from './routes';
 import { Oracle } from '../oracle';
+import { logger } from '../utils';
 
 export class API { 
   app: Application = express();
@@ -25,7 +26,7 @@ export class API {
     this.app.use(cors());
     this.configureRoutes();
     this.app.listen(port, () => {
-      console.log(`API started: running on port ${port}`);
+      logger.info(`HTTP API started - listening=127.0.0.1:${port}`);
     });
   }
 
