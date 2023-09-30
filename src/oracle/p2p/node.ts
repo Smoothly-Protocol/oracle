@@ -29,6 +29,7 @@ import { Validator } from '../../types';
 import { DB } from "../../db";
 import { Consensus } from "./consensus";
 import { pushable } from 'it-pushable';
+import { logger } from '../../utils';
 
 export class Node {
   bootstrapers: string[];
@@ -95,11 +96,11 @@ export class Node {
         },
         connectionGater: {
           denyOutboundConnection: (peerId: PeerId, maConn: any) => {
-		return !Peers.includes(peerId.toString());
+            return !Peers.includes(peerId.toString());
           },
-	  denyInboundEncryptedConnection: (peerId: PeerId, maConn: any) => {
-		return !Peers.includes(peerId.toString());
-	  }
+          denyInboundEncryptedConnection: (peerId: PeerId, maConn: any) => {
+            return !Peers.includes(peerId.toString());
+          }
         },
         services: {
           pubsub: gossipsub({ allowPublishToZeroPeers: true }),
@@ -129,22 +130,14 @@ export class Node {
       node.services.pubsub.subscribe('checkpoint')
       // Log established peer connections
       node.addEventListener('peer:connect', async (evt) => {
-        console.log(
-          "Established connection with peer:", 
-          evt.detail.toString(), 
-          "Total peers:", (await node.peerStore.all()).length
-        );
+        logger.info(`Established connection - peer=${evt.detail.toString()} total=${(await node.peerStore.all()).length}`);
         const conn = await node.dial(evt.detail)
         await node.services.identify.identify(conn);
       })
       // Establish connections on peer discovery 
       node.addEventListener('peer:discovery', async (evt) => {
         if(evt.detail.multiaddrs.length > 0) {
-          console.log(
-            "Discovered:",
-            evt.detail.id.toString(),
-            "Total peers:", (await node.peerStore.all()).length
-          );
+          logger.info(`Discovered - peer=${evt.detail.id.toString()} total=${(await node.peerStore.all()).length}`);
         }
       })
       // Manually delete peer to restore pubsub on restart 
@@ -158,12 +151,12 @@ export class Node {
         if(evt.detail.topic === `${node.peerId.toString()}`) {
           const data = Buffer.from(evt.detail.data).toString();
           if(data === 'sync') {
-            console.log(`Received sync request from: ${from}`);
+            logger.info(`Received sync request - peer=${from}`);
             this.dialPeerSync(from);
           }
         } else if(evt.detail.topic === 'checkpoint'){
           const { root, epoch } = JSON.parse(uint8ArrayToString(evt.detail.data));
-          console.log('checkpoint:', from, root, epoch);
+          logger.info(`Vote - peer=${from} root=${root} epoch=${epoch}`);
           this.consensus.addVote(from, root, epoch);
         }
       })
@@ -193,7 +186,7 @@ export class Node {
       await setTimeout(10000);
 
       node.getMultiaddrs().forEach((ma) => {
-        console.log('P2P listening on:', ma.toString())
+        logger.info(`P2P listening - multiaddress=${ma.toString()}`)
       })
 
       this.node = node;
@@ -211,14 +204,14 @@ export class Node {
         ? peers[Math.floor(Math.random() * peers.length)] 
         : await this._getRandomPeer();
 
-      console.log(`Requesting sync to: ${peerId.toString()}`)
+      logger.info(`Requesting sync - peer=${peerId.toString()}`)
 
       await node.services.pubsub.publish(
         peerId.toString(), 
         uint8ArrayFromString('sync'),
       );
     } catch(err: any) {
-      console.log(err);
+      logger.error(err);
     }
   }
 
@@ -241,7 +234,7 @@ export class Node {
       this.consensus.delete(epoch);
       return obj;
     } catch(err: any) {
-      console.log(err);
+      logger.error(err);
     }
   }
 
@@ -249,7 +242,7 @@ export class Node {
   async dialPeerSync(peer: PeerId) {
     try {
       const req = await fetch(`http://localhost:${this.httpPort}/checkpoint`);
-        const res = await req.json();
+      const res = await req.json();
 
       // Send data
       const stream = await this.node.dialProtocol(peer, ['/sync:peer'])
@@ -261,7 +254,7 @@ export class Node {
       // Graceful close
       stream.close()
     } catch(err: any) {
-      console.log(err);
+      logger.error(err);
     }
   }
 
@@ -295,7 +288,7 @@ export class Node {
         );
         await this.node.dial(peerId);
       } catch {
-        console.log("Warning: Bootsraper node not reachable");
+        logger.warn("Bootsraper node not reachable");
       }
     }
   }
@@ -304,7 +297,7 @@ export class Node {
     const maxTimeout = 30000;
     let count = 0;
 
-    console.log("Waiting for peers...");
+    logger.info("Waiting for peers...");
 
     const peers = await this.node.peerStore.all();
     while(peers.length === 0 && count < maxTimeout) {

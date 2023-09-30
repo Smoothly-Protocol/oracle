@@ -2,7 +2,7 @@ import fs from "fs";
 import * as path from 'path';
 import { Oracle } from '../oracle';
 import { generateTrees } from '../rebalancer';
-import { getFile } from '../../utils';
+import { getFile, logger } from '../../utils';
 
 export function Rebalance(oracle: Oracle): void {
   const contract = oracle.contract;
@@ -50,9 +50,9 @@ export async function uploadStateIPFS(oracle: Oracle, epoch: number, root: strin
     state['parentHash'] = parentCID;
     state['epoch'] = epoch;
     const reciept3 = await pinata.pinJSONToIPFS(state, opts);
-    console.log(`State updated to IPFS with CID: ${reciept3.IpfsHash}`);
+    logger.info(`State updated to IPFS - CID=${reciept3.IpfsHash}`);
   } catch(err: any) {
-    console.log(err);
+    logger.error(err);
   }
 }
 

@@ -3,7 +3,7 @@
 import { Oracle } from './oracle';
 import { API } from './api';
 import { Command } from 'commander';
-import { EMPTY_ROOT, existsHead } from './utils';
+import { EMPTY_ROOT, existsHead, logger } from './utils';
 
 const program = new Command();
 
@@ -16,8 +16,8 @@ program
 .option('-n, --network <value>', 'Select network [goerli, mainnet]', 'goerli')
 .option('-s, --sync <url>', 'Select checkpoint to sync from')
 .option('-p, --http-api <port>', 'Port for http api [default: 4040]', '4040')
-.option('-b, --beacon <url>', 'Add custom beacon node')
-.option('-eth1, --eth1 <url>', 'Add custom eth1 rpc endpoint')
+.option('-b, --beacon <separetd comma urls>', 'Add custom beacon node')
+.option('-eth1, --eth1 <separated comma urls>', 'Add custom eth1 rpc endpoint')
 .option('-pinata, --pinataJWT <JWT-token>', 'Pinata JWT token to push state files to ipfs')
 .option('-nat, --autoNAT', 'Specify if NAT Traversal is needed [default: activated]', true)
 .option('-server, --DHTServer', 'Use with Bootsraper node DHT Server config [default: deactivated]', false)
@@ -31,6 +31,14 @@ const opts = program.opts();
 
 async function main(): Promise<void> {
   try {
+    opts.eth1 = opts.eth1 
+      ? opts.eth1.split(",").map((e: string) => e.trim())
+      : [];
+
+    opts.beacon = opts.beacon 
+      ? opts.beacon.split(",").map((e: string) => e.trim())
+      : [];
+
     const checkpoint = opts.sync;
     const port = Number(opts.httpApi);
 
@@ -52,13 +60,13 @@ async function main(): Promise<void> {
     if(err.message === 'Sync failed, make sure checkpoint is active') {
       throw err;
     }
-    console.error(err);
+    logger.error(err);
   }
 }
 
 main()
 .catch(error => {
-  console.error(error);
+  logger.error(error);
   process.exit(1);
 });
 

@@ -17,6 +17,7 @@ import {
 } from './events';
 import { Node } from './p2p';
 import type { Libp2p } from 'libp2p';
+import { logger } from '../utils';
 
 export class Oracle extends Config {
   db: DB;  
@@ -48,10 +49,10 @@ export class Oracle extends Config {
 
     // Sync from checkpoint if provided
     if(checkpoint) {
-      console.log("Syncing from checkpoint node...");
+      logger.info(`Syncing from checkpoint node - url=${checkpoint}`);
       await this.sync(checkpoint);
     } else if(hasRoot) {
-      console.log("Syncing from last root known:", _root);
+      logger.info(`Syncing from last root known - root=${_root}` );
       await this.fullSync(epoch);
     } else {
       await this.p2p.requestSync();
@@ -74,7 +75,7 @@ export class Oracle extends Config {
         await this.db.insert(validator.index, validator);
       }
     } catch (err: any) {
-      console.log(err);
+      logger.error(err);
       throw new Error("Sync failed, make sure checkpoint is active");
     }
   }
@@ -85,7 +86,7 @@ export class Oracle extends Config {
         await this.db.insert(validator.index, validator);
       }
     } catch (err: any) {
-      console.log(err);
+      logger.error(err);
       throw new Error("Sync failed, make sure checkpoint is active");
     }
   }
@@ -97,7 +98,7 @@ export class Oracle extends Config {
       await processEpoch(current, true, this);
       return this.fullSync(current + 1);
     } catch(err: any) {
-      console.log(err);
+      logger.info(err);
       return 0;
     }
   }

@@ -1,5 +1,6 @@
 import { Oracle } from "./oracle";
 import { Validator } from "../types";
+import { logger } from "../utils";
 
 const headers = {
   method: "GET",
@@ -26,7 +27,7 @@ export async function MonitorRelays(oracle: Oracle): Promise<void> {
       .on('end', fulfilled);
     });
 
-    console.log("Starting Daily relay Monitoring, this might take a while...");
+    logger.info("Starting Daily relay Monitoring, this might take a while...");
 
     for(let validator of validators) {
       let ltsTimestamp: number = 0;
@@ -40,7 +41,7 @@ export async function MonitorRelays(oracle: Oracle): Promise<void> {
         if(res.code === 400) {
           nonRegistered ++;
         } else if(res.code === 500) {
-          console.log(relay, "down, due to internal error");
+          logger.error(`Relay down - relay=${relay} - status=${500}`);
         } else if(res.message) {
           const { fee_recipient, timestamp } = res.message; 
           const t = Number(timestamp);
@@ -59,14 +60,14 @@ export async function MonitorRelays(oracle: Oracle): Promise<void> {
       
       if(nonRegistered === relays.length) {
           validator.excludeRebalance = true; 
-          console.log(`Validator ${validator.index} not registered in any relays`);
+          logger.info(`Validator not registered in any relays - validator_index=${validator.index} `);
       }
 
       // Update
       await db.insert(validator.index, validator);
     }
   } catch(err: any) {
-    console.log(err);
+    logger.error(err);
   }
 }
 
@@ -87,7 +88,7 @@ async function reqRelayRegistration(relay: string, pubkey: string): Promise<any>
     const res = await req.json();
     return res;
   } catch(err: any) {
-    console.log(err);
+    logger.error(err);
   }
 }
 

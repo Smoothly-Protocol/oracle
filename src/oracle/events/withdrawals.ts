@@ -1,6 +1,7 @@
 import { BigNumber, utils } from "ethers";
 import { Oracle } from '../oracle';
 import { Validator } from "../../types";
+import { logger } from "../../utils";
 
 export function StakeWithdrawal(oracle: Oracle) {
   const contract = oracle.contract;
@@ -35,7 +36,7 @@ export async function validateWithdrawalRewards(
       await oracle.db.insert(index, validator); 
     } 
   }
-  console.log(`${sender} withdrawal for ${utils.formatEther(value)}`);
+  logger.info(`Rewards Withdrawal - validator_indexes=${indexes} address=${sender} amount=${utils.formatEther(value)}`);
 }
 
 export async function validateWithdrawalStake(
@@ -57,6 +58,6 @@ export async function validateWithdrawalStake(
       await oracle.db.insert(index, validator); 
     } 
   }
-  console.log(`${sender} exited validators: ${indexes}`);
+  logger.info(`Exit - validator_indexes=${indexes} address=${sender}`);
 }
 

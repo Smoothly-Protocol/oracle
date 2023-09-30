@@ -1,5 +1,6 @@
 import { Oracle } from '../oracle';
 import { Validator } from "../../types";
+import { logger } from "../../utils";
 
 export function ExitRequested(oracle: Oracle) {
   const contract = oracle.contract;
@@ -24,6 +25,6 @@ export async function validateExitRequest(
       await oracle.db.insert(index, validator); 
     } 
   }
-  console.log(`Exit request from: ${sender} with ${indexes}`);
+  logger.info(`Exit request - address=${sender} - validator_indexes=${indexes}`);
 }
 

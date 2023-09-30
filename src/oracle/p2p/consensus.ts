@@ -1,5 +1,6 @@
 import type { Vote } from './types';
 import type { PeerId } from '@libp2p/interface-peer-id';
+import { logger } from '../../utils';
 
 const VOTING_RATIO: number = 66;
 
@@ -58,7 +59,7 @@ export class Consensus {
       if(err == 'Warn: no votes provided to consensus') {
         return { root: undefined, peers: undefined, votes: undefined };
       } else {
-        console.log(err);
+        logger.error(err);
       }
     }
   }

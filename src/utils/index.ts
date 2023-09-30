@@ -6,3 +6,4 @@ export {
   EMPTY_ROOT
 } from "./constants";
 export { filterLogs, existsHead, getFile } from "./helpers";
+export { logger } from './logger';
