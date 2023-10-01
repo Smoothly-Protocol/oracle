@@ -69,7 +69,7 @@ export class Config {
       this.signer
     );
 
-    this._isEth1Alive(this.network.rpc);
+    this._isEth1Alive(this.network.rpc, true);
   }
 
   async getRoot(): Promise<string> {
@@ -97,9 +97,9 @@ export class Config {
     }
   }
 
-  async switchToBackup(): Promise<void> {
+  async switchToBackup(logs: boolean = true): Promise<boolean> {
     try {
-      await this._isEth1Alive(this.network.rpc);
+      await this._isEth1Alive(this.network.rpc, logs);
     } catch {
       const rpc = this.network.rpc;
       this.network.rpc = this.network.rpcBu[0] 
@@ -109,14 +109,16 @@ export class Config {
     }
 
     try {
-      await this._isBeaconAlive(this.network.beacon);
+      await this._isBeaconAlive(this.network.beacon, logs);
     } catch {
       const beacon = this.network.beacon;
       this.network.beacon = this.network.beaconBu[0] 
       this.network.beaconBu.shift();
       this.network.beaconBu.push(beacon)
       logger.warn(`Switched to Backup Beacon node - url=${this.network.beacon}`);
+      return true;
     }
+    return false;
   }
 
   private async _setupCL(nodes: string[]): Promise<void> {
@@ -127,7 +129,7 @@ export class Config {
       this.network.beacon = this.network.beaconBu[0];
     }
 
-    this._isBeaconAlive(this.network.beacon);
+    this._isBeaconAlive(this.network.beacon, true);
   }
 
   private async _setupEL(rpcs: string[]): Promise<void> {
@@ -139,23 +141,27 @@ export class Config {
     }
   }
 
-  private async _isEth1Alive(rpc: string): Promise<void> {
+  private async _isEth1Alive(rpc: string, logs: boolean): Promise<void> {
     try {
       await this.getRoot();
-      logger.info(`Eth1 node detected - url=${this.network.rpc}`);
+      if(logs) {
+        logger.info(`Eth1 node detected - url=${this.network.rpc}`);
+      }
     } catch { 
       throw new Error("Eth1 rpc endpoint not responding");
     }
   }
 
-  private async _isBeaconAlive(beacon: string): Promise<void> {
+  private async _isBeaconAlive(beacon: string, logs: boolean): Promise<void> {
     try {
       const epoch = await reqEpochCheckpoint(beacon); 
       const res = await reqEpochSlots(epoch, beacon);
       if(res.code || res.statusCode) {
         throw res.message;
       }
-      logger.info(`Beacon node detected - url=${beacon}`);
+      if(logs) {
+        logger.info(`Beacon node detected - url=${beacon}`);
+      }
     } catch (err: any){
       throw new Error(`Beacon node is not responding - err=${err}`);
     }

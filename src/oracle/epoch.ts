@@ -21,76 +21,77 @@ let retries = 0;
 let eventEpoch: EventSource;
 
 export async function EpochListener(oracle: Oracle) {
-  try {
     eventEpoch = new EventSource(`${oracle.network.beacon}/eth/v1/events?topics=finalized_checkpoint`);
     let prevEpoch: number = 0;
     let lastRebalanceTimestamp: number = 0;
 
     eventEpoch.addEventListener('finalized_checkpoint', async (e)  => {
-      let lastSlot;
-      let { epoch } = JSON.parse(e.data);	
-      epoch = Number(epoch);
+      try {
+        let lastSlot;
+        let { epoch } = JSON.parse(e.data);	
+        epoch = Number(epoch);
 
-      // Process epochs including skipped ones
-      while(prevEpoch < epoch) {
-        let _epoch: number;  
+        // Process epochs including skipped ones
+        while(prevEpoch < epoch) {
+          let _epoch: number;  
 
-        if(prevEpoch === 0 || (prevEpoch + 1) === epoch) {
-          prevEpoch = epoch;
-          _epoch = epoch;
-        } else {
-          _epoch = prevEpoch + 1;
-          prevEpoch++;
+          if(prevEpoch === 0 || (prevEpoch + 1) === epoch) {
+            prevEpoch = epoch;
+            _epoch = epoch;
+          } else {
+            _epoch = prevEpoch + 1;
+            prevEpoch++;
+          }
+
+          logger.info(`Processing epoch - epoch=${_epoch}`);
+          lastSlot = await processEpoch(_epoch, false, oracle);
+          
+          if(!lastSlot) throw "Couldn't find lastSlot";
+
+          // Check if rebalance is needed
+          const { timestamp, prev_randao, block_number} = lastSlot.body.execution_payload;
+          const contract = oracle.governance;
+          const lastEpoch = await contract.lastEpoch();
+          const epochInterval = await contract.epochInterval();
+          const operators = await contract.getOperators();
+          const timeLock = Number(lastEpoch) + Number(epochInterval);
+
+          // Check contract timelock
+          if(timeLock < timestamp) {
+            const epochNumber = await contract.epochNumber();
+            const voter = await oracle.signer.getAddress();
+            const vote = await contract.votes(epochNumber, voter);
+
+            // Process rebalance 
+            if(
+              vote[0] == 0 && 
+              Number(timestamp) > (lastRebalanceTimestamp + 3600) 
+            ) {
+              const random = Math.floor(
+                ((Number(prev_randao) % 100) / 100) * operators.length
+              );
+              const shuffle = operators.slice(random -1).concat(operators.slice(0, random -1));
+              const priority = shuffle.indexOf(voter);
+
+              priority !== -1 
+                ? Rebalancer(oracle, { block_number, priority })
+                : 0;
+
+              lastRebalanceTimestamp = Number(timestamp);
+            }
+          } 
         }
 
-        logger.info(`Processing epoch - epoch=${_epoch}`);
-        lastSlot = await processEpoch(_epoch, false, oracle);
-        
-        if(!lastSlot) throw "Couldn't find lastSlot";
+        checkConnectivity(oracle);
 
-        // Check if rebalance is needed
-        const { timestamp, prev_randao, block_number} = lastSlot.body.execution_payload;
-        const contract = oracle.governance;
-        const lastEpoch = await contract.lastEpoch();
-        const epochInterval = await contract.epochInterval();
-        const operators = await contract.getOperators();
-        const timeLock = Number(lastEpoch) + Number(epochInterval);
-
-        // Check contract timelock
-        if(timeLock < timestamp) {
-          const epochNumber = await contract.epochNumber();
-          const voter = await oracle.signer.getAddress();
-          const vote = await contract.votes(epochNumber, voter);
-
-          // Process rebalance 
-          if(
-            vote[0] == 0 && 
-            Number(timestamp) > (lastRebalanceTimestamp + 3600) 
-          ) {
-            const random = Math.floor(
-              ((Number(prev_randao) % 100) / 100) * operators.length
-            );
-            const shuffle = operators.slice(random -1).concat(operators.slice(0, random -1));
-            const priority = shuffle.indexOf(voter);
-
-            priority !== -1 
-              ? Rebalancer(oracle, { block_number, priority })
-              : 0;
-
-            lastRebalanceTimestamp = Number(timestamp);
-          }
-        } 
+      } catch(err:any) {
+        logger.error(err);
       }
     });
 
     logger.info("Listening for new finalized_checkpoints");
-  } catch(err: any) {
-    logger.error('Beacon node endpoint disconected');
-    await oracle.switchToBackup();
-    eventEpoch.close();
-    EpochListener(oracle);
-  }
 }
+
 
 export async function processEpoch(
   epoch: number, 
@@ -221,6 +222,20 @@ export async function processEpoch(
       }
       return await processEpoch(epoch, syncing, oracle);
     }
+  }
+}
+
+async function checkConnectivity(oracle: Oracle) {
+  try { 
+  const delay = 60000 * 7;
+  await setTimeout(delay);
+  const switched = await oracle.switchToBackup(false);
+  if(switched) {
+    eventEpoch.close();
+    EpochListener(oracle);
+  }
+  } catch(err: any) {
+    logger.error(err);
   }
 }
 
