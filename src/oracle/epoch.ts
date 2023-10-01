@@ -21,12 +21,12 @@ let retries = 0;
 let eventEpoch: EventSource;
 
 export async function EpochListener(oracle: Oracle) {
-  eventEpoch = new EventSource(`${oracle.network.beacon}/eth/v1/events?topics=finalized_checkpoint`);
-  let prevEpoch: number = 0;
-  let lastRebalanceTimestamp: number = 0;
+  try {
+    eventEpoch = new EventSource(`${oracle.network.beacon}/eth/v1/events?topics=finalized_checkpoint`);
+    let prevEpoch: number = 0;
+    let lastRebalanceTimestamp: number = 0;
 
-  eventEpoch.addEventListener('finalized_checkpoint', async (e)  => {
-    try {
+    eventEpoch.addEventListener('finalized_checkpoint', async (e)  => {
       let lastSlot;
       let { epoch } = JSON.parse(e.data);	
       epoch = Number(epoch);
@@ -81,12 +81,15 @@ export async function EpochListener(oracle: Oracle) {
           }
         } 
       }
-    } catch(err: any) {
-      logger.error(err);
-    }
-  });
+    });
 
-  logger.info("Listening for new finalized_checkpoints");
+    logger.info("Listening for new finalized_checkpoints");
+  } catch(err: any) {
+    logger.error('Beacon node endpoint disconected');
+    await oracle.switchToBackup();
+    eventEpoch.close();
+    EpochListener(oracle);
+  }
 }
 
 export async function processEpoch(
