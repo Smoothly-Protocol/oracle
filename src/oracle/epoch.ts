@@ -19,11 +19,11 @@ import { logger } from "../utils";
 const MAX_RETRYS = 5;
 let retries = 0;
 let eventEpoch: EventSource;
+let prevEpoch: number = 0;
+let lastRebalanceTimestamp: number = 0;
 
 export async function EpochListener(oracle: Oracle) {
     eventEpoch = new EventSource(`${oracle.network.beacon}/eth/v1/events?topics=finalized_checkpoint`);
-    let prevEpoch: number = 0;
-    let lastRebalanceTimestamp: number = 0;
 
     eventEpoch.addEventListener('finalized_checkpoint', async (e)  => {
       try {
@@ -227,7 +227,7 @@ export async function processEpoch(
 
 async function checkConnectivity(oracle: Oracle) {
   try { 
-  const delay = 60000 * 7;
+  const delay = 60000 * 15;
   await setTimeout(delay);
   const switched = await oracle.switchToBackup(false);
   if(switched) {
