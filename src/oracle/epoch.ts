@@ -212,11 +212,13 @@ export async function processEpoch(
     } else {
       if(retries >= MAX_RETRYS) {
         retries = 0;
-        await oracle.switchToBackup();
-        eventEpoch.close();
-        EpochListener(oracle);
+        const switched = await oracle.switchToBackup();
+        if(switched) {
+          eventEpoch.close();
+          EpochListener(oracle);
+        }
       } else {
-        logger.error(`Network connection error - retrying epoch - epoch=${epoch}`);
+        logger.error(`Network connection error - retrying epoch - epoch=${epoch} - err=${err}`);
         await setTimeout(5000);
         retries++;
       }

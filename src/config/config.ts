@@ -4,7 +4,7 @@ import {
   Contract, 
   Wallet, 
   ContractFactory,
-  BigNumber 
+  BigNumber,
 } from "ethers"; 
 import { 
   GOERLI,
@@ -51,24 +51,12 @@ export class Config {
 
     // Setup EL 
     this._setupEL(opts.eth1);
+
+    const { _signer, _contract, _governance } = this._initEL(_pk); 
+    this.signer = _signer;
+    this.contract = _contract;
+    this.governance = _governance;
     
-    // Signer
-    this.signer = this.validateWallet(_pk);
-
-    // Smoothly Pool 
-    this.contract = new Contract(
-      this.network.pool,
-      pool["abi"],
-      this.signer
-    );
-
-    // Governance 
-    this.governance = new Contract(
-      this.network.governance,
-      governance["abi"],
-      this.signer
-    );
-
     this._isEth1Alive(this.network.rpc, true);
   }
 
@@ -105,6 +93,12 @@ export class Config {
       this.network.rpc = this.network.rpcBu[0] 
       this.network.rpcBu.shift();
       this.network.rpcBu.push(rpc);
+      
+      const { _signer, _contract, _governance } = this._initEL(this.signer.privateKey); 
+      this.signer = _signer;
+      this.contract = _contract;
+      this.governance = _governance;
+
       logger.warn(`Switched to Backup Eth1 rpc - url=${this.network.rpc}`);
     }
 
@@ -121,7 +115,7 @@ export class Config {
     return false;
   }
 
-  private async _setupCL(nodes: string[]): Promise<void> {
+  private _setupCL(nodes: string[]): void {
     if(nodes.length > 0) {
       this.network.beacon = nodes[0];
       this.network.beaconBu = nodes.slice(1).concat(this.network.beaconBu);
@@ -132,13 +126,36 @@ export class Config {
     this._isBeaconAlive(this.network.beacon, true);
   }
 
-  private async _setupEL(rpcs: string[]): Promise<void> {
+  private _setupEL(rpcs: string[]): void {
     if(rpcs.length > 0) {
       this.network.rpc = rpcs[0];
       this.network.rpcBu = rpcs.slice(1).concat(this.network.rpcBu);
     } else {
       this.network.rpc = this.network.rpcBu[0];
     }
+  }
+
+  private  _initEL(pk: string)
+    : {_signer: Wallet, _contract: Contract, _governance: Contract} 
+  {
+    // Signer
+    const _signer: Wallet = this.validateWallet(pk);
+
+    // Smoothly Pool 
+    const _contract: Contract = new Contract(
+      this.network.pool,
+      pool["abi"],
+      _signer 
+    );
+
+    // Governance 
+    const _governance: Contract = new Contract(
+      this.network.governance,
+      governance["abi"],
+      _signer
+    );
+
+    return { _signer, _contract, _governance};
   }
 
   private async _isEth1Alive(rpc: string, logs: boolean): Promise<void> {
