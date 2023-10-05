@@ -229,7 +229,7 @@ export async function processEpoch(
 
 async function checkConnectivity(oracle: Oracle) {
   try { 
-  const delay = 60000 * 10;
+  const delay = 60000 * 15;
   await setTimeout(delay);
   logger.info("connectivity_check"):
   const switched = await oracle.switchToBackup(false);
