@@ -173,7 +173,6 @@ export class Config {
     try {
       const epoch = await reqEpochCheckpoint(beacon); 
       const res = await reqEpochSlots(epoch, beacon);
-      console.log(res);
       if(res.code || res.statusCode) {
         throw res.message;
       }
