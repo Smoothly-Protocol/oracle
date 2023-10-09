@@ -5,7 +5,7 @@ import { delay } from "./utils";
 import { STAKE_FEE } from "../src/utils";
 import { Oracle } from '../src/oracle';
 import { Validator } from "../src/types";
-import { Registered } from "../src/oracle/events/registers";
+import { Registered, verifyValidator } from "../src/oracle/events/registers";
 import { homedir } from 'os';
 
 import * as dotenv from 'dotenv';
@@ -16,7 +16,7 @@ import * as path from 'path';
 
 // Load Environment variables
 dotenv.config({
-  path: path.resolve(homedir(), '../.env')
+  path: path.resolve('.env')
 });
 
 describe("Registers users event listener", () => {
@@ -27,14 +27,14 @@ describe("Registers users event listener", () => {
   let indexes: number[];
 
   if(
-    (process.env.ACC_WITH_VALIDATORS != undefined) && 
+    (process.env.PRIVATE_KEY_WITHDRAWAL != undefined) && 
     (process.env.VALIDATOR_INDEXES != undefined)
   ) {
-    pk = process.env.ACC_WITH_VALIDATORS;
+    pk = process.env.PRIVATE_KEY_WITHDRAWAL;
     indexes = JSON.parse(process.env.VALIDATOR_INDEXES)
       .map((e: string) => {return Number (e)});
   } else {
-    //throw new Error("Setup ACC_WITH_VALIDATORS and VALIDATOR_INDEXES in .env");
+    throw new Error("Setup ACC_WITH_VALIDATORS and VALIDATOR_INDEXES in .env");
   }
 
   before(async () => {
@@ -75,6 +75,7 @@ describe("Registers users event listener", () => {
     assert.equal(result1.index, validators[0])
     assert.equal(result2.index, validators[1])
   }).timeout(20000);
+
 
   it("shouldn't allow a user to doble register a validator --> look for log", async () => {
     // Tests based on prater state for simplicity

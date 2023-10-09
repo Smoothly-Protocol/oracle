@@ -44,9 +44,9 @@ export interface Defaults {
 }
 
 export interface ValidatorInfo {
-	publickey: string;
-	valid_signature: boolean;
-	validatorindex: number;	
+  publickey: string;
+  valid_signature?: boolean;
+  validatorindex: number;
 }
 
 export interface Proofs {

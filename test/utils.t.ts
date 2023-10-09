@@ -23,6 +23,7 @@ describe("Test utilities", () => {
   }).timeout(60000);
 
   it("generates peerId with linked to ethereum address", async () => {
+    /*
     let wallet = Wallet.createRandom();
     let hash = utils.keccak256("0x" + wallet.publicKey.substring(4)).substring(26);
     console.warn(hash);
@@ -30,7 +31,6 @@ describe("Test utilities", () => {
     const multihash = Digest.encode(utf8, 'keccak-256')
     const peer = peerIdFromBytes(multihash);
     //console.warn(peer);
-    /*
     let peer = await createFromJSON({
       id: peerIdFromBytes(multihash), 
       //privKey: wallet.privateKey.slice(2), 
