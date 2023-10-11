@@ -10,3 +10,8 @@ export interface Vote {
   id: PeerId;
   root: string;
 } 
+
+export interface libp2pAddresses {
+  listen: string[],
+  announce?: string[]
+}

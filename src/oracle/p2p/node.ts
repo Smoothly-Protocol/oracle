@@ -1,4 +1,3 @@
-//import { utils, Wallet } from 'ethers';
 import { createLibp2p } from 'libp2p';
 import { yamux } from '@chainsafe/libp2p-yamux'
 import { keys } from '@libp2p/crypto';
@@ -24,6 +23,7 @@ import { Peers } from '../../config';
 import { Peer } from "@libp2p/interface/peer-store/index";
 import type { PeerId } from '@libp2p/interface-peer-id'
 import type { Libp2p } from 'libp2p';
+import type { libp2pAddresses } from './types';
 import { setTimeout } from "timers/promises";
 import { Validator } from '../../types';
 import { DB } from "../../db";
@@ -69,19 +69,24 @@ export class Node {
 
   async createNode(): Promise<void> {
     try {
-      const a = {
-          listen: [`/ip4/127.0.0.1/tcp/${this.p2pPort}/ws`],
-          announce: [`/dns4/${this.announceDns}/tcp/443/wss/`]
-      }
-      const b = {
-            listen: [`/ip4/0.0.0.0/tcp/${this.p2pPort}/ws`],
+      const addresses: libp2pAddresses = {
+        listen: [`/ip4/0.0.0.0/tcp/${this.p2pPort}/ws`],
+      };
+
+      if(this.announceDns) {
+        addresses.listen = [`/ip4/127.0.0.1/tcp/${this.p2pPort}/ws`],
+        addresses.announce = [`/dns4/${this.announceDns}/tcp/443/wss/`]
+      } else if(this.announceIp) {
+        addresses.listen = [`/ip4/0.0.0.0/tcp/${this.p2pPort}/ws`],
+        addresses.announce = [`/ip4/${this.announceIp}/tcp/${this.p2pPort}/ws`]
       }
 
       let config = {
         peerId: await createFromPrivKey(this.keyPair),
-        addresses: this.announceDns ? a : b,
+        addresses: addresses,
         transports: [
-          webSockets()
+          webSockets(),
+          tcp(),
         ],
         streamMuxers: [
           yamux({
@@ -92,7 +97,7 @@ export class Node {
           noise()
         ],
         connectionManager: {
-          minConnections: 1
+          minConnections: 6
         },
         connectionGater: {
           denyOutboundConnection: (peerId: PeerId, maConn: any) => {
@@ -109,7 +114,7 @@ export class Node {
           nat: uPnPNATService({
             //description: 'my-node', // set as the port mapping description on the router, defaults the current libp2p version and your peer id
             //gateway: '192.168.1.1', // leave unset to auto-discover
-            externalAddress: this.announceIp, // leave unset to auto-discover
+            //externalAddress: this.announceIp, // leave unset to auto-discover
             //localAddress: '129.168.1.123', // leave unset to auto-discover
             ttl: 7200, // TTL for port mappings (min 20 minutes)
             keepAlive: true, // Refresh port mapping after TTL expires
@@ -128,6 +133,7 @@ export class Node {
       node.services.pubsub.subscribe(`${node.peerId.toString()}`)
       // Checkpoint check
       node.services.pubsub.subscribe('checkpoint')
+
       // Log established peer connections
       node.addEventListener('peer:connect', async (evt) => {
         logger.info(`Established connection - peer=${evt.detail.toString()} total=${(await node.peerStore.all()).length}`);
@@ -191,7 +197,7 @@ export class Node {
 
       this.node = node;
     } catch(err: any) {
-      console.log(err);
+      logger.error(err);
     }
   }
 
