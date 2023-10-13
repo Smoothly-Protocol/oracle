@@ -100,11 +100,15 @@ At this point, you're running the operator node! Please use the following flags 
 
 ```-b "http://localhost:3500,http://127.0.0.1:3500"```
 
--eth1 identifies which eth1 api to connect to (ex. for geth -eth1 http://localhost:8545) If you'd like to identfity an eth1 fallback node, use the same format:
+-eth1 identifies which eth1 api to connect to (ex. for geth -eth1 http://localhost:8545) If you'd like to identfity an eth1 fallback node, you may do so, comma separated and in "quotes":
 
 ```-eth1 "http://localhost:8545,http://127.0.0.1:8545"```
 
-If you're running at home, you're probably behind a router. Although you will be able to reach your peers, they will not be able to sync from you in the event they fall out of consensus. Please verify that upnp is enabled on your router, and use these additional flags to become reachable. 
+If you're running at home, you're probably behind a router. Although you will be able to reach your peers, they will not be able to sync from you in the event they fall out of consensus. Please verify that upnp is enabled on your router, and allow p2p connections with your oracle peers on port 5040. 
+
+```sudo ufw allow 5040```
+
+Then add these additional flags to become reachable. 
 
 ```-nat -ip <your_public_ip>```
 
