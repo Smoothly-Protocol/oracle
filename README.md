@@ -92,9 +92,21 @@ Start Smoothly, the expected response is below
 <p align="center"><img width="1000" title="response" src='assets/expected_response.jpg' /></a></p>
 
 ---
-At this point, you're running the operator node! There are additional flags that you can test:   
--b identifies which beacon node api to connect to (ex. for prysm -b http://localhost:3500) by default we're using a public nimbus api  
--eth1 identifies which eth1 api to connect to (ex. for geth -eth1 http://localhost:8545) by default we're using an alchemy endpoint
+## Additional Flags
+
+At this point, you're running the operator node! Please use the following flags to identify your EL and CL connections, and if you're behind a router, you'll need to announce your IP to be reachable for syncing. 
+
+-b identifies which beacon node api to connect to (ex. for prysm -b http://localhost:3500) If you'd like to identify a fall back node, you may do so, comma separated and in "quotes":  
+
+```-b "http://localhost:3500,http://127.0.0.1:3500"```
+
+-eth1 identifies which eth1 api to connect to (ex. for geth -eth1 http://localhost:8545) If you'd like to identfity an eth1 fallback node, use the same format:
+
+```-eth1 "http://localhost:8545,http://127.0.0.1:8545"```
+
+If you're running at home, you're probably behind a router. Although you will be able to reach your peers, they will not be able to sync from you in the event they fall out of consensus. Please verify that upnp is enabled on your router, and use these additional flags to become reachable. 
+
+```-nat -ip <your_public_ip>```
 
 ## Create a Systemd Service File
 ```
