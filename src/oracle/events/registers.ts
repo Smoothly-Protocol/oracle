@@ -18,26 +18,7 @@ export async function verifyValidator(
   oracle: Oracle 
 ) {
   try { 
-    const deposit = `${oracle.network.beaconchainApi}/api/v1/validator/eth1/${eth1Addr}`;
-    const withdrawal = `${oracle.network.beaconchainApi}/api/v1/validator/withdrawalCredentials/${eth1Addr}`;
-    const headers = {
-      method: "GET",
-      headers: {
-        "Accept": "application/json",
-        "Content-Type": "application/json"
-      }
-    }
-
-    let data: Array<ValidatorInfo> = [];
-    const validatorsDeposit = await(await fetch(deposit, headers)).json();
-    validatorsDeposit.status === "OK" 
-      ? data = data.concat(validatorsDeposit.data) 
-      : 0;
-
-    const validatorsWithdrawal = await(await fetch(withdrawal, headers)).json();
-    validatorsWithdrawal.status === "OK" 
-      ? data = data.concat(validatorsWithdrawal.data) 
-      : 0;
+    const data = await getValidators(eth1Addr, oracle);
 
     for(let id of indexes) {
       const { verified, index } = proofOwnership(eth1Addr, id, data);
@@ -100,3 +81,31 @@ function proofOwnership(
   return { verified, index };
 }
 
+export async function getValidators(eth1Addr: string, oracle: Oracle): Promise<Array<ValidatorInfo>> {
+  try {
+    const deposit = `${oracle.network.beaconchainApi}/api/v1/validator/eth1/${eth1Addr}`;
+    const withdrawal = `${oracle.network.beaconchainApi}/api/v1/validator/withdrawalCredentials/${eth1Addr}`;
+    const headers = {
+      method: "GET",
+      headers: {
+        "Accept": "application/json",
+        "Content-Type": "application/json"
+      }
+    }
+
+    let data: Array<ValidatorInfo> = [];
+    const validatorsDeposit = await(await fetch(deposit, headers)).json();
+    validatorsDeposit.status === "OK" 
+      ? data = data.concat(validatorsDeposit.data) 
+      : 0;
+
+    const validatorsWithdrawal = await(await fetch(withdrawal, headers)).json();
+    validatorsWithdrawal.status === "OK" 
+      ? data = data.concat(validatorsWithdrawal.data) 
+      : 0;
+
+    return data;
+  } catch(err: any) {
+    throw err;
+  }
+}
