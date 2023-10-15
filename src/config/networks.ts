@@ -12,8 +12,8 @@ export const Peers = [
 export const GOERLI: NetInfo = {
   rpc: "",
   rpcBu: ["https://eth-goerli.g.alchemy.com/v2/V_A06Ohwm0CcD11zULvNA1-rCY8xnHT8"],
-  pool: "0x2bE68B8Fd9E7941378CA81dF120F2F7eBb7c0Cf6",
-  governance: "0xCD98b998d6C3e5685dD46bc9F7f056A3E5dd8AF5",
+  pool: "0x894F0786cb41b1c1760E70d61cB2952749Da6382",
+  governance: "0xc27B0c392e97C07f97e6893ea50FA9cBa82DF7FC",
   beacon: "",
   beaconBu: ["http://unstable.prater.beacon-api.nimbus.team"],
   beaconchainApi: "https://goerli.beaconcha.in",
