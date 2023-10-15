@@ -161,7 +161,7 @@ export async function processEpoch(
             break;
             case 'Epoch':
               if(oracle.pinata) {
-              await uploadStateIPFS(oracle, Number(args[0]), args[3]); // TODO: args[3] becomes args[1]
+              await uploadStateIPFS(oracle, Number(args[0]), args[1]); 
             }
             break;
           }  
