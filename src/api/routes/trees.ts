@@ -6,7 +6,7 @@ import { Oracle } from '../../oracle';
 import { StandardMerkleTree } from "@openzeppelin/merkle-tree";
 
 export async function TreeRoutes(app: Application, oracle: Oracle) {
-  app.get('/tree/:name/:eth1Addr', async (req: Request, res: Response): Promise<void> => {
+  app.get('/tree/:name/:eth1Addr', async (req: Request, res: Response): Promise<any> => {
     try {
       const name: string = req.params.name;
       const eth1Addr: string = req.params.eth1Addr;
@@ -19,13 +19,13 @@ export async function TreeRoutes(app: Application, oracle: Oracle) {
       const tree = StandardMerkleTree.load(data);   
       for (const [i, v] of tree.entries()) {
         if (v[0] === eth1Addr.toLowerCase()) {
-          res.json({
+          return res.json({
             proof: [tree.getProof(i), v[1], v[2]]
           })
         }
       }
 
-      res.json({ proof: [] });
+      return res.json({ proof: [] });
     } catch {
       res.json({
         status: 404,
