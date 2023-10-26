@@ -20,7 +20,10 @@ export const GOERLI: NetInfo = {
   relays: [
     "https://boost-relay-goerli.flashbots.net",
     "https://relay-stag.ultrasound.money",
-    "https://goerli.aestus.live"
+    "https://goerli.aestus.live",
+    "https://goerli-relay.securerpc.com",
+    "https://goerli-relay.wenmerge.com",
+    "https://goerli-blockspace.frontier.tech"
   ],
   bootstrapers: [
       //'/ip4/127.0.0.1/tcp/5040/ws/p2p/16Uiu2HAmA252NhbTLbwog6TY8ahyehHPFAdfWiwp2DsaL6uZqGki',

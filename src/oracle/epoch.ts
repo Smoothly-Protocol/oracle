@@ -20,7 +20,6 @@ const MAX_RETRYS = 5;
 let retries = 0;
 let eventEpoch: EventSource;
 let prevEpoch: number = 0;
-let lastRebalanceTimestamp: number = 0;
 
 export async function EpochListener(oracle: Oracle) {
     eventEpoch = new EventSource(`${oracle.network.beacon}/eth/v1/events?topics=finalized_checkpoint`);
@@ -63,10 +62,7 @@ export async function EpochListener(oracle: Oracle) {
             const vote = await contract.votes(epochNumber, voter);
 
             // Process rebalance 
-            if(
-              vote[0] == 0 && 
-              Number(timestamp) > (lastRebalanceTimestamp + 3600) 
-            ) {
+            if(vote[0] == 0) {
               const random = Math.floor(
                 ((Number(prev_randao) % 100) / 100) * operators.length
               );
@@ -76,8 +72,6 @@ export async function EpochListener(oracle: Oracle) {
               priority !== -1 
                 ? Rebalancer(oracle, { block_number, priority })
                 : 0;
-
-              lastRebalanceTimestamp = Number(timestamp);
             }
           } 
         }

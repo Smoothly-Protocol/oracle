@@ -208,8 +208,8 @@ export async function generateTrees(db: DB): Promise<string[]> {
 
 export async function fundUsers(includedValidators: Validator[], total: BigNumber, db: DB): Promise<BigNumber> {
   try { 
-    if(total.lt(utils.parseEther("0.001"))) {
-      throw "No funds to rebalance on this period"; 
+    if(total.lte(utils.parseEther("0"))) {
+      return BigNumber.from("0");
     } else if(includedValidators.length < 1) {
       throw "No validators available for rebalance";
     }
