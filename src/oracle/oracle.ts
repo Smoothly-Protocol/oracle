@@ -18,10 +18,12 @@ import {
 import { Node } from './p2p';
 import type { Libp2p } from 'libp2p';
 import { logger } from '../utils';
+import EventSource from "eventsource";
 
 export class Oracle extends Config {
   db: DB;  
   p2p: Node;
+  event!: EventSource;
 
   constructor(opts: any, _root: string) {
     super(opts);
@@ -65,6 +67,22 @@ export class Oracle extends Config {
     cron.schedule('30 0 * * *', async () => {
       await MonitorRelays(this);
     }, {timezone: "America/Los_Angeles"});
+
+    cron.schedule('*/15 * * * *', async () => {
+      await this.checkConnectivity(false);
+    }, {timezone: "America/Los_Angeles"});
+  }
+
+  async checkConnectivity(logs: boolean) {
+    try { 
+      const switched = await this.switchToBackup(logs);
+      if(switched) {
+        this.event.close();
+        EpochListener(this);
+      }
+    } catch(err: any) {
+      logger.error(err);
+    }
   }
 
   async sync(checkpoint: string): Promise<void> {

@@ -88,7 +88,8 @@ async function reqRelayRegistration(relay: string, pubkey: string): Promise<any>
     const res = await req.json();
     return res;
   } catch(err: any) {
-    logger.error(err);
+    logger.error(`Fetch failed to request validator registration: relay=${relay} - pubkey=${pubkey}`);
+    return { code: 408 }
   }
 }
 

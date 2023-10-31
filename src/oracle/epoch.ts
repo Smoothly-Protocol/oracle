@@ -18,13 +18,12 @@ import { logger } from "../utils";
 
 const MAX_RETRYS = 5;
 let retries = 0;
-let eventEpoch: EventSource;
 let prevEpoch: number = 0;
 
 export async function EpochListener(oracle: Oracle) {
-    eventEpoch = new EventSource(`${oracle.network.beacon}/eth/v1/events?topics=finalized_checkpoint`);
+    oracle.event = new EventSource(`${oracle.network.beacon}/eth/v1/events?topics=finalized_checkpoint`);
 
-    eventEpoch.addEventListener('finalized_checkpoint', async (e)  => {
+    oracle.event.addEventListener('finalized_checkpoint', async (e)  => {
       try {
         let lastSlot;
         let { epoch } = JSON.parse(e.data);	
@@ -75,9 +74,6 @@ export async function EpochListener(oracle: Oracle) {
             }
           } 
         }
-
-        checkConnectivity(oracle);
-
       } catch(err:any) {
         logger.error(err);
       }
@@ -85,7 +81,6 @@ export async function EpochListener(oracle: Oracle) {
 
     logger.info("Listening for new finalized_checkpoints");
 }
-
 
 export async function processEpoch(
   epoch: number, 
@@ -206,11 +201,7 @@ export async function processEpoch(
     } else {
       if(retries >= MAX_RETRYS) {
         retries = 0;
-        const switched = await oracle.switchToBackup();
-        if(switched) {
-          eventEpoch.close();
-          EpochListener(oracle);
-        }
+        await oracle.checkConnectivity(true);
       } else {
         logger.error(`Network connection error - retrying epoch - epoch=${epoch} - err=${err}`);
         await setTimeout(5000);
@@ -218,20 +209,6 @@ export async function processEpoch(
       }
       return await processEpoch(epoch, syncing, oracle);
     }
-  }
-}
-
-async function checkConnectivity(oracle: Oracle) {
-  try { 
-  const delay = 60000 * 15;
-  await setTimeout(delay);
-  const switched = await oracle.switchToBackup(false);
-  if(switched) {
-    eventEpoch.close();
-    EpochListener(oracle);
-  }
-  } catch(err: any) {
-    logger.error(err);
   }
 }
 

@@ -139,11 +139,17 @@ export class Node {
         logger.info(`Established connection - peer=${evt.detail.toString()} total=${(await node.peerStore.all()).length}`);
         const conn = await node.dial(evt.detail)
         await node.services.identify.identify(conn);
+        if(this.DHTServer) {
+          node.services.pubsub.subscribe(`${evt.detail.toString()}`)
+        }
       })
       // Establish connections on peer discovery 
       node.addEventListener('peer:discovery', async (evt) => {
         if(evt.detail.multiaddrs.length > 0) {
           logger.info(`Discovered - peer=${evt.detail.id.toString()} total=${(await node.peerStore.all()).length}`);
+          if(this.DHTServer) {
+            node.services.pubsub.subscribe(`${evt.detail.id.toString()}`)
+          }
         }
       })
       // Manually delete peer to restore pubsub on restart 
