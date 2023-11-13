@@ -11,11 +11,11 @@ export const Peers = [
 
 export const GOERLI: NetInfo = {
   rpc: "",
-  rpcBu: ["http://rpc.smoothly.money"],
+  rpcBu: ["http://rpc.smoothly.money:8545"],
   pool: "0x894F0786cb41b1c1760E70d61cB2952749Da6382",
   governance: "0xc27B0c392e97C07f97e6893ea50FA9cBa82DF7FC",
   beacon: "",
-  beaconBu: ["http://beacon.smoothly.money"],
+  beaconBu: ["http://beacon.smoothly.money:3500"],
   beaconchainApi: "https://goerli.beaconcha.in",
   relays: [
     "https://boost-relay-goerli.flashbots.net",
