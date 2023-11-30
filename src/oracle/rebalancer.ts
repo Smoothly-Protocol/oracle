@@ -44,7 +44,7 @@ export async function Rebalancer (oracle: Oracle, data: any) {
 export async function proposeEpoch(epochData: any, oracle: Oracle, priority: number): Promise<void> {
   try {
     // Random priority to avoid failed tx
-    await setTimeout((priority * 30) * 1000);
+    await setTimeout((priority * 40) * 1000);
 
     // Submit vote 
     const contract = oracle.governance;

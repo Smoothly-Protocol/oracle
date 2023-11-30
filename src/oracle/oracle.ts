@@ -76,7 +76,8 @@ export class Oracle extends Config {
   async checkConnectivity(logs: boolean) {
     try { 
       const switched = await this.switchToBackup(logs);
-      if(switched) {
+      const isClosed = this.event.readyState == EventSource.CLOSED;
+      if(switched || isClosed) {
         this.event.close();
         EpochListener(this);
       }
