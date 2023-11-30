@@ -3,7 +3,7 @@ import { setTimeout } from "timers/promises";
 import { Oracle } from './oracle';
 import { DB } from '../db';
 import { Validator } from '../types';
-import { Contract, utils } from 'ethers';
+import { Contract, utils, BigNumber } from 'ethers';
 import { filterLogs, existsHead } from "../utils";
 import { 
   verifyValidator, 
@@ -226,8 +226,12 @@ async function voluntaryExits(data: any, db: DB) {
     const index = exit.message.validator_index;
     const validator = await db.get(index);
     if(validator) {
-      validator.deactivated = true;
-      validator.active = false;
+      if(!validator.firstBlockProposed) {
+        // Zero out validator
+        validator.rewards = BigNumber.from("0");
+        logger.info(`Zero out - validator_index=${validator.index}`);
+      }
+      validator.exitRequested = true;
       await db.insert(index, validator);
       logger.info(`Voluntary exit - validator_index=${index}`);
     }
