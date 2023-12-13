@@ -30,8 +30,8 @@ export const GOERLI: NetInfo = {
     "https://goerli-blockspace.frontier.tech"
   ],
   bootstrapers: [
-      '/ip4/127.0.0.1/tcp/5040/ws/p2p/16Uiu2HAmA252NhbTLbwog6TY8ahyehHPFAdfWiwp2DsaL6uZqGki',
-      //'/dns4/relay.smoothly.money/tcp/443/wss/p2p/16Uiu2HAmTAKstCuxMozUFcmXoTJHpUrcM3YJxV4uNVntYBPNBZjo'
+      //'/ip4/127.0.0.1/tcp/5040/ws/p2p/16Uiu2HAmA252NhbTLbwog6TY8ahyehHPFAdfWiwp2DsaL6uZqGki',
+      '/dns4/relay.smoothly.money/tcp/443/wss/p2p/16Uiu2HAmTAKstCuxMozUFcmXoTJHpUrcM3YJxV4uNVntYBPNBZjo'
   ],
   deploymentEpoch: 209077 
 }
