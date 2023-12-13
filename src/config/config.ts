@@ -14,7 +14,7 @@ import {
 import { pool, governance } from '../artifacts';
 import { reqEpochCheckpoint, reqEpochSlots } from '../oracle/epoch';
 import PinataClient from '@pinata/sdk';
-import { logger } from '../utils';
+import { logger, initGlobal } from '../utils';
 
 export class Config {
   contract: Contract;
@@ -38,6 +38,8 @@ export class Config {
     } else {
       throw new Error("Unknown or not supported network.");
     } 
+
+    initGlobal(_network);
 
     this.apiPort = opts.httpApi;
     

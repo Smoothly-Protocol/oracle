@@ -13,7 +13,7 @@ program
 .description('CLI for running a node that supoorts the smoothly pool validator network')
 .version('0.0.1')
 .usage('[OPTIONS]...')
-.option('-n, --network <value>', 'Select network [goerli, mainnet]', 'goerli')
+.option('-n, --network <value>', 'Select network [goerli, mainnet]', 'mainnet')
 .option('-s, --sync <url>', 'Select checkpoint to sync from')
 .option('-p, --http-api <port>', 'Port for http api [default: 4040]', '4040')
 .option('-b, --beacon <separetd comma urls>', 'Add custom beacon node')

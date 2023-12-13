@@ -1,12 +1,16 @@
 import { NetInfo } from "../types";
 
 export const Peers = [
-  "16Uiu2HAmPh1zstkuEATAxZVR9hQLfvh6E9RgSuX1AnpJWQXyzfXu",
+  //"16Uiu2HAmPh1zstkuEATAxZVR9hQLfvh6E9RgSuX1AnpJWQXyzfXu",
   "16Uiu2HAkvyHWXj9caLxEPc2JbTWmapXqHpimTP4oqYZvSSoCAJtJ",
-  "16Uiu2HAmR7AXaAmkikrGo4W6iYJSNseC1PEdMJ3LEyw4cU57283c",
+  //"16Uiu2HAmR7AXaAmkikrGo4W6iYJSNseC1PEdMJ3LEyw4cU57283c",
   "16Uiu2HAmTAKstCuxMozUFcmXoTJHpUrcM3YJxV4uNVntYBPNBZjo",
   "16Uiu2HAmAm1SD5s9tJpFwxj5uTEiSpbYG1QqCqFRH49q3xWFS1H6",
-  "16Uiu2HAkvU861aiRsknGdppTv5PVqLjui4RYCGopMCn7corbJ75R"
+  "16Uiu2HAkvU861aiRsknGdppTv5PVqLjui4RYCGopMCn7corbJ75R",
+  "16Uiu2HAm5CLA84BsFNqm16qp3wZv4HnKB9fUbFs8oGJ6jY8VuoeZ",
+  "16Uiu2HAmgJUBDTuUNBEJUuNwssNEwm7qDLUvC4EGDgkqggG5u16rw",
+  "16Uiu2HAkvuZLHhhNgMpb81NuXkZVrwkBtDAhqJAoLKeuB929PAio",
+  "16Uiu2HAmKEDorBqPC7Q8jXyyrPfAVNiBDVEh39YTWVjdDDnbpie1"
 ];
 
 export const GOERLI: NetInfo = {
@@ -26,8 +30,8 @@ export const GOERLI: NetInfo = {
     "https://goerli-blockspace.frontier.tech"
   ],
   bootstrapers: [
-      //'/ip4/127.0.0.1/tcp/5040/ws/p2p/16Uiu2HAmA252NhbTLbwog6TY8ahyehHPFAdfWiwp2DsaL6uZqGki',
-      '/dns4/relay.smoothly.money/tcp/443/wss/p2p/16Uiu2HAmTAKstCuxMozUFcmXoTJHpUrcM3YJxV4uNVntYBPNBZjo'
+      '/ip4/127.0.0.1/tcp/5040/ws/p2p/16Uiu2HAmA252NhbTLbwog6TY8ahyehHPFAdfWiwp2DsaL6uZqGki',
+      //'/dns4/relay.smoothly.money/tcp/443/wss/p2p/16Uiu2HAmTAKstCuxMozUFcmXoTJHpUrcM3YJxV4uNVntYBPNBZjo'
   ],
   deploymentEpoch: 209077 
 }
@@ -35,14 +39,23 @@ export const GOERLI: NetInfo = {
 export const MAINNET: NetInfo = {
   rpc: "",
   rpcBu: ["https://eth-mainnet.alchemyapi.io/v2/zmsxPR7pKHtiLvAkZ1R61BYtCqnCg0yc"],
-  pool: "N/A",
-  governance: "N/A",
+  pool: "0x43670D6f39Bca19EE26462f62339e90A39B01e34",
+  governance: "0xA20672D73fD75b9e80F52492CE77cBFcF804d679",
   beacon: "",
   beaconBu: ["http://unstable.mainnet.beacon-api.nimbus.team"],
   beaconchainApi: "https://beaconcha.in",
-  relays: [],
-  bootstrapers: [],
-  deploymentEpoch: 163682
+  relays: [
+    'https://boost-relay.flashbots.net',
+    'https://relay.ultrasound.money',
+    'https://aestus.live',
+    'https://agnostic-relay.net',
+    'https://mainnet-relay.securerpc.com',
+    'https://bloxroute.max-profit.blxrbdn.com'
+  ],
+  bootstrapers: [
+    '/ip4/127.0.0.1/tcp/5040/ws/p2p/16Uiu2HAmA252NhbTLbwog6TY8ahyehHPFAdfWiwp2DsaL6uZqGki',
+  ],
+  deploymentEpoch: 249058
 }
 
 export const LOCAL: NetInfo = {

@@ -61,7 +61,7 @@ export async function proposeEpoch(epochData: any, oracle: Oracle, priority: num
       // Unauthorized() selector error
       logger.warn("Unauthorized address to propose vote");
     } else {
-      logger.error("Proposing epoch, trying again...")
+      logger.info("Proposing epoch, trying again...")
       logger.warn("Please, make sure your address is funded")
       proposeEpoch(epochData, oracle, priority);
     }
