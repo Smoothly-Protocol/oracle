@@ -83,15 +83,6 @@ npm link
 These commands use npm to build  the Smoothly client
 
 ---
-```sh
-smoothly_cli -pk <your private key> -n goerli 
-```
----
-Start Smoothly, the expected response is below  
-
-<p align="center"><img width="1000" title="response" src='assets/expected_response.jpg' /></a></p>
-
----
 
 ## Create a Systemd Service File
 ```
@@ -133,6 +124,11 @@ sudo journalctl -fu smoothly
 ```
 check logs to verify connections
 
+Start Smoothly, the expected response is below  
+
+<p align="center"><img width="1000" title="response" src='assets/expected_response.jpg' /></a></p>
+
+---
 ## Additional Flags
 
 At this point, you're running the operator node! Please use the following flags to identify your EL and CL connections, and if you're behind a router, you'll need to announce your IP to be reachable for syncing. 
