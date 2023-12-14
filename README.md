@@ -143,7 +143,9 @@ At this point, you're running the operator node! Please use the following flags 
 
 If you're running at home, you're probably behind a router. Although you will be able to reach your peers, they will not be able to sync from you in the event they fall out of consensus. Please verify that upnp is enabled on your router, and allow p2p connections with your oracle peers on port 5040. 
 
-```sudo ufw allow 5040```
+```
+sudo ufw allow 5040
+```
 
 Then add these additional flags to become reachable. 
 
