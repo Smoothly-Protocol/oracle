@@ -38,11 +38,11 @@ export const GOERLI: NetInfo = {
 
 export const MAINNET: NetInfo = {
   rpc: "",
-  rpcBu: ["https://eth-mainnet.alchemyapi.io/v2/zmsxPR7pKHtiLvAkZ1R61BYtCqnCg0yc"],
+  rpcBu: ["http://51.81.185.43:8545"],
   pool: "0x43670D6f39Bca19EE26462f62339e90A39B01e34",
   governance: "0xA20672D73fD75b9e80F52492CE77cBFcF804d679",
   beacon: "",
-  beaconBu: ["http://unstable.mainnet.beacon-api.nimbus.team"],
+  beaconBu: ["http://51.81.185.43:3500"],
   beaconchainApi: "https://beaconcha.in",
   relays: [
     'https://boost-relay.flashbots.net',
@@ -53,7 +53,8 @@ export const MAINNET: NetInfo = {
     'https://bloxroute.max-profit.blxrbdn.com'
   ],
   bootstrapers: [
-    '/ip4/127.0.0.1/tcp/5040/ws/p2p/16Uiu2HAmA252NhbTLbwog6TY8ahyehHPFAdfWiwp2DsaL6uZqGki',
+    '/ip4/146.190.144.190/tcp/5040/ws/p2p/16Uiu2HAkvuZLHhhNgMpb81NuXkZVrwkBtDAhqJAoLKeuB929PAio',
+    '/ip4/73.12.206.142/tcp/5040/ws/p2p/16Uiu2HAmKEDorBqPC7Q8jXyyrPfAVNiBDVEh39YTWVjdDDnbpie1'
   ],
   deploymentEpoch: 249058
 }
