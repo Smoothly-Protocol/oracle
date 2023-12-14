@@ -92,25 +92,6 @@ Start Smoothly, the expected response is below
 <p align="center"><img width="1000" title="response" src='assets/expected_response.jpg' /></a></p>
 
 ---
-## Additional Flags
-
-At this point, you're running the operator node! Please use the following flags to identify your EL and CL connections, and if you're behind a router, you'll need to announce your IP to be reachable for syncing. 
-
--b identifies which beacon node api to connect to (ex. for prysm -b http://localhost:3500) If you'd like to identify a fall back node, you may do so, comma separated and in "quotes":  
-
-```-b "http://localhost:3500,http://127.0.0.1:3500"```
-
--eth1 identifies which eth1 api to connect to (ex. for geth -eth1 http://localhost:8545) If you'd like to identfity an eth1 fallback node, you may do so, comma separated and in "quotes":
-
-```-eth1 "http://localhost:8545,http://127.0.0.1:8545"```
-
-If you're running at home, you're probably behind a router. Although you will be able to reach your peers, they will not be able to sync from you in the event they fall out of consensus. Please verify that upnp is enabled on your router, and allow p2p connections with your oracle peers on port 5040. 
-
-```sudo ufw allow 5040```
-
-Then add these additional flags to become reachable. 
-
-```-nat -ip <your_public_ip>```
 
 ## Create a Systemd Service File
 ```
@@ -126,8 +107,9 @@ After=network.target
 User=<YOUR USERNAME>
 Group=<YOUR GROUPNAME>
 WorkingDirectory=/home/<YOUR USERNAME>/oracle
-ExecStart=/home/<YOUR USERNAME>/.nvm/versions/node/v18.16.0/bin/smoothly_cli -pk YOUR_PRIVATE_KEY -n goerli
+ExecStart=/home/<YOUR USERNAME>/.nvm/versions/node/v18.16.0/bin/smoothly_cli -pk YOUR_PRIVATE_KEY -n mainnet
 Restart=always
+Restartsec=10
 Environment=PATH=/home/<YOUR USERNAME>/.nvm/versions/node/v18.16.0/bin:/usr/bin:/usr/local/bin
 
 [Install]
@@ -150,6 +132,26 @@ start service
 sudo journalctl -fu smoothly
 ```
 check logs to verify connections
+
+## Additional Flags
+
+At this point, you're running the operator node! Please use the following flags to identify your EL and CL connections, and if you're behind a router, you'll need to announce your IP to be reachable for syncing. 
+
+-b identifies which beacon node api to connect to (ex. for prysm -b http://127.0.0.1:3500) If you'd like to identify a fall back node, you may do so, comma separated and in "quotes":  
+
+```-b "http://localhost:3500,http://127.0.0.1:3500"```
+
+-eth1 identifies which eth1 api to connect to (ex. for geth -eth1 http://127.0.0.1:8545) If you'd like to identfity an eth1 fallback node, you may do so, comma separated and in "quotes":
+
+```-eth1 "http://localhost:8545,http://127.0.0.1:8545"```
+
+If you're running at home, you're probably behind a router. Although you will be able to reach your peers, they will not be able to sync from you in the event they fall out of consensus. Please verify that upnp is enabled on your router, and allow p2p connections with your oracle peers on port 5040. 
+
+```sudo ufw allow 5040```
+
+Then add these additional flags to become reachable. 
+
+```-nat -ip <your_public_ip>```
 
 ## Update the smoothly cli
 ```
