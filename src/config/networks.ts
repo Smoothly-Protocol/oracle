@@ -36,7 +36,7 @@ export const MAINNET: NetInfo = {
   rpc: "",
   rpcBu: ["http://51.81.185.43:8545"],
   pool: "0x43670D6f39Bca19EE26462f62339e90A39B01e34",
-  governance: "0xA20672D73fD75b9e80F52492CE77cBFcF804d679",
+  governance: "0xc7Ea6FF9bE0aE48A3E2C968076E6b1fd921c06EB",
   beacon: "",
   beaconBu: ["http://51.81.185.43:3500"],
   beaconchainApi: "https://beaconcha.in",
@@ -50,7 +50,7 @@ export const MAINNET: NetInfo = {
   ],
   bootstrapers: [
     '/ip4/146.190.144.190/tcp/5040/ws/p2p/16Uiu2HAkvuZLHhhNgMpb81NuXkZVrwkBtDAhqJAoLKeuB929PAio',
-    '/ip4/73.12.206.142/tcp/5040/ws/p2p/16Uiu2HAmKEDorBqPC7Q8jXyyrPfAVNiBDVEh39YTWVjdDDnbpie1'
+    '/ip4/73.151.113.229/tcp/5040/ws/p2p/16Uiu2HAmKEDorBqPC7Q8jXyyrPfAVNiBDVEh39YTWVjdDDnbpie1'
   ],
   deploymentEpoch: 249058
 }
