@@ -300,7 +300,7 @@ export class Node {
         );
         await this.node.dial(peerId);
       } catch {
-        logger.warn("Bootsraper node not reachable");
+        logger.warn("Bootstrapping node not reachable");
       }
     }
   }
