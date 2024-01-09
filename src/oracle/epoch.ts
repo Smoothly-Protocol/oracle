@@ -244,7 +244,7 @@ async function addMissedSlot(validator: Validator, db: DB) {
   logger.info(`Missed proposal - validator_index=${validator.index}`);
 }
 
-async function validateSlot(
+export async function validateSlot(
   validator: Validator, 
   body: any, 
   contract: Contract, 
@@ -252,10 +252,15 @@ async function validateSlot(
 ) {
   const { fee_recipient, block_hash } = body.execution_payload;
   const block: any = await contract.provider.getBlockWithTransactions(block_hash);
+  const lastTx: any = block.transactions[block.transactions.length - 1];
+  const pool: string = contract.address.toLowerCase();
 
   // Check builder not swapping address
-  if( (fee_recipient.toLowerCase() != contract.address.toLowerCase()) && 
-     (block.transactions[block.transactions.length - 1].to.toLowerCase() != contract.address.toLowerCase())) 
+  if( 
+     (fee_recipient.toLowerCase() != pool) && 
+     (lastTx.to.toLowerCase() != pool) &&
+     (!lastTx.data.toLowerCase().includes(pool.slice(2)))
+    ) 
     {
       validator.slashFee += 1;
       logger.info(`Proposed block with incorrect fee recipient - validator_index=${validator.index}`);
@@ -270,7 +275,7 @@ async function validateSlot(
     await db.insert(validator.index, validator)
 }
 
-async function reqSlotInfo(slot: number, beacon: string): Promise<any> {
+export async function reqSlotInfo(slot: number, beacon: string): Promise<any> {
   try {
     const url = `${beacon}/eth/v2/beacon/blocks/${slot}`;	
     const headers = {
