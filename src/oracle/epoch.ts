@@ -61,7 +61,7 @@ export async function EpochListener(oracle: Oracle) {
             const vote = await contract.votes(epochNumber, voter);
 
             // Process rebalance 
-            if(vote[0] == 0) {
+            if(vote == 0) {
               const random = Math.floor(
                 ((Number(prev_randao) % 100) / 100) * operators.length
               );
