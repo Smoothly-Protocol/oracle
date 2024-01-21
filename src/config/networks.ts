@@ -50,7 +50,8 @@ export const MAINNET: NetInfo = {
   ],
   bootstrapers: [
     '/ip4/146.190.144.190/tcp/5040/ws/p2p/16Uiu2HAkvuZLHhhNgMpb81NuXkZVrwkBtDAhqJAoLKeuB929PAio',
-    '/ip4/73.151.113.229/tcp/5040/ws/p2p/16Uiu2HAmKEDorBqPC7Q8jXyyrPfAVNiBDVEh39YTWVjdDDnbpie1'
+    '/ip4/45.21.148.179/tcp/5040/ws/p2p/16Uiu2HAmKEDorBqPC7Q8jXyyrPfAVNiBDVEh39YTWVjdDDnbpie1',
+    '/ip4/46.235.229.153/tcp/5040/ws/p2p/16Uiu2HAmJUBDTuUNBEJUuNwssNEwm7qDLUvC4EGDgkqggG5u16rw'
   ],
   deploymentEpoch: 249058
 }
