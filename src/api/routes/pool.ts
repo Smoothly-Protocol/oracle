@@ -32,17 +32,14 @@ export async function PoolRoutes(app: Application, oracle: Oracle) {
         .on('end', fulfilled);
       });
       
-      let tWithdrawals: BigNumber = await totalWithdrawals(oracle.contract);
-      let tValue: BigNumber = tRewards.add(tWithdrawals);
+      //let tWithdrawals: BigNumber = await totalWithdrawals(oracle.contract);
+      //let tValue: BigNumber = tRewards.add(tWithdrawals);
       res.json({
         awaiting_activation: awaitingActivation,
         activated: activated,
         total_rewards: tRewards, 
         total_stake: tStake,
-        total_value: tValue, 
-        total_withdrawals: tWithdrawals,
         total_value_period: (await oracle.getBalance("latest")).sub(tRewards.add(tStake)),
-        average_value: 0,
         total_miss: tMiss,
         total_fee: tFee  
       })
