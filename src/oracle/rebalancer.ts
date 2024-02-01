@@ -95,6 +95,8 @@ export async function processRebalance(db: DB): Promise<TrieRebalance> {
       }
 
       if(validator.excludeRebalance) {
+        validator.excludeRebalance = false;
+        await db.insert(validator.index, validator);
         logger.info(`Excluded - validator_index=${validator.index}`);
       }
 

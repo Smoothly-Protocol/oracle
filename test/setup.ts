@@ -3,8 +3,10 @@ import { EMPTY_ROOT } from "../src/utils";
 import { pool, governance } from "../src/artifacts";
 import { 
   Wallet, 
+  Contract,
   ContractFactory,
-  providers
+  providers,
+  constants
 } from "ethers";
 
 // Default 10 accounts from anvil
@@ -21,38 +23,44 @@ export const pks = [
   "2a871d0798f97d79848a013d4936a73bf4cc922c825d33c1cf7073dff6d409c6"
 ];
 
+export const provider = new providers.JsonRpcProvider("http://127.0.0.1:8545");
+
 export function getSigners(provider: any): Array<Wallet> {
   return pks.map((pk: string): Wallet => { return new Wallet(pk, provider) });
 }
 
 export async function time1Day(provider: any): Promise<void> {
   const oneDay = 25 * 60 * 60;
-  await provider.send("evm_increaseTime",[oneDay]);
+  const sevenDays = 7 * oneDay;
+  await provider.send("evm_increaseTime",[sevenDays]);
+}
+
+export async function getBlockNumber() {
+  return await provider.send("eth_blockNumber",[]);
 }
 
 export async function setup(): Promise<Oracle> {
   try {
     const provider = new providers.JsonRpcProvider("http://127.0.0.1:8545");
-    const [owner] = await getSigners(provider);
+    const [owner, second] = await getSigners(provider);
     const oracle = new Oracle({
       network: "local", 
       privateKey: pks[0],
       eth1: [],
       beacon: []
     }, EMPTY_ROOT);
-    const contract = await(new ContractFactory(
-      pool["abi"], 
-      pool["bytecode"],
-      owner
-    )).deploy();
     const gov = await(new ContractFactory(
       governance["abi"], 
       governance["bytecode"],
       owner
-    )).deploy(contract.address);
-    await contract.transferOwnership(gov.address);
-    await gov.addOperators([owner.address]);
-    oracle.updateContract(contract, gov);
+    )).deploy([owner.address, second.address], constants.AddressZero);
+    const poolAddress = await gov.pool();
+    const _pool: Contract = new Contract(
+      poolAddress,
+      pool["abi"],
+      owner 
+    );
+    oracle.updateContract(_pool, gov);
     return oracle;
   } catch (err: any) {
     throw new Error(err);

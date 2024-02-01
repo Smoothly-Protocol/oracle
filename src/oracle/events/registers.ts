@@ -53,7 +53,7 @@ export async function verifyValidator(
           logger.info(`Validator already registered - validator_index=${index} address=${eth1Addr}`)
         }
       } else {
-        logger.info(`Unowned User - validator_index=${index} address=${eth1Addr}`);
+        logger.info(`Unowned User - validator_index=${id} address=${eth1Addr}`);
       }
     }
   } catch(err: any) {
@@ -74,7 +74,7 @@ function proofOwnership(
       if(data[i].validatorindex == id) {
         verified = true;
         index = Number(data[i].validatorindex);
-          return { verified, index }; 
+        return { verified, index }; 
       }
     }
   }

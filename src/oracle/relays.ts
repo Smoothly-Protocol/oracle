@@ -30,6 +30,7 @@ export async function MonitorRelays(oracle: Oracle): Promise<void> {
     logger.info("Starting Daily relay Monitoring, this might take a while...");
 
     for(let validator of validators) {
+      if(validator.excludeRebalance) continue;
       let ltsTimestamp: number = 0;
       const pubKey = await getPubKey(beacon, validator.index);
 
@@ -52,15 +53,17 @@ export async function MonitorRelays(oracle: Oracle): Promise<void> {
             } else { 
               validator.excludeRebalance = true; 
             }
+            ltsTimestamp = t;
           }
 
-          ltsTimestamp = t;
         }
       }
       
       if(nonRegistered === relays.length) {
           validator.excludeRebalance = true; 
           logger.info(`Validator not registered in any relays - validator_index=${validator.index} `);
+      } else if(validator.excludeRebalance) {
+          logger.info(`Validator found with different fee_recipient - validator_index=${validator.index} `);
       }
 
       // Update

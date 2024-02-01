@@ -2,7 +2,6 @@ import { assert, expect } from "chai";
 import { providers, Contract, Wallet, utils } from "ethers";
 import { setup } from "./setup";
 import { delay } from "./utils";
-import { STAKE_FEE } from "../src/utils";
 import { Oracle } from '../src/oracle';
 import { Validator } from "../src/types";
 import { Registered, verifyValidator } from "../src/oracle/events/registers";
@@ -13,6 +12,7 @@ import * as path from 'path';
 
 //disable logs
 //console.log = function () {};
+const STAKE_FEE = utils.parseEther("0.5");
 
 // Load Environment variables
 dotenv.config({
