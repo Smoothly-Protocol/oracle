@@ -7,7 +7,7 @@ export function Registered(oracle: Oracle): void {
   const contract = oracle.contract;
   const filter = contract.filters.Registered();
   contract.on(filter, (sender, indexes) => {
-    verifyValidator(sender, indexes, oracle);
+    //verifyValidator(sender, indexes, oracle);
   });
   console.log("Listening to register events");
 }
@@ -15,6 +15,7 @@ export function Registered(oracle: Oracle): void {
 export async function verifyValidator(
   eth1Addr: string, 
   indexes: number[],
+  timestamp: number,
   oracle: Oracle 
 ) {
   try { 
@@ -32,6 +33,7 @@ export async function verifyValidator(
             slashMiss: 0,
             slashFee: 0, 
             stake: STAKE_FEE,
+            registrationTime: timestamp,
             firstBlockProposed: false, 
             firstMissedSlot: false,
             excludeRebalance: false,
@@ -47,6 +49,7 @@ export async function verifyValidator(
           validator.active = true;
           validator.stake = STAKE_FEE;
           validator.firstBlockProposed = false;
+          validator.registrationTime = timestamp;
           await oracle.db.insert(index, validator);
           logger.info(`Welcome back - validator_index=${index} address=${eth1Addr}`)
         } else if(validator.active) {

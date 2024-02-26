@@ -7,6 +7,7 @@ export interface Validator {
   slashMiss: number, 
   slashFee: number 
   stake: BigNumber, 
+  registrationTime?: number,
   firstBlockProposed: boolean, 
   firstMissedSlot: boolean,  
   excludeRebalance?: boolean,

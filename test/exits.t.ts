@@ -32,6 +32,7 @@ describe("Exits", () => {
       slashMiss: 0,
       slashFee: 0, 
       stake: STAKE_FEE,
+      registrationTime: 0,
       firstBlockProposed: false, 
       firstMissedSlot: false,
       exitRequested: false,

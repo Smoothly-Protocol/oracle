@@ -22,7 +22,13 @@ export async function Rebalancer (oracle: Oracle, data: any) {
     } = await processRebalance(db);
 
     const total = (await oracle.getBalance(data.block_number)).sub(tRewards.add(tStake));
-    const fee = await fundUsers(includedValidators, total, db);
+    const fee = await fundUsers(
+      includedValidators, 
+      total, 
+      db, 
+      data.timeLock, 
+      Number(data.epochInterval)
+    );
 
     const [withdrawalsRoot, exitsRoot] = await generateTrees(db);
 
@@ -208,22 +214,56 @@ export async function generateTrees(db: DB): Promise<string[]> {
   }
 }
 
-export async function fundUsers(includedValidators: Validator[], total: BigNumber, db: DB): Promise<BigNumber> {
+export async function fundUsers(
+  includedValidators: Validator[], 
+  total: BigNumber, 
+  db: DB, 
+  timeLock: number,
+  epochInterval: number
+): Promise<BigNumber> {
   try { 
     if(total.lte(utils.parseEther("0"))) {
       return BigNumber.from("0");
     } else if(includedValidators.length < 1) {
       throw "No validators available for rebalance";
     }
-    const _fee = total.mul(FEE).div(1000);
-    const validatorShare = total.sub(_fee).div(includedValidators.length);
+    let rewards = total;
+    const _fee = rewards.mul(FEE).div(1000);
+    rewards = rewards.sub(_fee);
+    const validatorShare = rewards.div(includedValidators.length);
+
+    // Pro-rata Distribution
+    let fullValidators = [];
     for(let validator of includedValidators) {
-      validator.rewards = BigNumber.from(validator.rewards).add(validatorShare);
+      const t = validator.registrationTime || (timeLock - epochInterval);
+      const share = t > timeLock ? 0 : timeLock - t;
+      let proRata = 1;
+
+      if(share < epochInterval) {
+        proRata = share / epochInterval;
+      } else {
+        fullValidators.push(validator);
+      }
+
+      let rewardShare = validatorShare.mul(Math.round(proRata * 1000)).div(1000);
+      rewards = rewards.sub(rewardShare);
+      validator.rewards = validator.rewards.add(rewardShare);
       await db.insert(validator.index, validator);
-      logger.info(`Funded - validator_index=${validator.index} - amount=${utils.formatEther(validatorShare)}`); 
+      //logger.info(`Funded - validator_index=${validator.index} - amount=${utils.formatEther(rewardShare)}`); 
     }
+
+    // Even out
+    const leftOvers = rewards.div(fullValidators.length);
+    if(leftOvers.gt(0)) {
+      fullValidators.forEach(async (v) => { 
+        v.rewards = v.rewards.add(leftOvers);
+        await db.insert(v.index, v);
+      });
+    }    
+
     return _fee;
   } catch (err: any) {
+    console.log(err);
     throw err;
   }
 }

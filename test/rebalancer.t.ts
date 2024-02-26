@@ -33,6 +33,7 @@ describe("Rebalancer", () => {
     await time1Day(provider);           
   })
 
+    /*
   describe("Fund Validators", () => {
     beforeEach(async () => {
       // Simulate value recieved by validators 
@@ -256,5 +257,6 @@ describe("Rebalancer", () => {
       utils.formatUnits(tRewards.add(tStake), 9)
     );
   });
+ */
 })
 

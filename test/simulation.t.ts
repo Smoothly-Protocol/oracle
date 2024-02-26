@@ -19,6 +19,9 @@ describe("Simulation Test", () => {
   let initRewards: BigNumber = BigNumber.from("0");
   let initStake: BigNumber = BigNumber.from("0");
   let initBalance: BigNumber = BigNumber.from("0");
+  let epochInterval: number;
+  let lastEpoch: number;
+  let timeLock: number;
 
   before(async() => {
     oracle = await setup();
@@ -41,6 +44,9 @@ describe("Simulation Test", () => {
       value: initBalance,
       to: oracle.contract.address
     });
+    epochInterval = Number(await oracle.governance.epochInterval());
+    lastEpoch = Number(await oracle.governance.lastEpoch());
+    timeLock = Number(lastEpoch) + Number(epochInterval);
   });
 
   it("computes correct root", () => {
@@ -66,7 +72,7 @@ describe("Simulation Test", () => {
       try {
         const { includedValidators, tRewards, tStake } = await processRebalance(oracle.db);
         const total = (await oracle.getBalance("latest")).sub(tRewards.add(tStake));
-        const fee = await fundUsers(includedValidators, total, oracle.db);
+        const fee = await fundUsers(includedValidators, total, oracle.db, timeLock, epochInterval);
       } catch(err: any) {
         assert.equal(err, "No funds to rebalance on this period");
       }
@@ -105,7 +111,7 @@ describe("Simulation Test", () => {
         assert.deepEqual(tRewards, initRewards);
         assert.deepEqual(tStake, initStake);
 
-        const fee = await fundUsers(includedValidators, total, db);
+        const fee = await fundUsers(includedValidators, total, db, timeLock, epochInterval);
         const [withdrawalsRoot, exitsRoot] = await generateTrees(db);
         const epochData = [withdrawalsRoot, exitsRoot, db.root(), fee];
 
@@ -131,7 +137,7 @@ describe("Simulation Test", () => {
       const db = oracle.db;
       const { includedValidators, tRewards, tStake } = await processRebalance(db);
       const total = (await oracle.getBalance("latest")).sub(tRewards.add(tStake));
-      const fee = await fundUsers(includedValidators, total, db);
+      const fee = await fundUsers(includedValidators, total, db, timeLock, epochInterval);
       const [withdrawalsRoot, exitsRoot] = await generateTrees(db);
       const epochData = [withdrawalsRoot, exitsRoot, db.root(), fee];
 
@@ -172,7 +178,7 @@ describe("Simulation Test", () => {
       const db = oracle.db;
       const { includedValidators, tRewards, tStake } = await processRebalance(db);
       const total = (await oracle.getBalance("latest")).sub(tRewards.add(tStake));
-      const fee = await fundUsers(includedValidators, total, db);
+      const fee = await fundUsers(includedValidators, total, db, timeLock, epochInterval);
       const [withdrawalsRoot, exitsRoot] = await generateTrees(db);
       const epochData = [withdrawalsRoot, exitsRoot, db.root(), fee];
 
@@ -217,7 +223,7 @@ describe("Simulation Test", () => {
       const db = oracle.db;
       const { includedValidators, tRewards, tStake } = await processRebalance(db);
       const total = (await oracle.getBalance("latest")).sub(tRewards.add(tStake));
-      const fee = await fundUsers(includedValidators, total, db);
+      const fee = await fundUsers(includedValidators, total, db, timeLock, epochInterval);
       const [withdrawalsRoot, exitsRoot] = await generateTrees(db);
       const epochData = [withdrawalsRoot, exitsRoot, db.root(), fee];
 

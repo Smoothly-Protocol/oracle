@@ -69,7 +69,7 @@ export async function EpochListener(oracle: Oracle) {
               const priority = shuffle.indexOf(voter);
 
               priority !== -1 
-                ? Rebalancer(oracle, { block_number, priority })
+                ? Rebalancer(oracle, { block_number, priority, timeLock, epochInterval })
                 : 0;
             }
           } 
@@ -126,6 +126,7 @@ export async function processEpoch(
 
     for(let _slot of slots) { 
       const { proposer_index, body, logs } = _slot;
+      const timestamp = body.execution_payload.timestamp;
 
       // Process eth1 logs
       if(logs.length > 0 /*&& syncing*/) {
@@ -134,7 +135,7 @@ export async function processEpoch(
           const args = log.args;
           switch(event) {
             case 'Registered':
-              await verifyValidator(args[0], args[1], oracle);
+              await verifyValidator(args[0], args[1], timestamp, oracle);
             break;
             case 'RewardsWithdrawal':
               await validateWithdrawalRewards(args[0], args[1], args[2], oracle);
