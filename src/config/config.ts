@@ -7,7 +7,7 @@ import {
   BigNumber,
 } from "ethers"; 
 import { 
-  GOERLI,
+  HOLESKY,
   MAINNET,
   LOCAL
 } from './networks';
@@ -29,8 +29,8 @@ export class Config {
     const _pk = opts.privateKey;
 
     // Network
-    if(_network === "goerli") {
-      this.network = GOERLI;
+    if(_network === "holesky") {
+      this.network = HOLESKY;
     } else if(_network === "mainnet") {
       this.network = MAINNET;
     } else if(_network === "local") {

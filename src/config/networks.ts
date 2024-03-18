@@ -9,27 +9,24 @@ export const Peers = [
   "16Uiu2HAmKEDorBqPC7Q8jXyyrPfAVNiBDVEh39YTWVjdDDnbpie1"
 ];
 
-export const GOERLI: NetInfo = {
+export const HOLESKY: NetInfo = {
   rpc: "",
-  rpcBu: ["http://rpc.smoothly.money:8545"],
-  pool: "0x894F0786cb41b1c1760E70d61cB2952749Da6382",
-  governance: "0x08E23BC6565294136eaed19953Ff547f6d452699",
+  rpcBu: ["https://ethereum-holesky-rpc.publicnode.com"],
+  pool: "0xdDdaBb545F2dc906259A9a26C33095a37f5AB1F9",
+  governance: "0x9aF9D23c1efC2f94F49eFa1eAD7c5eC36b5f584E",
   beacon: "",
-  beaconBu: ["http://beacon.smoothly.money:3500"],
-  beaconchainApi: "https://goerli.beaconcha.in",
+  beaconBu: ["http://unstable.holesky.beacon-api.nimbus.team"],
+  beaconchainApi: "https://holesky.beaconcha.in",
   relays: [
-    "https://boost-relay-goerli.flashbots.net",
+    "https://boost-relay-holesky.flashbots.net",
     "https://relay-stag.ultrasound.money",
-    "https://goerli.aestus.live",
-    "https://goerli-relay.securerpc.com",
-    "https://goerli-relay.wenmerge.com",
-    "https://goerli-blockspace.frontier.tech"
+    "https://holesky.aestus.live",
+    "https://holesky-relay.securerpc.com",
   ],
   bootstrapers: [
-      //'/ip4/127.0.0.1/tcp/5040/ws/p2p/16Uiu2HAmA252NhbTLbwog6TY8ahyehHPFAdfWiwp2DsaL6uZqGki',
       '/dns4/relay.smoothly.money/tcp/443/wss/p2p/16Uiu2HAkvuZLHhhNgMpb81NuXkZVrwkBtDAhqJAoLKeuB929PAio'
   ],
-  deploymentEpoch: 209077 
+  deploymentEpoch: 38317 
 }
 
 export const MAINNET: NetInfo = {
