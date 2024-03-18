@@ -6,7 +6,6 @@ export async function PoolRoutes(app: Application, oracle: Oracle) {
   app.get('/poolstats', async (req: Request, res: Response): Promise<void> =>  {
       let awaitingActivation: number = 0;
       let activated: number = 0; 
-      let deactivated: number = 0; 
       let tMiss: number = 0;
       let tFee: number = 0;
       let tRewards: BigNumber = BigNumber.from("0");
@@ -17,12 +16,8 @@ export async function PoolRoutes(app: Application, oracle: Oracle) {
         stream
         .on('data', async (data: any) => {
           let validator = JSON.parse(data.value.toString());
-          if(deactivated) {
-            deactivated++;
-          } else if (validator.firstBlockProposed) {
-            activated++;
-          } else {
-            awaitingActivation++;
+          if(validator.active) {
+            validator.firstBlockProposed ? activated++ : awaitingActivation++;
           }
           tMiss += validator.slashMiss;
           tFee += validator.slashFee;
