@@ -13,8 +13,8 @@ export const initGlobal = (network: string) => {
     SLASH_FEE = utils.parseEther("0.5");
     MISS_FEE = utils.parseEther("0.15");
   } else {
-    STAKE_FEE = utils.parseEther("0.065");
-    SLASH_FEE = utils.parseEther("0.065");
+    STAKE_FEE = utils.parseEther("0.05");
+    SLASH_FEE = utils.parseEther("0.05");
     MISS_FEE = utils.parseEther("0.015");
   } 
 }
