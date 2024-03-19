@@ -247,7 +247,7 @@ export async function fundUsers(
 
       let rewardShare = validatorShare.mul(Math.round(proRata * 1000)).div(1000);
       rewards = rewards.sub(rewardShare);
-      validator.rewards = validator.rewards.add(rewardShare);
+      validator.rewards = BigNumber.from(validator.rewards).add(rewardShare);
       await db.insert(validator.index, validator);
       //logger.info(`Funded - validator_index=${validator.index} - amount=${utils.formatEther(rewardShare)}`); 
     }

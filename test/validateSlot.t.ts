@@ -38,7 +38,7 @@ describe("Validate Slots", () => {
   it("should pick up block build through new PBS method", async () => {
     let { body } = await reqSlotInfo(
       8097330, 
-      'http://unstable.mainnet.beacon-api.nimbus.team'
+      'http://testing.mainnet.beacon-api.nimbus.team'
     );
     await validateSlot(validator, body, contract, db);
     let v = await db.get(validator.index) as Validator;
@@ -48,7 +48,7 @@ describe("Validate Slots", () => {
   it("should pick up block build through builder", async () => {
     let { body } = await reqSlotInfo(
       8163951, 
-      'http://unstable.mainnet.beacon-api.nimbus.team'
+      'http://testing.mainnet.beacon-api.nimbus.team'
     );
     await validateSlot(validator, body, contract, db);
     let v = await db.get(validator.index) as Validator;
@@ -58,7 +58,7 @@ describe("Validate Slots", () => {
   it("should pick up block with raw fee_recipient", async () => {
     let { body } = await reqSlotInfo(
       8143001, 
-      'http://unstable.mainnet.beacon-api.nimbus.team'
+      'http://testing.mainnet.beacon-api.nimbus.team'
     );
     await validateSlot(validator, body, contract, db);
     let v = await db.get(validator.index) as Validator;
@@ -68,7 +68,7 @@ describe("Validate Slots", () => {
   it("should pick up with incorrect fee_recipient", async () => {
     let { body } = await reqSlotInfo(
       8164781, 
-      'http://unstable.mainnet.beacon-api.nimbus.team'
+      'http://testing.mainnet.beacon-api.nimbus.team'
     );
     await validateSlot(validator, body, contract, db);
     let v = await db.get(validator.index) as Validator;

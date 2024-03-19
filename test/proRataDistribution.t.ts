@@ -76,32 +76,4 @@ describe("proRata Distribution", () => {
     assert.equal(total._hex, t._hex);
   });
 
-  /*
-  it("should distribute rewards correctly with proRataShare - distributing leftOvers equally", async () => {
-    const timestamp = 1814400;
-    const maxShare = total.div(validators.length);
-
-    // validator_share = timestamp - registration_data
-
-    // Distribution
-    let fullValidators = [];
-    for(const validator of validatorsTest) {
-      let proRata = 1;
-      if(validator.share < timestamp) {
-        proRata =  validator.share / timestamp;
-      } else {
-       fullValidators.push(validator); 
-      }
-      let share = maxShare.mul(Math.round(proRata * 1000)).div(1000);
-      total = total.sub(share);
-      validator.rewards = validator.rewards.add(share);
-    }
-
-    // Even out
-    const leftOvers = total.div(fullValidators.length);
-    if(leftOvers.gt(0)) {
-      fullValidators.forEach(v => v.rewards = v.rewards.add(leftOvers));
-    }    
-  });*/
-
 });

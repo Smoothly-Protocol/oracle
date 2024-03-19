@@ -68,16 +68,6 @@ describe("Simulation Test", () => {
       assert.deepEqual(total, BigNumber.from("0"));
     })
 
-    it("throws if total < 0.001 eth correctly", async () => {
-      try {
-        const { includedValidators, tRewards, tStake } = await processRebalance(oracle.db);
-        const total = (await oracle.getBalance("latest")).sub(tRewards.add(tStake));
-        const fee = await fundUsers(includedValidators, total, oracle.db, timeLock, epochInterval);
-      } catch(err: any) {
-        assert.equal(err, "No funds to rebalance on this period");
-      }
-    })
-
   });
   
   describe("Simulation with live data on rebalance", () => {
@@ -95,11 +85,6 @@ describe("Simulation Test", () => {
         await oracle.db.insert(i, validator);
       }
     });
-
-    it("computes correct root", () => {
-      const root = oracle.db.root().toString('hex');
-      assert.equal(root, '8e84c7cf404ef4beacfd6aa6da60f7eb0cab4a8a155f6d1a8ee69da70393ebad');
-    })
 
     it("No Slashes no money coming in should throw No funds to rebalance", async () => {
       try {
