@@ -1,7 +1,7 @@
 import { BigNumber, utils } from "ethers";
 import { Validator } from "../../src/types";
 
-const STAKE_FEE = utils.parseEther("0.065");
+const STAKE_FEE = utils.parseEther("0.05");
 export const validators: Validator[] = [
   {
     index: 100, 

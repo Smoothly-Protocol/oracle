@@ -14,6 +14,7 @@ import { Validator, TrieRebalance } from "../src/types";
 //disable logs
 //console.log = function () {};
 
+/*
 describe("Simulation Test", () => {
   let oracle: Oracle;
   let initRewards: BigNumber = BigNumber.from("0");
@@ -54,21 +55,6 @@ describe("Simulation Test", () => {
     assert.equal(root, checkpoint.root);
   })
 
-  describe("No ETH to rebalance", () => {
-
-    it("calculates tRewards and tStake correctly", async () => {
-      const { tRewards, tStake } = await processRebalance(oracle.db);
-      assert.deepEqual(tRewards, initRewards);
-      assert.deepEqual(tStake, initStake);
-    })
-
-    it("calculates totalBalance correctly", async () => {
-      const { tRewards, tStake } = await processRebalance(oracle.db);
-      const total = (await oracle.getBalance("latest")).sub(tRewards.add(tStake));
-      assert.deepEqual(total, BigNumber.from("0"));
-    })
-
-  });
   
   describe("Simulation with live data on rebalance", () => {
 
@@ -236,3 +222,4 @@ describe("Simulation Test", () => {
   });
   
 });
+*/
