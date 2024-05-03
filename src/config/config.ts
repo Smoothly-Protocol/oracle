@@ -59,7 +59,8 @@ export class Config {
     this.contract = _contract;
     this.governance = _governance;
     
-    this._isEth1Alive(this.network.rpc, true);
+    // On failure only
+    this.switchToBackup();
   }
 
   async getRoot(): Promise<string> {
@@ -90,7 +91,7 @@ export class Config {
   async switchToBackup(logs: boolean = true): Promise<boolean> {
     try {
       await this._isEth1Alive(this.network.rpc, logs);
-    } catch {
+    } catch(err) {
       const rpc = this.network.rpc;
       this.network.rpc = this.network.rpcBu[0] 
       this.network.rpcBu.shift();
@@ -101,16 +102,19 @@ export class Config {
       this.contract = _contract;
       this.governance = _governance;
 
+      logger.error(err);
       logger.warn(`Switched to Backup Eth1 rpc - url=${this.network.rpc}`);
     }
 
     try {
       await this._isBeaconAlive(this.network.beacon, logs);
-    } catch {
+    } catch(err) {
       const beacon = this.network.beacon;
       this.network.beacon = this.network.beaconBu[0] 
       this.network.beaconBu.shift();
       this.network.beaconBu.push(beacon)
+
+      logger.error(err);
       logger.warn(`Switched to Backup Beacon node - url=${this.network.beacon}`);
       return true;
     }
@@ -124,8 +128,6 @@ export class Config {
     } else {
       this.network.beacon = this.network.beaconBu[0];
     }
-
-    this._isBeaconAlive(this.network.beacon, true);
   }
 
   private _setupEL(rpcs: string[]): void {
