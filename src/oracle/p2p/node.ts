@@ -282,7 +282,7 @@ export class Node {
   }
 
   private async _waitForVotes(epoch: number): Promise<void> {
-    const maxTimeout = 240000;
+    const maxTimeout = 60000;
     let count = 0;
     const peers = await this.node.peerStore.all();
 
