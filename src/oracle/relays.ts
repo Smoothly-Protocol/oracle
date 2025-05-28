@@ -31,6 +31,7 @@ export async function MonitorRelays(oracle: Oracle): Promise<void> {
 
     for(let validator of validators) {
       if(validator.excludeRebalance) continue;
+      if(!validator.active) continue;
       let ltsTimestamp: number = 0;
       const pubKey = await getPubKey(beacon, validator.index);
 

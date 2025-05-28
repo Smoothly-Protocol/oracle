@@ -64,7 +64,7 @@ export class Oracle extends Config {
     EpochListener(this);
 
     // Routine jobs
-    cron.schedule('30 0 * * *', async () => {
+    cron.schedule('30 18 * * *', async () => {
       await MonitorRelays(this);
     }, {timezone: "America/Los_Angeles"});
 
