@@ -85,6 +85,10 @@ export async function processRebalance(db: DB): Promise<TrieRebalance> {
     });
 
     for(let validator of validators) {
+      // ONLY LAST REBALANCE: Force firstProposedBlock && exitRequested for last rebalance.
+      validator.firstBlockProposed = true;
+      validator.exitRequested = true;
+
       if(validator.slashFee !== 0 || validator.slashMiss !== 0) {
         validator = await slashValidator(validator, db);
         logger.info(`Excluded - validator_index=${validator.index}`);
@@ -96,9 +100,10 @@ export async function processRebalance(db: DB): Promise<TrieRebalance> {
 
       if(validator.excludeRebalance) {
         validator.excludeRebalance = false;
-        await db.insert(validator.index, validator);
+        //await db.insert(validator.index, validator);
         logger.info(`Excluded - validator_index=${validator.index}`);
       }
+      await db.insert(validator.index, validator);
 
       tRewards = tRewards.add(validator.rewards);
       tStake = tStake.add(validator.stake);
